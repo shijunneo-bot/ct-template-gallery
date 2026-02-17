@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Hola Health – Exit Survey</title>
+<script>
+var CONFIG = {
+  brandColor: '#00A173',
+  brandDark: '#01875F',
+  question: 'Quick question before you go —',
+  heading: 'What held you back from booking?',
+  options: [
+    "Not sure if I'm eligible for bulk billing",
+    "I'd prefer to see a GP in person",
+    "Concerned about privacy & data security",
+    "Just browsing — not urgent right now",
+    "Pricing wasn't clear enough"
+  ],
+  submitText: 'Submit',
+  thankYou: 'Thanks for letting us know 💚',
+  eventName: 'Hola_ExitSurvey',
+  redirectUrl: 'wzrk://exit'
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:rgba(0,0,0,0.4)}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 20px);max-width:440px;margin:0 auto;transform:translateY(100%);animation:slideUp .4s cubic-bezier(.32,.72,0,1) forwards;box-shadow:0 -8px 40px rgba(0,0,0,.15)}
+@keyframes slideUp{to{transform:translateY(0)}}
+.handle{width:36px;height:4px;background:#D1D5DB;border-radius:4px;margin:0 auto 16px}
+.close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;color:#9CA3AF;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s}
+.close:hover{background:#F3F4F6}
+.brand{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.brand-dot{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.brand-name{font-size:12px;font-weight:600;color:#6B7280;letter-spacing:.3px}
+.q-label{font-size:13px;color:#9CA3AF;margin-bottom:4px}
+h2{font-size:18px;font-weight:700;color:#111827;line-height:1.35;margin-bottom:16px}
+.options{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #E5E7EB;border-radius:12px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.opt:active{transform:scale(.98)}
+.opt.sel{border-color:var(--bc);background:color-mix(in srgb,var(--bc) 6%,#fff)}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid #D1D5DB;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sel .radio{border-color:var(--bc)}
+.radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--bc);transform:scale(0);transition:transform .15s}
+.sel .radio::after{transform:scale(1)}
+.opt span{font-size:14px;color:#374151;line-height:1.35}
+.sel span{color:#111827;font-weight:500}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45;cursor:default}
+.ty{text-align:center;padding:24px 0 8px;animation:fadeIn .3s ease}
+.ty .check{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px}
+.ty p{font-size:16px;font-weight:600;color:#111827}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="sheet" id="sheet">
+  <div class="handle"></div>
+  <button class="close" id="closeBtn" aria-label="Close">×</button>
+  <div class="brand">
+    <div class="brand-dot" id="brandDot">H</div>
+    <span class="brand-name">HOLA HEALTH</span>
+  </div>
+  <div id="formView">
+    <p class="q-label" id="qLabel"></p>
+    <h2 id="heading"></h2>
+    <div class="options" id="opts"></div>
+    <button class="btn" id="submitBtn" disabled></button>
+  </div>
+  <div class="ty" id="tyView" style="display:none">
+    <div class="check" id="checkCircle">✓</div>
+    <p id="tyText"></p>
+  </div>
+</div>
+<script>
+(function(){
+  var bc = CONFIG.brandColor;
+  document.documentElement.style.setProperty('--bc', bc);
+  document.getElementById('brandDot').style.background = bc;
+  document.getElementById('qLabel').textContent = CONFIG.question;
+  document.getElementById('heading').textContent = CONFIG.heading;
+  document.getElementById('checkCircle').style.background = bc + '18';
+  document.getElementById('checkCircle').style.color = bc;
+
+  var btn = document.getElementById('submitBtn');
+  btn.textContent = CONFIG.submitText;
+  btn.style.background = bc;
+
+  var optsEl = document.getElementById('opts');
+  var selected = -1;
+
+  CONFIG.options.forEach(function(text, i){
+    var el = document.createElement('div');
+    el.className = 'opt';
+    el.innerHTML = '<div class="radio"></div><span>' + text + '</span>';
+    el.addEventListener('click', function(){
+      document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('sel')});
+      el.classList.add('sel');
+      selected = i;
+      btn.disabled = false;
+    });
+    optsEl.appendChild(el);
+  });
+
+  function fireEvent(name, props){
+    try{
+      if(window.CleverTap) window.CleverTap.pushEvent(name, props);
+      else if(window.clevertap) window.clevertap.event.push(name, props);
+    }catch(e){}
+    try{
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
+        window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:name,properties:props}));
+      }
+    }catch(e){}
+  }
+
+  fireEvent(CONFIG.eventName + '_Shown', {Question: CONFIG.heading});
+
+  btn.addEventListener('click', function(){
+    if(selected < 0) return;
+    var response = CONFIG.options[selected];
+    fireEvent(CONFIG.eventName + '_Submitted', {
+      Question: CONFIG.heading,
+      Response: response,
+      Response_Index: selected + 1
+    });
+    document.getElementById('formView').style.display = 'none';
+    var ty = document.getElementById('tyView');
+    ty.style.display = 'block';
+    document.getElementById('tyText').textContent = CONFIG.thankYou;
+    setTimeout(function(){window.location.href = CONFIG.redirectUrl},1600);
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', function(){
+    fireEvent(CONFIG.eventName + '_Dismissed', {
+      Responded: selected >= 0,
+      Response: selected >= 0 ? CONFIG.options[selected] : 'None'
+    });
+    window.location.href = CONFIG.redirectUrl;
+  });
+})();
+</script>
+</body>
+</html>

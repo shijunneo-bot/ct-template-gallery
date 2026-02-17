@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+const CONFIG = {
+  includeDismissButton: true,
+  brand: { name: "tantan", coral: "#FF6B6B", coralDark: "#E84545", rose: "#FF8FA3", gold: "#FFB347", surface: "#FFF5F5" },
+
+  // User's current plan — drives "You're here" marker
+  currentPlan: "free", // "free" | "vip" | "premium" | "ultra"
+
+  tiers: [
+    { id: "free", label: "Free", price: "Free", priceSub: "forever", color: "#94A3B8", colorBg: "#F1F5F9" },
+    { id: "vip", label: "VIP", price: "$4.99", priceSub: "/month", color: "#FF6B6B", colorBg: "#FFF0F0", badge: "Popular" },
+    { id: "premium", label: "Premium", price: "$12.99", priceSub: "/month", color: "#8B5CF6", colorBg: "#F3F0FF", badge: "" },
+    { id: "ultra", label: "Ultra", price: "$24.99", priceSub: "/month", color: "#F59E0B", colorBg: "#FFFBEB", badge: "Best Value" },
+  ],
+
+  // Feature matrix: true = included, false = locked
+  features: [
+    { icon: "💬", name: "Chat with matches", free: true, vip: true, premium: true, ultra: true },
+    { icon: "👆", name: "Daily swipe limit", free: "50/day", vip: "Unlimited", premium: "Unlimited", ultra: "Unlimited" },
+    { icon: "🔙", name: "Rewind last swipe", free: false, vip: true, premium: true, ultra: true },
+    { icon: "🚫", name: "Ad-free experience", free: false, vip: true, premium: true, ultra: true },
+    { icon: "🏷️", name: "Exclusive VIP badge", free: false, vip: true, premium: true, ultra: true },
+    { icon: "👻", name: "Hide last seen status", free: false, vip: true, premium: true, ultra: true },
+    { icon: "👀", name: "See who likes you", free: false, vip: false, premium: true, ultra: true },
+    { icon: "🔍", name: "See who viewed profile", free: false, vip: false, premium: true, ultra: true },
+    { icon: "⭐", name: "Super Likes per day", free: "0", vip: "1", premium: "5", ultra: "Unlimited" },
+    { icon: "🚀", name: "Profile boosts", free: false, vip: false, premium: "1/month", ultra: "4/month" },
+    { icon: "✓✓", name: "Read receipts", free: false, vip: false, premium: true, ultra: true },
+    { icon: "📍", name: "Change location", free: false, vip: false, premium: false, ultra: true },
+    { icon: "👑", name: "Priority matching", free: false, vip: false, premium: false, ultra: true },
+    { icon: "💌", name: "Message before match", free: false, vip: false, premium: false, ultra: true },
+  ],
+
+  testMode: new URLSearchParams(window.location.search).get("test") === "true",
+};
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>tantan — Compare Plans</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Nunito',-apple-system,sans-serif;
+  background:#FFF5F5;min-height:100vh;
+  display:flex;justify-content:center;align-items:flex-start;
+  padding:10px;-webkit-tap-highlight-color:transparent;
+}
+
+.modal{
+  width:100%;max-width:380px;
+  background:#FFF;border-radius:24px;
+  overflow:hidden;position:relative;
+  box-shadow:0 8px 40px rgba(255,107,107,0.08),0 2px 12px rgba(0,0,0,0.04);
+  border:1px solid rgba(255,107,107,0.06);
+}
+
+.dismiss{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.04);border:none;cursor:pointer;color:rgba(0,0,0,0.25);font-size:14px;display:flex;align-items:center;justify-content:center;z-index:20}
+.dismiss:active{background:rgba(0,0,0,0.08)}
+
+/* === HEADER === */
+.head{text-align:center;padding:24px 20px 14px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;top:-40px;left:-20px;right:-20px;height:160px;
+  background:linear-gradient(135deg,rgba(255,107,107,0.06),rgba(139,92,246,0.04),rgba(255,179,71,0.04));
+  border-radius:0 0 50% 50%;pointer-events:none;
+}
+.head>*{position:relative;z-index:1}
+
+.brand{font-size:22px;font-weight:900;color:#FF6B6B;letter-spacing:-0.5px;margin-bottom:2px}
+.brand span{color:#E84545}
+.head-title{font-size:16px;font-weight:800;color:#1E293B;line-height:1.3}
+.head-sub{font-size:12px;font-weight:600;color:#94A3B8;margin-top:4px}
+.head-current{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:8px;padding:4px 12px;border-radius:20px;
+  background:#F1F5F9;
+  font-size:11px;font-weight:700;color:#64748B;
+}
+.head-current .dot{width:6px;height:6px;border-radius:50%;background:#94A3B8}
+
+/* === TIER TOGGLE === */
+.toggle-row{
+  display:flex;gap:0;margin:0 16px 14px;
+  background:#F8FAFC;border-radius:14px;padding:3px;
+  position:relative;
+}
+.toggle-btn{
+  flex:1;padding:10px 4px;border:none;border-radius:12px;
+  background:transparent;cursor:pointer;
+  font-family:inherit;font-size:12px;font-weight:700;
+  color:#94A3B8;transition:all 0.3s ease;
+  position:relative;z-index:2;
+}
+.toggle-btn.active{color:#FFF}
+.toggle-btn .t-badge{
+  display:block;font-size:8px;font-weight:800;
+  text-transform:uppercase;letter-spacing:0.3px;
+  opacity:0.5;margin-top:1px;
+}
+.toggle-slider{
+  position:absolute;top:3px;bottom:3px;
+  border-radius:12px;
+  transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:1;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* === PRICE BANNER === */
+.price-banner{
+  display:flex;align-items:baseline;justify-content:center;gap:4px;
+  padding:10px 16px;margin:0 16px 12px;
+  border-radius:14px;
+  transition:background 0.3s;
+}
+.price-big{font-size:32px;font-weight:900;color:#1E293B;transition:color 0.3s}
+.price-sub{font-size:13px;font-weight:600;color:#94A3B8}
+.price-save{
+  display:inline-block;padding:3px 8px;border-radius:8px;
+  font-size:10px;font-weight:800;color:#FFF;
+  margin-left:6px;opacity:0;transition:opacity 0.3s;
+}
+.price-save.show{opacity:1}
+
+/* === FEATURE LIST === */
+.feat-list{
+  padding:0 16px 6px;
+  max-height:310px;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.feat-list::-webkit-scrollbar{width:3px}
+.feat-list::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.06);border-radius:3px}
+
+.feat{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;margin-bottom:4px;
+  border-radius:12px;
+  transition:background 0.3s,opacity 0.3s;
+}
+.feat.unlocked{background:rgba(74,222,128,0.06)}
+.feat.locked{background:rgba(0,0,0,0.02);opacity:0.45}
+.feat.upgraded{animation:unlockPop 0.4s ease}
+@keyframes unlockPop{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.02);background:rgba(74,222,128,0.12)}
+  100%{transform:scale(1)}
+}
+
+.feat-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.feat-name{flex:1;font-size:12.5px;font-weight:700;color:#334155}
+.feat.locked .feat-name{color:#94A3B8}
+
+.feat-status{
+  flex-shrink:0;font-size:11px;font-weight:800;
+  padding:3px 8px;border-radius:8px;
+  transition:all 0.3s;min-width:32px;text-align:center;
+}
+.feat-status.yes{background:rgba(74,222,128,0.12);color:#16A34A}
+.feat-status.no{background:rgba(239,68,68,0.06);color:#DC2626;font-size:13px}
+.feat-status.val{background:rgba(99,102,241,0.08);color:#6366F1}
+.feat-status.new-unlock{animation:statusPop 0.4s ease}
+@keyframes statusPop{
+  0%{transform:scale(0.7);opacity:0}
+  60%{transform:scale(1.15)}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* === WHAT YOU'RE MISSING === */
+.missing{
+  margin:8px 16px 12px;padding:12px;
+  background:linear-gradient(135deg,#FFF7ED,#FEF3C7);
+  border:1px solid rgba(245,158,11,0.1);
+  border-radius:14px;
+  transition:all 0.4s;
+}
+.missing.hidden{opacity:0;max-height:0;margin:0 16px;padding:0 12px;overflow:hidden;border:none}
+.missing-title{font-size:11px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.missing-items{display:flex;flex-direction:column;gap:3px}
+.missing-item{font-size:11px;font-weight:600;color:#78350F;display:flex;align-items:center;gap:6px}
+.missing-item::before{content:'🔒';font-size:10px}
+
+/* === CTA === */
+.cta-area{padding:6px 16px 12px}
+.btn-upgrade{
+  width:100%;padding:14px;border:none;border-radius:14px;
+  font-family:inherit;font-size:14px;font-weight:800;
+  cursor:pointer;color:#FFF;
+  transition:all 0.3s;
+  box-shadow:0 4px 16px rgba(0,0,0,0.1);
+}
+.btn-upgrade:active{transform:scale(0.97)}
+.btn-upgrade:disabled{opacity:0.4;cursor:default;box-shadow:none}
+.btn-label{display:block;font-size:10px;font-weight:600;opacity:0.7;margin-top:2px}
+
+.btn-skip{
+  width:100%;padding:8px;border:none;background:transparent;
+  font-family:inherit;font-size:11px;font-weight:600;
+  color:#94A3B8;cursor:pointer;
+}
+
+/* === TEST === */
+.test{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.1);border-radius:12px;margin:6px 16px 12px;padding:8px;display:none}
+.test.on{display:block}
+.test-row{display:flex;flex-wrap:wrap;gap:3px}
+.tb{padding:3px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.15);background:rgba(245,158,11,0.04);font-family:inherit;font-size:10px;font-weight:600;color:#B45309;cursor:pointer}
+
+.foot{text-align:center;font-size:9px;color:#CBD5E1;padding:4px 16px 14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="modal" id="modal">
+  <button class="dismiss" onclick="dismiss()">✕</button>
+
+  <!-- Header -->
+  <div class="head">
+    <div class="brand">tan<span>tan</span></div>
+    <div class="head-title">Unlock your best<br>dating experience</div>
+    <div class="head-sub">See what each plan gets you</div>
+    <div class="head-current" id="headCurrent">
+      <span class="dot"></span>
+      <span id="currentLabel">You're on Free</span>
+    </div>
+  </div>
+
+  <!-- Tier Toggle -->
+  <div class="toggle-row" id="toggleRow">
+    <div class="toggle-slider" id="slider"></div>
+  </div>
+
+  <!-- Price Banner -->
+  <div class="price-banner" id="priceBanner">
+    <span class="price-big" id="priceDisplay">Free</span>
+    <span class="price-sub" id="priceSub">forever</span>
+    <span class="price-save" id="priceSave">Save 40%</span>
+  </div>
+
+  <!-- Feature List -->
+  <div class="feat-list" id="featList"></div>
+
+  <!-- What You're Missing -->
+  <div class="missing" id="missingBox">
+    <div class="missing-title">What you're missing</div>
+    <div class="missing-items" id="missingItems"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-area">
+    <button class="btn-upgrade" id="btnUpgrade" onclick="upgradeTap()">
+      Upgrade to VIP
+      <span class="btn-label" id="btnLabel">Start 7-day free trial</span>
+    </button>
+    <button class="btn-skip" onclick="dismiss()">Maybe later</button>
+  </div>
+
+  <!-- Test -->
+  <div class="test" id="testPanel">
+    <div class="test-row">
+      <button class="tb" onclick="setCurrent('free')">As: Free</button>
+      <button class="tb" onclick="setCurrent('vip')">As: VIP</button>
+      <button class="tb" onclick="setCurrent('premium')">As: Premium</button>
+      <button class="tb" onclick="logState()">📋 Log</button>
+    </div>
+  </div>
+
+  <div class="foot">tantan · Designed for real connections<br>Subscription auto-renews. Cancel anytime.</div>
+</div>
+
+<script>
+// ============================================
+// STATE
+// ============================================
+let selectedTier = 'vip'; // default selected tier to show
+let previousFeatureStates = {};
+const loadTime = Date.now();
+
+// ============================================
+// INIT
+// ============================================
+function init() {
+  if (!CONFIG.includeDismissButton) document.querySelector('.dismiss').style.display = 'none';
+  if (CONFIG.testMode) document.getElementById('testPanel').classList.add('on');
+
+  buildToggle();
+  buildFeatures();
+  updateCurrentBadge();
+
+  // Default to first tier above current
+  const tierIds = CONFIG.tiers.map(t => t.id);
+  const curIdx = tierIds.indexOf(CONFIG.currentPlan);
+  const defaultTier = curIdx < tierIds.length - 1 ? tierIds[curIdx + 1] : tierIds[tierIds.length - 1];
+  selectTier(defaultTier, false);
+
+  pushEvent('Plan_Comparison_Viewed', { current_plan: CONFIG.currentPlan });
+}
+
+// ============================================
+// TOGGLE BAR
+// ============================================
+function buildToggle() {
+  const row = document.getElementById('toggleRow');
+  CONFIG.tiers.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.id = 'tbtn-' + t.id;
+    btn.dataset.id = t.id;
+    btn.innerHTML = `${t.label}${t.badge ? `<span class="t-badge">${t.badge}</span>` : ''}`;
+    btn.onclick = () => selectTier(t.id, true);
+    row.appendChild(btn);
+  });
+}
+
+function updateSlider(tierId) {
+  const slider = document.getElementById('slider');
+  const tier = CONFIG.tiers.find(t => t.id === tierId);
+  const idx = CONFIG.tiers.findIndex(t => t.id === tierId);
+  const count = CONFIG.tiers.length;
+  const pct = (idx / count) * 100;
+  const width = (1 / count) * 100;
+
+  slider.style.left = `calc(${pct}% + 0px)`;
+  slider.style.width = width + '%';
+  slider.style.background = tier.color;
+
+  // Update button active states
+  document.querySelectorAll('.toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === tierId);
+  });
+}
+
+// ============================================
+// SELECT TIER
+// ============================================
+function selectTier(tierId, isUserAction) {
+  const prevTier = selectedTier;
+  selectedTier = tierId;
+  const tier = CONFIG.tiers.find(t => t.id === tierId);
+
+  updateSlider(tierId);
+  updatePrice(tier);
+  updateFeatures(tierId, prevTier);
+  updateMissing(tierId);
+  updateCTA(tierId);
+
+  if (isUserAction) {
+    pushEvent('Plan_Toggled', {
+      from_tier: prevTier,
+      to_tier: tierId,
+      current_plan: CONFIG.currentPlan,
+    });
+  }
+}
+
+// ============================================
+// PRICE
+// ============================================
+function updatePrice(tier) {
+  document.getElementById('priceDisplay').textContent = tier.price;
+  document.getElementById('priceSub').textContent = tier.priceSub;
+  document.getElementById('priceBanner').style.background = tier.colorBg;
+
+  const save = document.getElementById('priceSave');
+  if (tier.id === 'ultra') {
+    save.textContent = 'Best value';
+    save.style.background = tier.color;
+    save.classList.add('show');
+  } else if (tier.id === 'premium') {
+    save.textContent = 'Most popular';
+    save.style.background = tier.color;
+    save.classList.add('show');
+  } else {
+    save.classList.remove('show');
+  }
+}
+
+// ============================================
+// FEATURES
+// ============================================
+function buildFeatures() {
+  const list = document.getElementById('featList');
+  CONFIG.features.forEach((f, i) => {
+    const el = document.createElement('div');
+    el.className = 'feat';
+    el.id = 'feat-' + i;
+    el.innerHTML = `
+      <span class="feat-icon">${f.icon}</span>
+      <span class="feat-name">${f.name}</span>
+      <span class="feat-status" id="fstat-${i}"></span>`;
+    list.appendChild(el);
+  });
+}
+
+function updateFeatures(tierId, prevTier) {
+  CONFIG.features.forEach((f, i) => {
+    const el = document.getElementById('feat-' + i);
+    const stat = document.getElementById('fstat-' + i);
+    const val = f[tierId];
+    const prevVal = prevTier ? f[prevTier] : null;
+
+    // Determine state
+    const isUnlocked = val === true || (typeof val === 'string' && val !== '0');
+    const wasUnlocked = prevVal === true || (typeof prevVal === 'string' && prevVal !== '0');
+    const justUpgraded = isUnlocked && !wasUnlocked && prevTier;
+
+    el.className = 'feat ' + (isUnlocked ? 'unlocked' : 'locked');
+    if (justUpgraded) el.classList.add('upgraded');
+
+    // Status display
+    stat.className = 'feat-status';
+    if (val === true) {
+      stat.textContent = '✓';
+      stat.classList.add('yes');
+    } else if (val === false) {
+      stat.textContent = '🔒';
+      stat.classList.add('no');
+    } else if (val === '0') {
+      stat.textContent = '—';
+      stat.classList.add('no');
+    } else {
+      stat.textContent = val;
+      stat.classList.add('val');
+    }
+
+    if (justUpgraded) stat.classList.add('new-unlock');
+  });
+}
+
+// ============================================
+// WHAT YOU'RE MISSING
+// ============================================
+function updateMissing(tierId) {
+  const box = document.getElementById('missingBox');
+  const items = document.getElementById('missingItems');
+
+  // Find features locked in selected tier
+  const locked = CONFIG.features.filter(f => {
+    const val = f[tierId];
+    return val === false || val === '0';
+  });
+
+  if (locked.length === 0 || tierId === 'ultra') {
+    box.classList.add('hidden');
+  } else {
+    box.classList.remove('hidden');
+    items.innerHTML = '';
+    // Show up to 3 locked features
+    locked.slice(0, 3).forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'missing-item';
+      div.textContent = f.name;
+      items.appendChild(div);
+    });
+    if (locked.length > 3) {
+      const more = document.createElement('div');
+      more.className = 'missing-item';
+      more.style.opacity = '0.6';
+      more.textContent = `+${locked.length - 3} more in higher tiers`;
+      items.appendChild(more);
+    }
+  }
+}
+
+// ============================================
+// CTA
+// ============================================
+function updateCTA(tierId) {
+  const btn = document.getElementById('btnUpgrade');
+  const label = document.getElementById('btnLabel');
+  const tier = CONFIG.tiers.find(t => t.id === tierId);
+  const tierIds = CONFIG.tiers.map(t => t.id);
+  const isCurrentOrBelow = tierIds.indexOf(tierId) <= tierIds.indexOf(CONFIG.currentPlan);
+
+  if (isCurrentOrBelow) {
+    btn.textContent = tierId === CONFIG.currentPlan ? 'This is your current plan' : 'You already have this';
+    btn.disabled = true;
+    btn.style.background = '#CBD5E1';
+    label.textContent = '';
+    btn.appendChild(label);
+  } else {
+    btn.disabled = false;
+    btn.style.background = `linear-gradient(135deg, ${tier.color}, ${adjustColor(tier.color, -20)})`;
+    btn.style.boxShadow = `0 4px 16px ${tier.color}30`;
+    const mainText = document.createTextNode(`Upgrade to ${tier.label}`);
+    btn.textContent = '';
+    btn.appendChild(mainText);
+    label.textContent = tier.id === 'vip' ? 'Start 7-day free trial' : `${tier.price}${tier.priceSub} · Cancel anytime`;
+    btn.appendChild(label);
+  }
+}
+
+function adjustColor(hex, amount) {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+  const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+  return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+}
+
+// ============================================
+// CURRENT PLAN
+// ============================================
+function updateCurrentBadge() {
+  const tier = CONFIG.tiers.find(t => t.id === CONFIG.currentPlan);
+  const dot = document.querySelector('.head-current .dot');
+  dot.style.background = tier.color;
+  document.getElementById('currentLabel').textContent = `You're on ${tier.label}`;
+}
+
+function setCurrent(planId) {
+  CONFIG.currentPlan = planId;
+  updateCurrentBadge();
+  selectTier(selectedTier, false);
+}
+
+// ============================================
+// CLEVERTAP
+// ============================================
+function pushEvent(name, props) {
+  const p = props || {};
+  p.Timestamp = new Date().toISOString();
+  p.Brand = 'tantan';
+  p.Template = 'Plan_Comparison_Toggle';
+  try {
+    if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent)
+      CleverTap.pushEvent(name, JSON.stringify(p));
+    if (typeof clevertap !== 'undefined' && clevertap.event)
+      clevertap.event.push(name, p);
+    if (window.webkit?.messageHandlers?.clevertap)
+      window.webkit.messageHandlers.clevertap.postMessage(
+        JSON.stringify({ type: 'event', name, props: p }));
+  } catch (e) { console.log('[CT]', name, p); }
+  if (CONFIG.testMode) console.log('%c[CT] ' + name, 'color:#FF6B6B;font-weight:bold', p);
+}
+
+function upgradeTap() {
+  const tier = CONFIG.tiers.find(t => t.id === selectedTier);
+  pushEvent('Plan_Upgrade_Tapped', {
+    selected_tier: selectedTier,
+    current_plan: CONFIG.currentPlan,
+    upgrade_price: tier.price,
+    time_on_modal: Math.round((Date.now() - loadTime) / 1000),
+  });
+  try {
+    if (typeof CleverTap !== 'undefined' && CleverTap.openUrl)
+      CleverTap.openUrl('https://int.tantanapp.com/subscribe?plan=' + selectedTier);
+  } catch (e) {}
+}
+
+function dismiss() {
+  pushEvent('Plan_Comparison_Dismissed', {
+    last_viewed_tier: selectedTier,
+    current_plan: CONFIG.currentPlan,
+    time_on_modal: Math.round((Date.now() - loadTime) / 1000),
+  });
+  try {
+    if (typeof CleverTap !== 'undefined' && CleverTap.closeInApp)
+      CleverTap.closeInApp();
+  } catch (e) {}
+}
+
+function logState() {
+  console.table({
+    currentPlan: CONFIG.currentPlan,
+    selectedTier,
+    timeOnModal: Math.round((Date.now() - loadTime) / 1000) + 's',
+  });
+}
+
+init();
+</script>
+</body>
+</html>
