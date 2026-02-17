@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "Eatigo",
+        primary: "#FF6B35",       // Eatigo warm orange
+        primaryDark: "#E55A28",
+        primaryLight: "#FFF3ED",
+        primarySubtle: "rgba(255,107,53,0.08)",
+        surface: "#FFFFFF",
+        surfaceRaised: "#FAFBFC",
+        text: "#1A1D23",
+        textSecondary: "#6B7280",
+        textTertiary: "#9CA3AF",
+        border: "rgba(0,0,0,0.06)",
+        borderHover: "rgba(0,0,0,0.10)",
+      },
+
+      // ðŸ½ï¸ Context â€” what are they reacting to?
+      // Populated by CleverTap campaign with deep data:
+      //   Restaurant_Name, Booking_ID, Booking_Date, Cuisine_Type
+      context: {
+        question: "How was your meal at",
+        venue: "Soi 55 Thai Kitchen",
+        subtext: "Kuala Lumpur Â· Today, 7:30 PM",
+        screen: "post_dining",
+        bookingId: "EAT-2026-8847",
+      },
+
+      // ðŸ˜‹ Reactions â€” order matters (best â†’ worst)
+      reactions: [
+        { emoji: "ðŸ˜", label: "Loved it",  key: "loved",       seedCount: 1842 },
+        { emoji: "ðŸ˜‹", label: "Yummy",     key: "yummy",       seedCount: 2156 },
+        { emoji: "ðŸ™‚", label: "It was OK",  key: "ok",          seedCount: 847  },
+        { emoji: "ðŸ˜", label: "Meh",        key: "meh",         seedCount: 234  },
+        { emoji: "ðŸ˜ž", label: "Not great",  key: "not_great",   seedCount: 121  },
+      ],
+
+      // â± Behaviour
+      autoDismissDelay: 4000,       // ms after distribution reveal
+      revealDelay: 350,             // ms before showing distribution
+      showTotalReactors: true,
+
+      cta: {
+        text: "Write a Review",
+        url: "eatigo://review",
+      },
+
+      events: {
+        reactionViewed: "Reaction_Bar_Viewed",
+        reactionGiven: "Reaction_Given",
+        reactionDismissed: "Reaction_Dismissed",
+        reviewCta: "Reaction_Review_Tapped",
+      },
+    };
+  </script>
+
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Eatigo â€” Post-Dining Reaction</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html,body{
+      width:100%;height:100%;
+      font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      background:rgba(0,0,0,0.35);
+      overflow:hidden;
+    }
+
+    /* =============================================
+       SCRIM â€” tappable backdrop
+       ============================================= */
+    .scrim{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.35);
+      z-index:1;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    /* =============================================
+       CARD â€” floating bottom card
+       ============================================= */
+    .card{
+      position:fixed;
+      bottom:0;left:0;right:0;
+      z-index:10;
+      background:#FFFFFF;
+      border-radius:20px 20px 0 0;
+      padding:20px 20px 28px;
+      box-shadow:
+        0 -4px 40px rgba(0,0,0,0.08),
+        0 -1px 3px rgba(0,0,0,0.04);
+      transform:translateY(100%);
+      animation:slideUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
+    }
+    @keyframes slideUp{
+      to{transform:translateY(0)}
+    }
+
+    .card.dismissing{
+      animation:slideDown 0.3s cubic-bezier(0.4,0,1,1) forwards;
+    }
+    @keyframes slideDown{
+      to{transform:translateY(110%)}
+    }
+
+    /* Grab handle */
+    .handle{
+      width:36px;height:4px;
+      border-radius:100px;
+      background:rgba(0,0,0,0.08);
+      margin:0 auto 16px;
+    }
+
+    /* =============================================
+       DISMISS
+       ============================================= */
+    .dismiss{
+      position:absolute;top:14px;right:14px;
+      width:28px;height:28px;border-radius:50%;
+      background:rgba(0,0,0,0.04);border:none;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:background 0.15s;
+    }
+    .dismiss:active{background:rgba(0,0,0,0.08)}
+    .dismiss svg{width:12px;height:12px;stroke:#9CA3AF;stroke-width:2.5}
+
+    /* =============================================
+       HEADER â€” venue context
+       ============================================= */
+    .header{
+      text-align:center;
+      margin-bottom:18px;
+      opacity:0;
+      animation:fadeIn 0.3s ease 0.25s forwards;
+    }
+    @keyframes fadeIn{
+      to{opacity:1}
+    }
+
+    .q-text{
+      font-size:13px;
+      color:#6B7280;
+      font-weight:500;
+      line-height:1.4;
+    }
+    .venue{
+      font-size:17px;
+      font-weight:700;
+      color:#1A1D23;
+      margin-top:2px;
+      line-height:1.3;
+    }
+    .venue-sub{
+      font-size:11px;
+      color:#9CA3AF;
+      font-weight:500;
+      margin-top:3px;
+      letter-spacing:0.2px;
+    }
+
+    /* =============================================
+       EMOJI BAR â€” the main interaction
+       ============================================= */
+    .emoji-bar{
+      display:flex;
+      justify-content:center;
+      gap:6px;
+      margin-bottom:6px;
+    }
+
+    .emoji-btn{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+      padding:10px 10px 8px;
+      border-radius:16px;
+      background:transparent;
+      border:2px solid transparent;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:all 0.2s ease;
+      flex:1;
+      max-width:72px;
+      position:relative;
+    }
+
+    .emoji-btn .em{
+      font-size:32px;
+      line-height:1;
+      transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      will-change:transform;
+    }
+
+    .emoji-btn .lbl{
+      font-size:10px;
+      font-weight:600;
+      color:#9CA3AF;
+      transition:color 0.2s ease;
+      white-space:nowrap;
+    }
+
+    /* Hover / tap hint */
+    .emoji-btn:active{
+      background:rgba(255,107,53,0.06);
+    }
+    .emoji-btn:active .em{
+      transform:scale(1.15);
+    }
+
+    /* ---- SELECTED STATE ---- */
+    .emoji-btn.selected{
+      background:rgba(255,107,53,0.08);
+      border-color:rgba(255,107,53,0.2);
+    }
+    .emoji-btn.selected .em{
+      transform:scale(1.25);
+      animation:emojiPop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .emoji-btn.selected .lbl{
+      color:#FF6B35;
+      font-weight:700;
+    }
+
+    @keyframes emojiPop{
+      0%{transform:scale(1)}
+      40%{transform:scale(1.45)}
+      70%{transform:scale(1.15)}
+      100%{transform:scale(1.25)}
+    }
+
+    /* ---- UNSELECTED (after someone picks) ---- */
+    .emoji-btn.dimmed .em{
+      transform:scale(0.85);
+      opacity:0.4;
+    }
+    .emoji-btn.dimmed .lbl{
+      opacity:0.35;
+    }
+
+    /* ---- DISTRIBUTION BAR ---- */
+    .dist-bar{
+      width:100%;
+      height:4px;
+      border-radius:100px;
+      background:rgba(0,0,0,0.04);
+      margin-top:6px;
+      overflow:hidden;
+      opacity:0;
+      transition:opacity 0.3s ease;
+    }
+    .dist-bar.show{opacity:1}
+
+    .dist-fill{
+      height:100%;
+      border-radius:100px;
+      background:#FF6B35;
+      width:0%;
+      transition:width 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .emoji-btn.dimmed .dist-fill{
+      background:#D1D5DB;
+    }
+
+    /* Percentage label that appears */
+    .pct{
+      font-size:11px;
+      font-weight:700;
+      color:#FF6B35;
+      margin-top:2px;
+      opacity:0;
+      transition:opacity 0.3s ease 0.2s;
+      height:14px;
+    }
+    .pct.show{opacity:1}
+    .emoji-btn.dimmed .pct{
+      color:#9CA3AF;
+      font-weight:600;
+    }
+
+    /* =============================================
+       FOOTER â€” total + CTA
+       ============================================= */
+    .footer{
+      text-align:center;
+      opacity:0;
+      transform:translateY(5px);
+      transition:all 0.3s ease;
+      margin-top:8px;
+    }
+    .footer.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .reactor-count{
+      font-size:11px;
+      color:#9CA3AF;
+      font-weight:500;
+    }
+    .reactor-count strong{
+      color:#6B7280;
+      font-weight:600;
+    }
+
+    .review-link{
+      display:inline-block;
+      margin-top:8px;
+      font-size:12px;
+      font-weight:700;
+      color:#FF6B35;
+      text-decoration:none;
+      padding:6px 16px;
+      border-radius:100px;
+      background:rgba(255,107,53,0.06);
+      border:1px solid rgba(255,107,53,0.12);
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:all 0.15s ease;
+    }
+    .review-link:active{
+      background:rgba(255,107,53,0.12);
+      transform:scale(0.97);
+    }
+
+    /* =============================================
+       THANK YOU STATE
+       ============================================= */
+    .thank-you{
+      text-align:center;
+      padding:8px 0 4px;
+      display:none;
+    }
+    .thank-you.show{display:block}
+
+    .ty-emoji{
+      font-size:28px;
+      animation:tyPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes tyPop{
+      0%{transform:scale(0) rotate(-20deg)}
+      100%{transform:scale(1) rotate(0)}
+    }
+    .ty-text{
+      font-size:13px;
+      font-weight:600;
+      color:#1A1D23;
+      margin-top:4px;
+    }
+    .ty-sub{
+      font-size:11px;
+      color:#9CA3AF;
+      margin-top:2px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Tappable scrim -->
+  <div class="scrim" id="scrim" onclick="dismiss()"></div>
+
+  <!-- Floating card -->
+  <div class="card" id="card">
+    <div class="handle"></div>
+
+    <button class="dismiss" id="dismissBtn" onclick="dismiss()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <!-- Venue context -->
+    <div class="header">
+      <div class="q-text" id="qText"></div>
+      <div class="venue" id="venue"></div>
+      <div class="venue-sub" id="venueSub"></div>
+    </div>
+
+    <!-- Emoji bar -->
+    <div class="emoji-bar" id="emojiBar"></div>
+
+    <!-- Footer: total + review CTA (hidden until reaction) -->
+    <div class="footer" id="footer">
+      <div class="reactor-count" id="reactorCount"></div>
+      <a class="review-link" id="reviewLink" onclick="reviewTap()"></a>
+    </div>
+
+    <!-- Thank you (appears before auto-dismiss) -->
+    <div class="thank-you" id="thankYou">
+      <div class="ty-emoji">ðŸ™</div>
+      <div class="ty-text">Thanks for sharing!</div>
+      <div class="ty-sub">Your feedback helps others pick great restaurants.</div>
+    </div>
+  </div>
+
+  <script>
+    let hasReacted = false;
+    let autoDismissTimer = null;
+
+    function init() {
+      const ctx = CONFIG.context;
+      const rx = CONFIG.reactions;
+
+      // Header
+      document.getElementById('qText').textContent = ctx.question;
+      document.getElementById('venue').textContent = ctx.venue;
+      document.getElementById('venueSub').textContent = ctx.subtext;
+
+      // Build emoji buttons
+      const bar = document.getElementById('emojiBar');
+      rx.forEach((r, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'emoji-btn';
+        btn.dataset.idx = idx;
+        btn.innerHTML = `
+          <span class="em">${r.emoji}</span>
+          <span class="lbl">${r.label}</span>
+          <div class="dist-bar"><div class="dist-fill" id="dist-${idx}"></div></div>
+          <span class="pct" id="pct-${idx}"></span>
+        `;
+        btn.addEventListener('click', () => react(idx));
+        bar.appendChild(btn);
+      });
+
+      // Review link
+      document.getElementById('reviewLink').textContent = CONFIG.cta.text;
+
+      // Dismiss button
+      if (!CONFIG.includeDismissButton) {
+        document.getElementById('dismissBtn').style.display = 'none';
+      }
+
+      // Track view
+      pushEvent(CONFIG.events.reactionViewed, {
+        Venue: ctx.venue,
+        Booking_ID: ctx.bookingId,
+        Screen: ctx.screen,
+      });
+    }
+
+    // =============================================
+    // REACT
+    // =============================================
+    function react(idx) {
+      if (hasReacted) return;
+      hasReacted = true;
+
+      const rx = CONFIG.reactions;
+      const btns = document.querySelectorAll('.emoji-btn');
+
+      // Increment selected count
+      rx[idx].seedCount += 1;
+      const total = rx.reduce((s, r) => s + r.seedCount, 0);
+
+      // Apply selected / dimmed states
+      btns.forEach((btn, i) => {
+        if (i === idx) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.add('dimmed');
+        }
+      });
+
+      // Reveal distributions after delay
+      setTimeout(() => {
+        rx.forEach((r, i) => {
+          const pct = Math.round((r.seedCount / total) * 100);
+          const fill = document.getElementById(`dist-${i}`);
+          const pctEl = document.getElementById(`pct-${i}`);
+
+          // Show bar
+          fill.parentElement.classList.add('show');
+          pctEl.classList.add('show');
+
+          // Animate fill
+          requestAnimationFrame(() => {
+            fill.style.width = `${pct}%`;
+          });
+
+          pctEl.textContent = `${pct}%`;
+        });
+
+        // Show footer
+        const footer = document.getElementById('footer');
+        footer.classList.add('show');
+        document.getElementById('reactorCount').innerHTML =
+          `You and <strong>${(total - 1).toLocaleString()}</strong> others reacted`;
+
+      }, CONFIG.revealDelay);
+
+      // Track event
+      pushEvent(CONFIG.events.reactionGiven, {
+        Emoji: rx[idx].emoji,
+        Reaction: rx[idx].key,
+        Reaction_Label: rx[idx].label,
+        Venue: CONFIG.context.venue,
+        Booking_ID: CONFIG.context.bookingId,
+        Screen: CONFIG.context.screen,
+      });
+
+      // Auto-dismiss sequence
+      autoDismissTimer = setTimeout(() => {
+        // Show thank you briefly, then dismiss
+        document.getElementById('thankYou').classList.add('show');
+        // Hide the bar and footer
+        document.getElementById('emojiBar').style.opacity = '0';
+        document.getElementById('emojiBar').style.transition = 'opacity 0.3s ease';
+        document.getElementById('footer').style.opacity = '0';
+        document.getElementById('footer').style.transition = 'opacity 0.3s ease';
+        document.querySelector('.header').style.opacity = '0';
+        document.querySelector('.header').style.transition = 'opacity 0.3s ease';
+
+        setTimeout(() => dismiss(), 1800);
+      }, CONFIG.autoDismissDelay);
+    }
+
+    // =============================================
+    // REVIEW TAP
+    // =============================================
+    function reviewTap() {
+      if (autoDismissTimer) clearTimeout(autoDismissTimer);
+
+      pushEvent(CONFIG.events.reviewCta, {
+        Venue: CONFIG.context.venue,
+        Booking_ID: CONFIG.context.bookingId,
+      });
+
+      if (CONFIG.cta.url) window.location.href = CONFIG.cta.url;
+    }
+
+    // =============================================
+    // DISMISS
+    // =============================================
+    window.dismiss = function () {
+      if (autoDismissTimer) clearTimeout(autoDismissTimer);
+
+      const card = document.getElementById('card');
+      card.classList.add('dismissing');
+
+      document.getElementById('scrim').style.opacity = '0';
+      document.getElementById('scrim').style.transition = 'opacity 0.3s ease';
+
+      if (!hasReacted) {
+        pushEvent(CONFIG.events.reactionDismissed, {
+          Venue: CONFIG.context.venue,
+          Booking_ID: CONFIG.context.bookingId,
+        });
+      }
+
+      setTimeout(() => {
+        try {
+          if (typeof CleverTap !== 'undefined' && CleverTap.dismissInAppNotification) {
+            CleverTap.dismissInAppNotification(); return;
+          }
+        } catch (e) {}
+        window.location.href = 'wzrk://exit';
+      }, 350);
+    };
+
+    // =============================================
+    // CLEVERTAP EVENT BRIDGE
+    // =============================================
+    function pushEvent(name, props) {
+      const p = props || {};
+      p.Timestamp = new Date().toISOString();
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent)
+          CleverTap.pushEvent(name, JSON.stringify(p));
+        if (typeof clevertap !== 'undefined' && clevertap.event)
+          clevertap.event.push(name, p);
+        if (window.webkit?.messageHandlers?.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(
+            JSON.stringify({ type: 'event', name, props: p })
+          );
+      } catch (e) { console.log('[CT]', name, p); }
+    }
+
+    // =============================================
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "Easybook",
+        blue: "#1565C0",
+        blueDark: "#0D47A1",
+        blueLight: "#42A5F5",
+        blueSubtle: "rgba(21,101,192,0.08)",
+        surface: "#0A1628",
+        card: "#111E33",
+        cardRaised: "#162740",
+        border: "rgba(255,255,255,0.05)",
+        white: "#F0F4F8",
+        grey: "#6B8299",
+      },
+
+      // ðŸŽ Rarity tiers with probability (must sum to 100)
+      tiers: {
+        common:    { label: "Common",    color: "#9CA3AF", glow: "rgba(156,163,175,0.3)", pct: 45 },
+        uncommon:  { label: "Uncommon",  color: "#22C55E", glow: "rgba(34,197,94,0.3)",   pct: 28 },
+        rare:      { label: "Rare",      color: "#3B82F6", glow: "rgba(59,130,246,0.35)", pct: 17 },
+        epic:      { label: "Epic",      color: "#A855F7", glow: "rgba(168,85,247,0.35)", pct: 8 },
+        legendary: { label: "Legendary", color: "#F59E0B", glow: "rgba(245,158,11,0.4)",  pct: 2 },
+      },
+
+      // ðŸŽ Rewards pool â€” one per tier
+      rewards: {
+        common:    { icon: "ðŸ·ï¸", title: "5% Off",            subtitle: "Your next bus, train, or ferry booking",   code: "EB5OFF" },
+        uncommon:  { icon: "ðŸ’°", title: "RM5 eWallet Credit",  subtitle: "Added to your Easybook eWallet instantly",  code: "EWRM5" },
+        rare:      { icon: "ðŸ’º", title: "Free VIP Upgrade",    subtitle: "Upgrade to VIP coach on your next trip",    code: "VIPUP" },
+        epic:      { icon: "ðŸšŒ", title: "Free Bus Ticket",     subtitle: "Any route under RM50 â€” on us",              code: "FREEBUS" },
+        legendary: { icon: "â›´ï¸", title: "Free Island Ferry",   subtitle: "Langkawi, Tioman, or Redang â€” your pick",   code: "FERRYWIN" },
+      },
+
+      // ðŸ“¦ Collection progress (user's found tiers)
+      // In production: pulled from CT profile
+      collection: {
+        common: true,
+        uncommon: true,
+        rare: false,
+        epic: false,
+        legendary: false,
+      },
+
+      // ðŸ”® Force a specific tier for demo (null = random weighted)
+      forceResult: null, // "legendary", "epic", "rare", "uncommon", "common"
+
+      headline: "Mystery Travel Box",
+      subheadline: "Tap to discover your reward",
+
+      cta: {
+        text: "Use Reward Now",
+        url: "easybook://deals",
+      },
+
+      events: {
+        boxViewed:    "MysteryBox_Viewed",
+        boxOpened:    "MysteryBox_Opened",
+        boxCollected: "MysteryBox_Collected",
+        boxCta:       "MysteryBox_CTA_Clicked",
+        boxDismissed: "MysteryBox_Dismissed",
+        codeCopied:   "MysteryBox_Code_Copied",
+      },
+    };
+  </script>
+
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Easybook â€” Mystery Travel Box</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap');
+
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html,body{
+      width:100%;height:100%;
+      font-family:'DM Sans',sans-serif;
+      background:#0A1628;
+      -webkit-font-smoothing:antialiased;
+      overflow:hidden;
+    }
+
+    .modal{
+      width:100%;height:100%;
+      display:flex;flex-direction:column;
+      align-items:center;
+      position:relative;
+      background:linear-gradient(175deg,#0A1628 0%,#111E33 50%,#0A1628 100%);
+      overflow-y:auto;overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .modal::before{
+      content:'';position:fixed;inset:0;
+      background:radial-gradient(ellipse 50% 30% at 50% 40%,rgba(21,101,192,0.06) 0%,transparent 70%);
+      pointer-events:none;z-index:0;
+    }
+
+    .dismiss{
+      position:fixed;top:12px;right:12px;
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.06);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent;
+    }
+    .dismiss:active{background:rgba(255,255,255,0.08)}
+    .dismiss svg{width:13px;height:13px;stroke:rgba(255,255,255,0.35);stroke-width:2}
+
+    .content{
+      position:relative;z-index:1;
+      padding:20px 20px 28px;
+      width:100%;max-width:380px;
+      display:flex;flex-direction:column;
+      align-items:center;
+      text-align:center;
+      min-height:100%;
+      justify-content:center;
+    }
+
+    /* =============================================
+       HEADER
+       ============================================= */
+    .header{
+      margin-bottom:8px;
+      opacity:0;animation:fadeUp .4s ease .1s forwards;
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(8px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    .badge{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:4px 12px;border-radius:100px;
+      background:rgba(21,101,192,0.1);
+      border:1px solid rgba(21,101,192,0.15);
+      font-size:10px;font-weight:700;
+      color:#42A5F5;text-transform:uppercase;
+      letter-spacing:0.7px;margin-bottom:8px;
+    }
+
+    .headline{
+      font-size:22px;font-weight:900;
+      color:#F0F4F8;line-height:1.2;
+    }
+    .sub{
+      font-size:12px;color:#6B8299;
+      font-weight:500;margin-top:3px;
+    }
+
+    /* =============================================
+       BOX STAGE â€” the mystery box
+       ============================================= */
+    .box-stage{
+      position:relative;
+      width:200px;height:200px;
+      margin:20px 0 16px;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      opacity:0;animation:fadeScale .5s cubic-bezier(.16,1,.3,1) .2s forwards;
+    }
+    @keyframes fadeScale{
+      from{opacity:0;transform:scale(.7)}
+      to{opacity:1;transform:scale(1)}
+    }
+
+    /* Glow ring behind box */
+    .box-glow{
+      position:absolute;inset:-20px;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(21,101,192,0.15) 0%,transparent 70%);
+      transition:all .4s ease;
+      animation:glowPulse 2s ease-in-out infinite;
+    }
+    @keyframes glowPulse{
+      0%,100%{opacity:.6;transform:scale(1)}
+      50%{opacity:1;transform:scale(1.05)}
+    }
+
+    /* The box itself */
+    .box{
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:120px;height:120px;
+      border-radius:20px;
+      background:linear-gradient(145deg,#1565C0,#0D47A1);
+      border:3px solid rgba(255,255,255,0.08);
+      display:flex;align-items:center;justify-content:center;
+      transition:all .3s ease;
+      box-shadow:
+        0 4px 30px rgba(21,101,192,0.3),
+        0 0 60px rgba(21,101,192,0.1);
+    }
+    .box:active{transform:translate(-50%,-50%) scale(.95)}
+
+    .box-icon{font-size:48px;transition:transform .3s ease}
+
+    /* Question mark overlay */
+    .box-q{
+      position:absolute;
+      font-family:'JetBrains Mono',monospace;
+      font-size:56px;font-weight:900;
+      color:rgba(255,255,255,0.08);
+      pointer-events:none;
+    }
+
+    .tap-hint{
+      position:absolute;bottom:-4px;
+      font-size:11px;font-weight:700;
+      color:rgba(255,255,255,0.25);
+      letter-spacing:0.5px;
+      animation:tapBounce 1.5s ease-in-out infinite;
+    }
+    @keyframes tapBounce{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(3px)}
+    }
+
+    /* =============================================
+       BOX ANIMATIONS â€” shake, burst, reveal
+       ============================================= */
+    @keyframes boxShake{
+      0%,100%{transform:translate(-50%,-50%) rotate(0)}
+      10%{transform:translate(-50%,-50%) rotate(-3deg) scale(1.02)}
+      20%{transform:translate(-50%,-50%) rotate(3deg) scale(1.04)}
+      30%{transform:translate(-50%,-50%) rotate(-4deg) scale(1.06)}
+      40%{transform:translate(-50%,-50%) rotate(4deg) scale(1.08)}
+      50%{transform:translate(-50%,-50%) rotate(-5deg) scale(1.1)}
+      60%{transform:translate(-50%,-50%) rotate(5deg) scale(1.12)}
+      70%{transform:translate(-50%,-50%) rotate(-3deg) scale(1.1)}
+      80%{transform:translate(-50%,-50%) rotate(3deg) scale(1.08)}
+      90%{transform:translate(-50%,-50%) rotate(-1deg) scale(1.04)}
+    }
+    .box.shaking{
+      animation:boxShake .8s ease;
+    }
+
+    @keyframes boxBurst{
+      0%{transform:translate(-50%,-50%) scale(1.12);opacity:1}
+      50%{transform:translate(-50%,-50%) scale(1.4);opacity:.5}
+      100%{transform:translate(-50%,-50%) scale(0);opacity:0}
+    }
+    .box.burst{
+      animation:boxBurst .4s cubic-bezier(.4,0,.2,1) forwards;
+    }
+
+    /* Glow intensify during shake */
+    .box-glow.intensify{
+      animation:none;
+      opacity:1;
+      transform:scale(1.3);
+      transition:all .8s ease;
+    }
+    .box-glow.burst{
+      transform:scale(2);
+      opacity:0;
+      transition:all .5s ease;
+    }
+
+    /* Particle ring on burst */
+    .particle-ring{
+      position:absolute;inset:0;
+      pointer-events:none;
+    }
+    .particle{
+      position:absolute;
+      width:4px;height:4px;
+      border-radius:50%;
+      top:50%;left:50%;
+      opacity:0;
+    }
+    @keyframes particleFly{
+      0%{transform:translate(-50%,-50%) scale(1);opacity:1}
+      100%{opacity:0}
+    }
+
+    /* =============================================
+       REWARD CARD (appears after opening)
+       ============================================= */
+    .reward-section{
+      display:none;
+      width:100%;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+    }
+    .reward-section.show{
+      display:flex;
+    }
+
+    .rarity-badge{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 14px;border-radius:100px;
+      font-size:11px;font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:0.8px;
+      animation:badgePop .4s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    @keyframes badgePop{
+      from{transform:scale(0);opacity:0}
+      to{transform:scale(1);opacity:1}
+    }
+
+    .reward-icon-big{
+      font-size:48px;
+      animation:rewardDrop .5s cubic-bezier(.34,1.56,.64,1) .2s both;
+    }
+    @keyframes rewardDrop{
+      from{transform:translateY(-30px) scale(0);opacity:0}
+      to{transform:translateY(0) scale(1);opacity:1}
+    }
+
+    .reward-title{
+      font-size:24px;font-weight:900;
+      color:#F0F4F8;
+      animation:fadeUp .4s ease .3s both;
+    }
+
+    .reward-subtitle{
+      font-size:13px;color:#6B8299;
+      font-weight:500;max-width:280px;
+      animation:fadeUp .4s ease .35s both;
+    }
+
+    /* Coupon code */
+    .code-ticket{
+      display:flex;align-items:center;gap:10px;
+      padding:12px 20px;
+      border-radius:12px;
+      border:2px dashed rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.02);
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:all .2s ease;
+      animation:fadeUp .4s ease .4s both;
+    }
+    .code-ticket:active{background:rgba(255,255,255,0.04)}
+    .code-ticket.copied{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.04)}
+
+    .code-text{
+      font-family:'JetBrains Mono',monospace;
+      font-size:18px;font-weight:800;
+      color:#F0F4F8;letter-spacing:1px;
+    }
+    .code-copy-icon{
+      width:18px;height:18px;
+      stroke:#6B8299;stroke-width:2;
+      transition:stroke .2s ease;
+    }
+    .code-ticket.copied .code-copy-icon{stroke:#22C55E}
+
+    .code-hint{
+      font-size:10px;color:#6B8299;
+      font-weight:500;
+      transition:color .2s ease;
+      animation:fadeUp .3s ease .45s both;
+    }
+    .code-hint.copied{color:#22C55E}
+
+    /* =============================================
+       PROBABILITY TABLE
+       ============================================= */
+    .prob-section{
+      width:100%;
+      margin-top:4px;
+      opacity:0;animation:fadeUp .4s ease .35s forwards;
+    }
+    .prob-toggle{
+      display:flex;align-items:center;justify-content:center;gap:4px;
+      padding:6px;
+      background:none;border:none;
+      color:#6B8299;font-size:10px;font-weight:600;
+      font-family:'DM Sans',sans-serif;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .prob-toggle svg{
+      width:10px;height:10px;
+      stroke:#6B8299;stroke-width:2;
+      transition:transform .2s ease;
+    }
+    .prob-toggle.open svg{transform:rotate(180deg)}
+
+    .prob-grid{
+      display:none;
+      grid-template-columns:repeat(5,1fr);
+      gap:4px;
+      margin-top:4px;
+    }
+    .prob-grid.show{display:grid}
+
+    .prob-item{
+      display:flex;flex-direction:column;
+      align-items:center;gap:2px;
+      padding:8px 4px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .prob-dot{width:8px;height:8px;border-radius:50%}
+    .prob-tier{font-size:8px;font-weight:700;color:#6B8299;text-transform:uppercase;letter-spacing:0.3px}
+    .prob-pct{
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px;font-weight:700;
+      color:#8BA3B9;
+    }
+
+    /* =============================================
+       COLLECTION GRID (mini)
+       ============================================= */
+    .collection-section{
+      width:100%;
+      margin-top:8px;
+      opacity:0;animation:fadeUp .4s ease .5s forwards;
+    }
+    .collection-label{
+      font-size:10px;font-weight:700;
+      color:#6B8299;text-transform:uppercase;
+      letter-spacing:0.5px;
+      margin-bottom:6px;
+    }
+    .collection-grid{
+      display:flex;gap:6px;
+      justify-content:center;
+    }
+    .coll-item{
+      width:48px;height:48px;
+      border-radius:10px;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      gap:1px;
+      border:1.5px solid rgba(255,255,255,0.04);
+      background:rgba(255,255,255,0.02);
+      transition:all .3s ease;
+    }
+    .coll-item.found{background:rgba(255,255,255,0.04)}
+    .coll-item.unfound{opacity:.25;filter:grayscale(1)}
+    .coll-item.just-found{
+      animation:collectPop .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes collectPop{
+      0%{transform:scale(1)}
+      50%{transform:scale(1.2)}
+      100%{transform:scale(1)}
+    }
+    .coll-icon{font-size:16px}
+    .coll-tier{font-size:6px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px}
+
+    /* =============================================
+       CTA
+       ============================================= */
+    .cta-area{
+      width:100%;margin-top:14px;
+      display:none;
+    }
+    .cta-area.show{display:block}
+
+    .cta-btn{
+      width:100%;padding:15px;
+      border-radius:14px;border:none;
+      background:#1565C0;color:#fff;
+      font-family:'DM Sans',sans-serif;
+      font-size:15px;font-weight:700;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      box-shadow:0 4px 20px rgba(21,101,192,0.25);
+      transition:all .2s ease;
+    }
+    .cta-btn:active{transform:scale(.97);background:#0D47A1}
+
+    .cta-secondary{
+      margin-top:8px;
+      width:100%;padding:10px;
+      background:transparent;border:none;
+      color:#6B8299;font-size:12px;font-weight:600;
+      font-family:'DM Sans',sans-serif;
+      cursor:pointer;text-align:center;
+    }
+
+    /* =============================================
+       CONFETTI & PARTICLES
+       ============================================= */
+    .confetti-container{position:fixed;inset:0;pointer-events:none;z-index:99999}
+    .confetti-piece{
+      position:absolute;border-radius:2px;
+      animation:confettiFall linear forwards;
+    }
+    @keyframes confettiFall{
+      0%{transform:translateY(-20px) rotate(0) scale(1);opacity:1}
+      80%{opacity:1}
+      100%{transform:translateY(105vh) rotate(720deg) scale(.3);opacity:0}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="modal">
+    <button class="dismiss" onclick="dismiss()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div class="content">
+      <!-- Header -->
+      <div class="header" id="headerSection">
+        <div class="badge">ðŸ“¦ Daily Reward</div>
+        <div class="headline" id="headline"></div>
+        <div class="sub" id="subText"></div>
+      </div>
+
+      <!-- Mystery Box Stage -->
+      <div class="box-stage" id="boxStage" onclick="openBox()">
+        <div class="box-glow" id="boxGlow"></div>
+        <div class="box" id="box">
+          <span class="box-icon">ðŸ“¦</span>
+          <span class="box-q">?</span>
+        </div>
+        <div class="particle-ring" id="particleRing"></div>
+        <span class="tap-hint" id="tapHint">TAP TO OPEN</span>
+      </div>
+
+      <!-- Probability toggle -->
+      <div class="prob-section" id="probSection">
+        <button class="prob-toggle" id="probToggle" onclick="toggleProb()">
+          Drop rates
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="prob-grid" id="probGrid"></div>
+      </div>
+
+      <!-- ===== REWARD (hidden until opened) ===== -->
+      <div class="reward-section" id="rewardSection">
+        <div class="rarity-badge" id="rarityBadge"></div>
+        <div class="reward-icon-big" id="rewardIcon"></div>
+        <div class="reward-title" id="rewardTitle"></div>
+        <div class="reward-subtitle" id="rewardSubtitle"></div>
+        <div class="code-ticket" id="codeTicket" onclick="copyCode()">
+          <span class="code-text" id="codeText"></span>
+          <svg class="code-copy-icon" viewBox="0 0 24 24" fill="none">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </div>
+        <div class="code-hint" id="codeHint">Tap to copy code</div>
+      </div>
+
+      <!-- Collection -->
+      <div class="collection-section" id="collectionSection">
+        <div class="collection-label" id="collLabel">Collection</div>
+        <div class="collection-grid" id="collGrid"></div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-area" id="ctaArea">
+        <button class="cta-btn" id="ctaBtn" onclick="ctaClick()"></button>
+        <button class="cta-secondary" onclick="dismiss()">Maybe Later</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TIERS = CONFIG.tiers;
+    const REWARDS = CONFIG.rewards;
+    const COLL = { ...CONFIG.collection };
+    let isOpened = false;
+    let wonTier = null;
+    let wonReward = null;
+
+    // =============================================
+    // INIT
+    // =============================================
+    document.getElementById('headline').textContent = CONFIG.headline;
+    document.getElementById('subText').textContent = CONFIG.subheadline;
+    if (!CONFIG.includeDismissButton) document.querySelector('.dismiss').style.display = 'none';
+
+    // Build probability grid
+    (function buildProbGrid() {
+      const grid = document.getElementById('probGrid');
+      const tierOrder = ['common','uncommon','rare','epic','legendary'];
+      tierOrder.forEach(key => {
+        const t = TIERS[key];
+        const item = document.createElement('div');
+        item.className = 'prob-item';
+        item.innerHTML = `
+          <div class="prob-dot" style="background:${t.color}"></div>
+          <span class="prob-tier">${t.label}</span>
+          <span class="prob-pct">${t.pct}%</span>
+        `;
+        grid.appendChild(item);
+      });
+    })();
+
+    // Build collection grid
+    function buildCollection(justFound) {
+      const grid = document.getElementById('collGrid');
+      grid.innerHTML = '';
+      const tierOrder = ['common','uncommon','rare','epic','legendary'];
+      const found = Object.values(COLL).filter(Boolean).length;
+      document.getElementById('collLabel').textContent = `Collection ${found}/5`;
+
+      tierOrder.forEach(key => {
+        const t = TIERS[key];
+        const r = REWARDS[key];
+        const isFound = COLL[key];
+        const item = document.createElement('div');
+        item.className = `coll-item ${isFound ? 'found' : 'unfound'} ${justFound === key ? 'just-found' : ''}`;
+        item.style.borderColor = isFound ? t.color + '33' : '';
+        item.innerHTML = `
+          <span class="coll-icon">${isFound ? r.icon : 'â“'}</span>
+          <span class="coll-tier" style="color:${isFound ? t.color : '#6B8299'}">${t.label}</span>
+        `;
+        grid.appendChild(item);
+      });
+    }
+    buildCollection(null);
+
+    // =============================================
+    // WEIGHTED RANDOM
+    // =============================================
+    function chooseRarity() {
+      if (CONFIG.forceResult && TIERS[CONFIG.forceResult]) return CONFIG.forceResult;
+      const entries = Object.entries(TIERS);
+      const total = entries.reduce((s, [, t]) => s + t.pct, 0);
+      let rand = Math.random() * total;
+      for (const [key, t] of entries) {
+        if (rand < t.pct) return key;
+        rand -= t.pct;
+      }
+      return 'common';
+    }
+
+    // =============================================
+    // OPEN BOX
+    // =============================================
+    window.openBox = function () {
+      if (isOpened) return;
+      isOpened = true;
+
+      // Choose result
+      wonTier = chooseRarity();
+      wonReward = REWARDS[wonTier];
+      const tierData = TIERS[wonTier];
+
+      const box = document.getElementById('box');
+      const glow = document.getElementById('boxGlow');
+      const tapHint = document.getElementById('tapHint');
+
+      tapHint.style.display = 'none';
+
+      // Phase 1: Shake (0.8s)
+      box.classList.add('shaking');
+      glow.classList.add('intensify');
+      glow.style.background = `radial-gradient(circle,${tierData.glow} 0%,transparent 70%)`;
+
+      setTimeout(() => {
+        // Phase 2: Burst (0.4s)
+        box.classList.remove('shaking');
+        box.classList.add('burst');
+        glow.classList.remove('intensify');
+        glow.classList.add('burst');
+
+        // Spawn particles
+        spawnParticles(tierData.color);
+
+        setTimeout(() => {
+          // Phase 3: Reveal
+          document.getElementById('boxStage').style.display = 'none';
+          document.getElementById('probSection').style.display = 'none';
+
+          showReward(wonTier, wonReward, tierData);
+        }, 400);
+      }, 900);
+    };
+
+    // =============================================
+    // PARTICLES
+    // =============================================
+    function spawnParticles(color) {
+      const ring = document.getElementById('particleRing');
+      for (let i = 0; i < 16; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const angle = (i / 16) * 360;
+        const dist = 60 + Math.random() * 40;
+        const dx = Math.cos(angle * Math.PI / 180) * dist;
+        const dy = Math.sin(angle * Math.PI / 180) * dist;
+        p.style.background = color;
+        p.style.width = `${3 + Math.random() * 4}px`;
+        p.style.height = p.style.width;
+        p.style.animation = `particleFly .6s ease-out forwards`;
+        p.style.setProperty('--dx', dx + 'px');
+        p.style.setProperty('--dy', dy + 'px');
+
+        // Inline keyframe approach
+        p.animate([
+          { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.3)`, opacity: 0 }
+        ], { duration: 600, easing: 'ease-out', fill: 'forwards' });
+
+        ring.appendChild(p);
+      }
+    }
+
+    // =============================================
+    // SHOW REWARD
+    // =============================================
+    function showReward(tier, reward, tierData) {
+      const section = document.getElementById('rewardSection');
+      section.classList.add('show');
+
+      // Rarity badge
+      const badge = document.getElementById('rarityBadge');
+      badge.textContent = `â˜… ${tierData.label}`;
+      badge.style.background = tierData.glow;
+      badge.style.color = tierData.color;
+      badge.style.border = `1px solid ${tierData.color}33`;
+
+      // Reward details
+      document.getElementById('rewardIcon').textContent = reward.icon;
+      document.getElementById('rewardTitle').textContent = reward.title;
+      document.getElementById('rewardSubtitle').textContent = reward.subtitle;
+      document.getElementById('codeText').textContent = reward.code;
+
+      // Update collection
+      const wasNew = !COLL[tier];
+      COLL[tier] = true;
+      buildCollection(wasNew ? tier : null);
+
+      // Show CTA
+      const ctaArea = document.getElementById('ctaArea');
+      ctaArea.classList.add('show');
+      ctaArea.style.animation = 'fadeUp .4s ease .5s both';
+      document.getElementById('ctaBtn').textContent = CONFIG.cta.text;
+
+      // Confetti for rare+
+      if (['rare', 'epic', 'legendary'].includes(tier)) {
+        spawnConfetti(tierData.color);
+      }
+
+      // Track
+      pushEvent(CONFIG.events.boxOpened, {
+        Tier: tierData.label,
+        Reward: reward.title,
+        Code: reward.code,
+        Is_New_Collection: wasNew,
+      });
+    }
+
+    // =============================================
+    // COPY CODE
+    // =============================================
+    window.copyCode = function () {
+      const code = wonReward?.code;
+      if (!code) return;
+
+      const ticket = document.getElementById('codeTicket');
+      const hint = document.getElementById('codeHint');
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(() => fallback(code));
+      } else {
+        fallback(code);
+      }
+
+      function done() {
+        ticket.classList.add('copied');
+        hint.textContent = 'âœ“ Code copied!';
+        hint.classList.add('copied');
+        pushEvent(CONFIG.events.codeCopied, { Code: code });
+      }
+
+      function fallback(t) {
+        const inp = document.createElement('input');
+        inp.value = t;
+        inp.style.position = 'absolute';
+        inp.style.left = '-9999px';
+        document.body.appendChild(inp);
+        inp.select();
+        document.execCommand('copy');
+        document.body.removeChild(inp);
+        done();
+      }
+    };
+
+    // =============================================
+    // TOGGLE PROBABILITY
+    // =============================================
+    window.toggleProb = function () {
+      const grid = document.getElementById('probGrid');
+      const toggle = document.getElementById('probToggle');
+      grid.classList.toggle('show');
+      toggle.classList.toggle('open');
+    };
+
+    // =============================================
+    // CONFETTI
+    // =============================================
+    function spawnConfetti(accentColor) {
+      const c = document.createElement('div');
+      c.className = 'confetti-container';
+      document.body.appendChild(c);
+      const colors = [accentColor, '#FFD740', '#fff', accentColor + 'CC', '#42A5F5', '#22C55E'];
+      for (let i = 0; i < 50; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = `${15 + Math.random() * 70}%`;
+        p.style.top = `${-5 - Math.random() * 10}px`;
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.width = `${3 + Math.random() * 5}px`;
+        p.style.height = `${6 + Math.random() * 10}px`;
+        p.style.animationDuration = `${1.5 + Math.random() * 2.5}s`;
+        p.style.animationDelay = `${Math.random() * 0.4}s`;
+        c.appendChild(p);
+      }
+      setTimeout(() => c.remove(), 5000);
+    }
+
+    // =============================================
+    // ACTIONS
+    // =============================================
+    window.ctaClick = function () {
+      pushEvent(CONFIG.events.boxCta, {
+        Tier: TIERS[wonTier]?.label,
+        Code: wonReward?.code,
+      });
+      if (CONFIG.cta.url) window.location.href = CONFIG.cta.url;
+    };
+
+    window.dismiss = function () {
+      pushEvent(CONFIG.events.boxDismissed, {
+        Had_Opened: isOpened,
+        Tier: wonTier ? TIERS[wonTier]?.label : null,
+      });
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.dismissInAppNotification) {
+          CleverTap.dismissInAppNotification(); return;
+        }
+      } catch (e) {}
+      window.location.href = 'wzrk://exit';
+    };
+
+    // =============================================
+    // CLEVERTAP
+    // =============================================
+    function pushEvent(name, props) {
+      const p = props || {};
+      p.Timestamp = new Date().toISOString();
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent)
+          CleverTap.pushEvent(name, JSON.stringify(p));
+        if (typeof clevertap !== 'undefined' && clevertap.event)
+          clevertap.event.push(name, p);
+        if (window.webkit?.messageHandlers?.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(
+            JSON.stringify({ type: 'event', name, props: p })
+          );
+      } catch (e) { console.log('[CT]', name, p); }
+    }
+
+    pushEvent(CONFIG.events.boxViewed, {
+      Collection_Progress: Object.values(COLL).filter(Boolean).length + '/5',
+    });
+  </script>
+</body>
+</html>

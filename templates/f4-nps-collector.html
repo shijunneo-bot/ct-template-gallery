@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "Miso",
+        primary: "#6366F1",
+        primaryLight: "#818CF8",
+        dark: "#0B0B14",
+        darkCard: "#151520",
+        text: "#FFFFFF",
+        red: "#EF4444",
+        amber: "#F59E0B",
+        green: "#10B981",
+      },
+
+      nps: {
+        headline: "How likely are you to recommend Miso to a friend?",
+        subheadline: "0 = not at all Â· 10 = extremely likely",
+        showLabels: true,
+        lowLabel: "Not likely",
+        highLabel: "Very likely",
+      },
+
+      followUp: {
+        detractorPrompt: "We're sorry to hear that. What could we do better?",
+        passivePrompt: "Thanks! What would make us a 9 or 10 for you?",
+        promoterPrompt: "Amazing! What do you love most about Miso?",
+        placeholder: "Share your thoughts (optional)...",
+        submitText: "Submit",
+        skipText: "Skip",
+      },
+
+      thankYou: {
+        detractor: { emoji: "ðŸ™", headline: "Thank you for your honesty", body: "Your feedback helps us improve. We'll work on it." },
+        passive: { emoji: "ðŸ’¬", headline: "Thanks for sharing!", body: "We're working to earn that higher score." },
+        promoter: { emoji: "ðŸŽ‰", headline: "You're awesome!", body: "Glad you're loving Miso. Tell a friend?" },
+        autoDismissSeconds: 4,
+      },
+
+      events: {
+        npsViewed:     "NPS_Viewed",
+        npsScored:     "NPS_Score_Selected",
+        npsFeedback:   "NPS_Feedback_Submitted",
+        npsCompleted:  "NPS_Completed",
+        npsSkipped:    "NPS_Skipped",
+        npsDismissed:  "NPS_Dismissed",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --primary:#6366F1;--primary-light:#818CF8;
+      --dark:#0B0B14;--dark-card:#151520;
+      --text:#FFF;--text-muted:rgba(255,255,255,.45);
+      --red:#EF4444;--amber:#F59E0B;--green:#10B981;
+    }
+    body{
+      background:var(--dark);min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;color:var(--text);
+      padding:40px 20px 32px;overflow:hidden;
+    }
+    .dismiss{position:fixed;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}.dismiss:active{transform:scale(.9)}
+
+    @keyframes fadeIn{to{opacity:1}}
+    @keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
+
+    /* Screens */
+    .screen{display:none;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:360px}
+    .screen.active{display:flex}
+
+    /* â”€â”€ Score Screen â”€â”€ */
+    .s-headline{font-size:20px;font-weight:800;line-height:1.3;margin-bottom:6px;opacity:0;animation:fadeIn .5s .15s ease forwards}
+    .s-sub{font-size:12px;color:var(--text-muted);margin-bottom:24px;opacity:0;animation:fadeIn .5s .25s ease forwards}
+
+    /* Score buttons */
+    .score-row{
+      display:flex;gap:6px;width:100%;justify-content:center;
+      margin-bottom:8px;
+      opacity:0;animation:fadeIn .5s .35s ease forwards;
+    }
+    .score-btn{
+      width:30px;height:42px;border-radius:12px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;
+      cursor:pointer;color:var(--text-muted);
+      background:var(--dark-card);
+      border:1px solid rgba(255,255,255,.06);
+      transition:all .2s ease;
+      -webkit-tap-highlight-color:transparent;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .score-btn:active{transform:scale(.92)}
+    .score-btn.selected{
+      color:#fff;transform:scale(1.1);
+      box-shadow:0 4px 16px rgba(0,0,0,.3);
+      border-color:transparent;
+    }
+    /* Color range: 0-6 red, 7-8 amber, 9-10 green */
+    .score-btn.selected.detractor{background:var(--red)}
+    .score-btn.selected.passive{background:var(--amber)}
+    .score-btn.selected.promoter{background:var(--green)}
+
+    .score-labels{
+      display:flex;justify-content:space-between;width:100%;
+      padding:0 2px;margin-bottom:20px;
+      opacity:0;animation:fadeIn .5s .4s ease forwards;
+    }
+    .score-label{font-size:10px;color:var(--text-muted);letter-spacing:.3px}
+
+    /* Segment indicator */
+    .segment-badge{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:6px 14px;border-radius:50px;
+      font-size:11px;font-weight:700;
+      opacity:0;transition:opacity .3s;
+      margin-bottom:6px;
+    }
+    .segment-badge.show{opacity:1}
+    .segment-badge.detractor{background:rgba(239,68,68,.12);color:var(--red)}
+    .segment-badge.passive{background:rgba(245,158,11,.12);color:var(--amber)}
+    .segment-badge.promoter{background:rgba(16,185,129,.12);color:var(--green)}
+
+    /* â”€â”€ Feedback Screen â”€â”€ */
+    .fb-prompt{font-size:16px;font-weight:700;line-height:1.4;margin-bottom:16px}
+    .fb-textarea{
+      width:100%;min-height:100px;padding:14px;
+      border-radius:16px;border:1px solid rgba(255,255,255,.08);
+      background:var(--dark-card);color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:14px;
+      resize:none;outline:none;
+      transition:border-color .2s;
+      margin-bottom:14px;
+    }
+    .fb-textarea::placeholder{color:rgba(255,255,255,.25)}
+    .fb-textarea:focus{border-color:var(--primary)}
+
+    .fb-actions{display:flex;gap:10px;width:100%}
+    .fb-btn{
+      flex:1;padding:14px;border-radius:14px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;
+      cursor:pointer;transition:transform .2s;
+    }
+    .fb-btn:active{transform:scale(.96)}
+    .fb-submit{background:var(--primary);color:#fff}
+    .fb-skip{background:rgba(255,255,255,.06);color:var(--text-muted)}
+
+    /* â”€â”€ Thank You Screen â”€â”€ */
+    .ty-emoji{
+      font-size:56px;margin-bottom:16px;
+      opacity:0;transform:scale(0);
+    }
+    .ty-emoji.pop{animation:emojiPop .6s cubic-bezier(.16,1,.3,1) forwards}
+    @keyframes emojiPop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+    .ty-headline{font-size:22px;font-weight:800;margin-bottom:6px;opacity:0;transform:translateY(8px)}
+    .ty-body{font-size:14px;color:var(--text-muted);line-height:1.5;opacity:0;transform:translateY(6px)}
+    .ty-progress{
+      width:80px;height:3px;border-radius:2px;
+      background:rgba(255,255,255,.08);margin-top:20px;
+      overflow:hidden;opacity:0;
+    }
+    .ty-progress-bar{
+      height:100%;border-radius:2px;background:var(--primary);
+      width:0%;transition:width linear;
+    }
+  </style>
+</head>
+<body>
+  <!-- Score Screen -->
+  <div class="screen active" id="screenScore">
+    <h2 class="s-headline" id="headline"></h2>
+    <p class="s-sub" id="sub"></p>
+    <div class="score-row" id="scoreRow"></div>
+    <div class="score-labels" id="scoreLabels"></div>
+    <div class="segment-badge" id="segBadge"></div>
+  </div>
+
+  <!-- Feedback Screen -->
+  <div class="screen" id="screenFeedback">
+    <div class="fb-prompt" id="fbPrompt"></div>
+    <textarea class="fb-textarea" id="fbText"></textarea>
+    <div class="fb-actions">
+      <button class="fb-btn fb-skip" id="fbSkip"></button>
+      <button class="fb-btn fb-submit" id="fbSubmit"></button>
+    </div>
+  </div>
+
+  <!-- Thank You Screen -->
+  <div class="screen" id="screenThanks">
+    <div class="ty-emoji" id="tyEmoji"></div>
+    <h2 class="ty-headline" id="tyHeadline"></h2>
+    <p class="ty-body" id="tyBody"></p>
+    <div class="ty-progress" id="tyProgress"><div class="ty-progress-bar" id="tyBar"></div></div>
+  </div>
+
+  <script>
+    function fireEvent(n,p){try{if(window.CleverTap)window.CleverTap.pushEvent(n,p||{});else if(window.webkit?.messageHandlers?.clevertap)window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:n,properties:p||{}}));else if(window.clevertap)window.clevertap.event.push(n,p||{})}catch(e){console.log("CT:",n,p)}}
+    function dismiss(){fireEvent(CONFIG.events.npsDismissed,{score:selectedScore,segment:getSegment(selectedScore)});try{location.href="wzrk://exit"}catch(e){}}
+    function getSegment(s){if(s===null)return null;if(s<=6)return"detractor";if(s<=8)return"passive";return"promoter"}
+
+    let selectedScore=null;
+
+    (function init(){
+      if(CONFIG.includeDismissButton){const b=document.createElement("button");b.className="dismiss";b.innerHTML="âœ•";b.onclick=dismiss;document.body.appendChild(b)}
+
+      document.getElementById("headline").textContent=CONFIG.nps.headline;
+      document.getElementById("sub").textContent=CONFIG.nps.subheadline;
+
+      // Score buttons
+      const row=document.getElementById("scoreRow");
+      for(let i=0;i<=10;i++){
+        const btn=document.createElement("button");
+        btn.className="score-btn";
+        btn.textContent=i;
+        btn.dataset.score=i;
+        btn.addEventListener("click",()=>selectScore(i));
+        row.appendChild(btn);
+      }
+
+      // Labels
+      if(CONFIG.nps.showLabels){
+        document.getElementById("scoreLabels").innerHTML=`
+          <span class="score-label">${CONFIG.nps.lowLabel}</span>
+          <span class="score-label">${CONFIG.nps.highLabel}</span>`;
+      }
+
+      // Feedback buttons
+      document.getElementById("fbText").placeholder=CONFIG.followUp.placeholder;
+      document.getElementById("fbSubmit").textContent=CONFIG.followUp.submitText;
+      document.getElementById("fbSkip").textContent=CONFIG.followUp.skipText;
+      document.getElementById("fbSubmit").onclick=submitFeedback;
+      document.getElementById("fbSkip").onclick=skipFeedback;
+
+      fireEvent(CONFIG.events.npsViewed);
+    })();
+
+    function selectScore(score){
+      selectedScore=score;
+      const seg=getSegment(score);
+
+      // Update button states
+      document.querySelectorAll(".score-btn").forEach(btn=>{
+        const s=parseInt(btn.dataset.score);
+        btn.classList.remove("selected","detractor","passive","promoter");
+        if(s===score){
+          btn.classList.add("selected",seg);
+        }
+      });
+
+      // Show segment badge
+      const badge=document.getElementById("segBadge");
+      badge.className="segment-badge show "+seg;
+      const labels={detractor:"Detractor (0â€“6)",passive:"Passive (7â€“8)",promoter:"Promoter (9â€“10)"};
+      const dots={detractor:"ðŸ”´",passive:"ðŸŸ¡",promoter:"ðŸŸ¢"};
+      badge.innerHTML=`${dots[seg]} ${labels[seg]}`;
+
+      fireEvent(CONFIG.events.npsScored,{score,segment:seg});
+
+      // Auto-advance to feedback after brief delay
+      setTimeout(()=>showFeedback(seg),600);
+    }
+
+    function showFeedback(seg){
+      document.getElementById("screenScore").classList.remove("active");
+      const fb=document.getElementById("screenFeedback");
+      fb.classList.add("active");
+
+      const prompts={
+        detractor:CONFIG.followUp.detractorPrompt,
+        passive:CONFIG.followUp.passivePrompt,
+        promoter:CONFIG.followUp.promoterPrompt,
+      };
+      document.getElementById("fbPrompt").textContent=prompts[seg];
+
+      // Style submit button to match segment
+      const colors={detractor:"var(--red)",passive:"var(--amber)",promoter:"var(--green)"};
+      document.getElementById("fbSubmit").style.background=colors[seg];
+    }
+
+    function submitFeedback(){
+      const text=document.getElementById("fbText").value.trim();
+      const seg=getSegment(selectedScore);
+      fireEvent(CONFIG.events.npsFeedback,{score:selectedScore,segment:seg,feedback:text||"(empty)"});
+      showThanks();
+    }
+
+    function skipFeedback(){
+      fireEvent(CONFIG.events.npsSkipped,{score:selectedScore,segment:getSegment(selectedScore)});
+      showThanks();
+    }
+
+    function showThanks(){
+      document.getElementById("screenFeedback").classList.remove("active");
+      const ty=document.getElementById("screenThanks");
+      ty.classList.add("active");
+
+      const seg=getSegment(selectedScore);
+      const data=CONFIG.thankYou[seg];
+      document.getElementById("tyEmoji").textContent=data.emoji;
+      document.getElementById("tyHeadline").textContent=data.headline;
+      document.getElementById("tyBody").textContent=data.body;
+
+      // Animate
+      setTimeout(()=>document.getElementById("tyEmoji").classList.add("pop"),100);
+      setTimeout(()=>{document.getElementById("tyHeadline").style.animation="fadeInUp .5s ease forwards"},350);
+      setTimeout(()=>{document.getElementById("tyBody").style.animation="fadeInUp .5s ease forwards"},500);
+
+      // Auto-dismiss progress bar
+      const dur=CONFIG.thankYou.autoDismissSeconds;
+      if(dur>0){
+        const prog=document.getElementById("tyProgress");
+        const bar=document.getElementById("tyBar");
+        setTimeout(()=>{
+          prog.style.opacity="1";
+          bar.style.transitionDuration=dur+"s";
+          bar.style.width="100%";
+        },700);
+        setTimeout(()=>{
+          fireEvent(CONFIG.events.npsCompleted,{score:selectedScore,segment:seg});
+          try{location.href="wzrk://exit"}catch(e){}
+        },(dur+1)*1000);
+      }
+    }
+  </script>
+</body>
+</html>

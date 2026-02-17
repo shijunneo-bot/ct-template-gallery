@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "CATCHPLAY+",
+        primary: "#E50914",
+        primaryLight: "#FF3D47",
+        accent: "#F59E0B",
+        dark: "#0A0A0A",
+        darkCard: "#151515",
+        text: "#FFFFFF",
+      },
+
+      winback: {
+        headline: "We saved your spot",
+        subheadline: "A lot has happened since you left",
+        emoji: "ðŸ¿",
+      },
+
+      user: {
+        name: "Sarah",
+        daysSinceLastVisit: 34,
+      },
+
+      // What they've missed â€” dynamic stats
+      missed: [
+        { emoji: "ðŸŽ¬", value: "47", label: "new films added" },
+        { emoji: "ðŸ“º", value: "12", label: "new series dropped" },
+        { emoji: "ðŸ†", value: "3", label: "award winners you'll love" },
+      ],
+
+      // Personalised picks to lure them back
+      picks: [
+        { title: "The Brutalist", tag: "Oscar Winner", emoji: "ðŸŽ­" },
+        { title: "Squid Game S3", tag: "Trending #1", emoji: "ðŸ”¥" },
+        { title: "Conclave", tag: "Just Added", emoji: "âœ¨" },
+      ],
+
+      offer: {
+        show: true,
+        badge: "COMEBACK DEAL",
+        headline: "50% off for 3 months",
+        originalPrice: "USD 9.99/mo",
+        dealPrice: "USD 4.99/mo",
+        expiryText: "Offer expires in 48 hours",
+        ctaText: "Restart My Subscription",
+        ctaUrl: "catchplay://resubscribe?promo=COMEBACK50",
+      },
+
+      noOffer: {
+        ctaText: "Explore What's New",
+        ctaUrl: "catchplay://browse/new",
+      },
+
+      events: {
+        winbackViewed:    "Winback_Viewed",
+        winbackCTA:       "Winback_CTA_Clicked",
+        winbackDismissed: "Winback_Dismissed",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --primary:#E50914;--primary-light:#FF3D47;--accent:#F59E0B;
+      --dark:#0A0A0A;--dark-card:#151515;
+      --text:#FFF;--text-muted:rgba(255,255,255,.4);
+      --border:rgba(255,255,255,.06);
+    }
+    body{
+      background:var(--dark);min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;
+      font-family:'DM Sans',sans-serif;color:var(--text);
+      padding:44px 20px 32px;
+      overflow-y:auto;overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
+    }
+    body::-webkit-scrollbar{display:none}
+    .dismiss{position:fixed;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}.dismiss:active{transform:scale(.9)}
+
+    @keyframes fadeIn{to{opacity:1}}
+    @keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+    .content{width:100%;max-width:360px}
+
+    /* Header */
+    .header{text-align:center;margin-bottom:20px}
+    .h-emoji{font-size:48px;margin-bottom:8px;opacity:0;animation:fadeIn .4s .1s ease forwards,float 3s 1s ease-in-out infinite}
+    .h-headline{font-size:24px;font-weight:800;margin-bottom:4px;line-height:1.2;opacity:0;animation:fadeIn .5s .2s ease forwards}
+    .h-sub{font-size:13px;color:var(--text-muted);opacity:0;animation:fadeIn .5s .3s ease forwards}
+
+    /* Days away badge */
+    .days-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 14px;border-radius:20px;
+      background:rgba(229,9,20,.1);
+      font-size:12px;font-weight:700;color:var(--primary-light);
+      margin-top:8px;
+      opacity:0;animation:fadeIn .5s .35s ease forwards;
+    }
+
+    /* Missed stats */
+    .missed-row{
+      display:flex;gap:8px;margin-bottom:16px;
+      opacity:0;animation:fadeIn .5s .4s ease forwards;
+    }
+    .missed-stat{
+      flex:1;text-align:center;padding:16px 8px;
+      background:var(--dark-card);border:1px solid var(--border);
+      border-radius:16px;
+    }
+    .ms-emoji{font-size:22px;margin-bottom:6px}
+    .ms-val{font-size:24px;font-weight:800;line-height:1}
+    .ms-label{font-size:10px;color:var(--text-muted);margin-top:3px;line-height:1.2}
+
+    /* Content picks */
+    .picks-section{margin-bottom:16px;opacity:0;animation:fadeIn .5s .5s ease forwards}
+    .picks-label{font-size:10px;font-weight:800;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:8px}
+    .picks-list{display:flex;flex-direction:column;gap:6px}
+    .pick-card{
+      display:flex;align-items:center;gap:12px;
+      padding:12px 14px;
+      background:var(--dark-card);border:1px solid var(--border);
+      border-radius:14px;
+    }
+    .pick-emoji{
+      width:40px;height:40px;border-radius:10px;
+      background:rgba(255,255,255,.04);
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;flex-shrink:0;
+    }
+    .pick-info{flex:1}
+    .pick-title{font-size:14px;font-weight:700}
+    .pick-tag{
+      display:inline-block;font-size:10px;font-weight:700;
+      padding:2px 7px;border-radius:6px;margin-top:2px;
+      background:rgba(229,9,20,.12);color:var(--primary-light);
+    }
+    .pick-play{
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(255,255,255,.06);
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;color:var(--text-muted);flex-shrink:0;
+    }
+
+    /* Offer card */
+    .offer-card{
+      background:var(--dark-card);
+      border:1px solid rgba(229,9,20,.2);
+      border-radius:20px;padding:20px;text-align:center;
+      margin-bottom:16px;position:relative;overflow:hidden;
+      opacity:0;animation:fadeInUp .5s .6s ease forwards;
+      transform:translateY(8px);
+    }
+    .offer-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--primary),var(--accent));
+    }
+    .offer-badge{
+      display:inline-block;padding:4px 12px;border-radius:20px;
+      font-size:10px;font-weight:800;letter-spacing:1px;
+      background:var(--primary);color:#fff;margin-bottom:10px;
+    }
+    .offer-headline{font-size:20px;font-weight:800;margin-bottom:8px}
+    .offer-pricing{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+    .offer-old{font-size:14px;color:var(--text-muted);text-decoration:line-through}
+    .offer-new{font-size:22px;font-weight:800;color:var(--accent)}
+    .offer-expiry{
+      font-size:11px;color:var(--text-muted);
+      display:flex;align-items:center;justify-content:center;gap:4px;
+    }
+    .expiry-dot{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:pulse 1.5s ease-in-out infinite}
+
+    /* CTA */
+    .cta{
+      width:100%;padding:16px;border-radius:16px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:15px;font-weight:800;
+      cursor:pointer;color:#fff;background:var(--primary);
+      transition:transform .2s;position:relative;overflow:hidden;
+      opacity:0;animation:fadeInUp .5s .7s ease forwards;
+      transform:translateY(6px);
+    }
+    .cta:active{transform:scale(.97) translateY(0)!important}
+    .cta::after{
+      content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.12) 50%,transparent 60%);
+      animation:shimmer 3s infinite;
+    }
+    @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+    /* Footer note */
+    .footer{font-size:11px;color:rgba(255,255,255,.2);text-align:center;margin-top:10px;opacity:0;animation:fadeIn .5s .8s ease forwards}
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="header">
+      <div class="h-emoji" id="hEmoji"></div>
+      <h2 class="h-headline" id="headline"></h2>
+      <p class="h-sub" id="sub"></p>
+      <div class="days-badge" id="daysBadge"></div>
+    </div>
+
+    <div class="missed-row" id="missed"></div>
+    <div class="picks-section" id="picksSection"></div>
+    <div class="offer-card" id="offer"></div>
+    <button class="cta" id="cta"></button>
+    <div class="footer">Your watchlist and preferences are still here</div>
+  </div>
+
+  <script>
+    function fireEvent(n,p){try{if(window.CleverTap)window.CleverTap.pushEvent(n,p||{});else if(window.webkit?.messageHandlers?.clevertap)window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:n,properties:p||{}}));else if(window.clevertap)window.clevertap.event.push(n,p||{})}catch(e){console.log("CT:",n,p)}}
+    function dismiss(){fireEvent(CONFIG.events.winbackDismissed);try{location.href="wzrk://exit"}catch(e){}}
+
+    (function init(){
+      if(CONFIG.includeDismissButton){const b=document.createElement("button");b.className="dismiss";b.innerHTML="âœ•";b.onclick=dismiss;document.body.appendChild(b)}
+
+      // Header
+      document.getElementById("hEmoji").textContent=CONFIG.winback.emoji;
+      document.getElementById("headline").textContent=CONFIG.winback.headline;
+      document.getElementById("sub").textContent=CONFIG.winback.subheadline;
+      document.getElementById("daysBadge").textContent=`â±ï¸ ${CONFIG.user.daysSinceLastVisit} days since your last visit`;
+
+      // Missed stats
+      const missedEl=document.getElementById("missed");
+      CONFIG.missed.forEach(m=>{
+        missedEl.innerHTML+=`<div class="missed-stat">
+          <div class="ms-emoji">${m.emoji}</div>
+          <div class="ms-val">${m.value}</div>
+          <div class="ms-label">${m.label}</div>
+        </div>`;
+      });
+
+      // Picks
+      const picksEl=document.getElementById("picksSection");
+      if(CONFIG.picks.length){
+        let html=`<div class="picks-label">CURATED FOR YOU</div><div class="picks-list">`;
+        CONFIG.picks.forEach(p=>{
+          html+=`<div class="pick-card">
+            <div class="pick-emoji">${p.emoji}</div>
+            <div class="pick-info">
+              <div class="pick-title">${p.title}</div>
+              <span class="pick-tag">${p.tag}</span>
+            </div>
+            <div class="pick-play">â–¶</div>
+          </div>`;
+        });
+        html+=`</div>`;
+        picksEl.innerHTML=html;
+      }
+
+      // Offer
+      const offerEl=document.getElementById("offer");
+      if(CONFIG.offer.show){
+        offerEl.innerHTML=`
+          <div class="offer-badge">${CONFIG.offer.badge}</div>
+          <div class="offer-headline">${CONFIG.offer.headline}</div>
+          <div class="offer-pricing">
+            <span class="offer-old">${CONFIG.offer.originalPrice}</span>
+            <span class="offer-new">${CONFIG.offer.dealPrice}</span>
+          </div>
+          <div class="offer-expiry"><span class="expiry-dot"></span>${CONFIG.offer.expiryText}</div>
+        `;
+      }else{
+        offerEl.style.display="none";
+      }
+
+      // CTA
+      const cta=document.getElementById("cta");
+      const hasOffer=CONFIG.offer.show;
+      cta.textContent=hasOffer?CONFIG.offer.ctaText:CONFIG.noOffer.ctaText;
+      cta.onclick=()=>{
+        fireEvent(CONFIG.events.winbackCTA,{
+          days_away:CONFIG.user.daysSinceLastVisit,
+          has_offer:hasOffer,
+        });
+        const url=hasOffer?CONFIG.offer.ctaUrl:CONFIG.noOffer.ctaUrl;
+        if(url)location.href=url;
+      };
+
+      fireEvent(CONFIG.events.winbackViewed,{
+        days_away:CONFIG.user.daysSinceLastVisit,
+        has_offer:hasOffer,
+      });
+    })();
+  </script>
+</body>
+</html>

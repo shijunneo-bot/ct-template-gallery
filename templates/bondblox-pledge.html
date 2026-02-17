@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BondbloX â€“ Investment Pledge</title>
+<script>
+var CONFIG = {
+  brandColor: '#22D3EE',
+  brandDark: '#0891B2',
+  brandName: 'BondbloX',
+  heading: 'Set your investment goal',
+  subtitle: 'Make a pledge â€” track your progress all month',
+  eventName: 'BondbloX_Pledge',
+  currency: 'US$',
+  presets: [1000, 5000, 10000, 25000],
+  timeframes: ['This month', 'This quarter', 'This year'],
+  confirmTitle: 'Pledge locked in!',
+  confirmEmoji: 'ðŸ”’',
+  deeplink: 'bondblox://invest'
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.card{width:100%;max-width:380px;background:#0F1720;border-radius:20px;padding:24px 20px;margin:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.close{position:absolute;top:14px;right:14px;background:none;border:none;color:#6B7A94;font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s}
+.close:hover{background:rgba(255,255,255,.06)}
+.brand{font-size:11px;font-weight:600;letter-spacing:.5px;color:#6B7A94;text-transform:uppercase;margin-bottom:12px}
+h2{font-size:20px;font-weight:700;color:#F0F4F8;margin-bottom:4px}
+.sub{font-size:13px;color:#6B7A94;margin-bottom:20px;line-height:1.4}
+label{font-size:12px;font-weight:600;color:#8B95A8;letter-spacing:.3px;text-transform:uppercase;display:block;margin-bottom:8px}
+.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
+.preset{padding:14px 12px;background:#161E2A;border:1.5px solid #1E2A38;border-radius:12px;text-align:center;font-size:18px;font-weight:700;color:#C9D1D9;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.preset:active{transform:scale(.97)}
+.preset.sel{border-color:var(--bc);background:rgba(34,211,238,.06);color:#F0F4F8}
+.preset .cur{font-size:13px;font-weight:500;color:#6B7A94}
+.preset.sel .cur{color:var(--bc)}
+.tf-row{display:flex;gap:8px;margin-bottom:24px}
+.tf{flex:1;padding:10px 8px;background:#161E2A;border:1.5px solid #1E2A38;border-radius:10px;text-align:center;font-size:12px;font-weight:600;color:#8B95A8;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.tf:active{transform:scale(.97)}
+.tf.sel{border-color:var(--bc);color:#F0F4F8;background:rgba(34,211,238,.06)}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#0A0D14;cursor:pointer;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.3;cursor:default}
+/* Confirm state */
+.confirm-view{display:none;text-align:center;padding:16px 0}
+.confirm-view.show{display:block}
+.form-view.hide{display:none}
+.seal{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;animation:sealPop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes sealPop{from{transform:scale(0)}to{transform:scale(1)}}
+.confirm-view h3{font-size:20px;font-weight:700;color:#F0F4F8;margin-bottom:12px}
+.pledge-summary{background:#161E2A;border-radius:14px;padding:16px;margin-bottom:20px;border-left:3px solid var(--bc)}
+.pledge-summary .amount{font-size:28px;font-weight:800;color:#F0F4F8;margin-bottom:4px}
+.pledge-summary .amount .cur{font-size:16px;color:var(--bc);font-weight:600}
+.pledge-summary .tf-text{font-size:13px;color:#6B7A94}
+.confirm-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#0A0D14;cursor:pointer}
+.confirm-btn:active{transform:scale(.98)}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.pledge-summary{animation:fadeSlideIn .4s ease .2s both}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <button class="close" id="closeBtn" aria-label="Close">Ã—</button>
+  <div class="brand" id="brandLabel"></div>
+
+  <div class="form-view" id="formView">
+    <h2 id="heading"></h2>
+    <p class="sub" id="subtitle"></p>
+    <label>Investment target</label>
+    <div class="presets" id="presets"></div>
+    <label>Timeframe</label>
+    <div class="tf-row" id="tfRow"></div>
+    <button class="btn" id="pledgeBtn" disabled>Lock in my pledge</button>
+  </div>
+
+  <div class="confirm-view" id="confirmView">
+    <div class="seal" id="seal"></div>
+    <h3 id="confirmTitle"></h3>
+    <div class="pledge-summary">
+      <div class="amount" id="summaryAmount"></div>
+      <div class="tf-text" id="summaryTf"></div>
+    </div>
+    <button class="confirm-btn" id="confirmBtn">Start investing â†’</button>
+  </div>
+</div>
+<script>
+(function(){
+  var bc = CONFIG.brandColor;
+  document.documentElement.style.setProperty('--bc', bc);
+  document.getElementById('brandLabel').textContent = CONFIG.brandName;
+  document.getElementById('heading').textContent = CONFIG.heading;
+  document.getElementById('subtitle').textContent = CONFIG.subtitle;
+  document.getElementById('seal').style.background = bc + '18';
+
+  var pledgeBtn = document.getElementById('pledgeBtn');
+  pledgeBtn.style.background = bc;
+
+  var selectedAmount = null;
+  var selectedTf = null;
+
+  function checkReady(){
+    pledgeBtn.disabled = !(selectedAmount !== null && selectedTf !== null);
+  }
+
+  // Presets
+  var presetsEl = document.getElementById('presets');
+  CONFIG.presets.forEach(function(val){
+    var el = document.createElement('div');
+    el.className = 'preset';
+    el.innerHTML = '<span class="cur">' + CONFIG.currency + '</span> ' + val.toLocaleString();
+    el.addEventListener('click', function(){
+      presetsEl.querySelectorAll('.preset').forEach(function(p){p.classList.remove('sel')});
+      el.classList.add('sel');
+      selectedAmount = val;
+      checkReady();
+    });
+    presetsEl.appendChild(el);
+  });
+
+  // Timeframes
+  var tfRow = document.getElementById('tfRow');
+  CONFIG.timeframes.forEach(function(tf){
+    var el = document.createElement('div');
+    el.className = 'tf';
+    el.textContent = tf;
+    el.addEventListener('click', function(){
+      tfRow.querySelectorAll('.tf').forEach(function(t){t.classList.remove('sel')});
+      el.classList.add('sel');
+      selectedTf = tf;
+      checkReady();
+    });
+    tfRow.appendChild(el);
+  });
+
+  function fireEvent(name, props){
+    try{
+      if(window.CleverTap) window.CleverTap.pushEvent(name, props);
+      else if(window.clevertap) window.clevertap.event.push(name, props);
+    }catch(e){}
+    try{
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
+        window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:name,properties:props}));
+      }
+    }catch(e){}
+  }
+
+  fireEvent(CONFIG.eventName + '_Shown', {});
+
+  pledgeBtn.addEventListener('click', function(){
+    if(!selectedAmount || !selectedTf) return;
+    try{ navigator.vibrate(50); }catch(e){}
+
+    fireEvent(CONFIG.eventName + '_Created', {
+      Target: selectedAmount,
+      Currency: CONFIG.currency,
+      Timeframe: selectedTf
+    });
+
+    document.getElementById('formView').classList.add('hide');
+    var cv = document.getElementById('confirmView');
+    cv.classList.add('show');
+    document.getElementById('seal').textContent = CONFIG.confirmEmoji;
+    document.getElementById('confirmTitle').textContent = CONFIG.confirmTitle;
+    document.getElementById('summaryAmount').innerHTML = '<span class="cur">' + CONFIG.currency + '</span> ' + selectedAmount.toLocaleString();
+    document.getElementById('summaryTf').textContent = selectedTf;
+    var cb = document.getElementById('confirmBtn');
+    cb.style.background = bc;
+    cb.addEventListener('click', function(){
+      fireEvent(CONFIG.eventName + '_CTA_Clicked', {
+        Target: selectedAmount,
+        Timeframe: selectedTf,
+        Deeplink: CONFIG.deeplink
+      });
+      window.location.href = CONFIG.deeplink;
+    });
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', function(){
+    fireEvent(CONFIG.eventName + '_Dismissed', {
+      Amount_Selected: selectedAmount || 'None',
+      Timeframe_Selected: selectedTf || 'None',
+      Pledged: false
+    });
+    window.location.href = 'wzrk://exit';
+  });
+})();
+</script>
+</body>
+</html>

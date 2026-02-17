@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "Universal",
+        primary: "#FF6B6B",
+        secondary: "#4ECDC4",
+        accent: "#FFE66D",
+        dark: "#0a0a0a",
+        light: "#FFFFFF",
+      },
+
+      hero: {
+        headline: "Summer Sale\nis Here",
+        subheadline: "Up to 50% off everything this weekend",
+        alignment: "center",
+      },
+
+      gradient: {
+        colors: ["#FF6B6B", "#FFE66D", "#4ECDC4", "#FF6B6B"],
+        angle: 135,
+        animationDuration: 4,
+        backgroundSize: "300% 300%",
+      },
+
+      background: {
+        color: "#0a0a0a",
+        pattern: "dots", // "none" | "dots" | "grid"
+      },
+
+      font: {
+        url: "https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Sora:wght@400;700&display=swap",
+        headline: "'DM Serif Display', serif",
+        body: "'Sora', sans-serif",
+      },
+
+      decorativeOrbs: true,
+
+      cta: {
+        text: "Shop Now",
+        url: "myapp://summer-sale",
+      },
+
+      events: {
+        bannerViewed:     "GradientBanner_Viewed",
+        bannerCTAClicked: "GradientBanner_CTA_Clicked",
+        bannerDismissed:  "GradientBanner_Dismissed",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gradient-colors: initial;
+      --gradient-angle: 135deg;
+      --gradient-size: 300% 300%;
+      --gradient-duration: 4s;
+      --bg-color: #0a0a0a;
+      --text-light: #FFFFFF;
+      --text-muted: rgba(255,255,255,0.6);
+      --brand-primary: #FF6B6B;
+      --font-headline: 'DM Serif Display', serif;
+      --font-body: 'Sora', sans-serif;
+    }
+
+    body {
+      background: var(--bg-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Background pattern â€” dots */
+    body.pattern-dots::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Background pattern â€” grid */
+    body.pattern-grid::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Decorative orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 200px; height: 200px;
+      top: -60px; right: -40px;
+      animation: orbDrift1 8s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 160px; height: 160px;
+      bottom: -40px; left: -30px;
+      animation: orbDrift2 10s ease-in-out infinite;
+    }
+    .orb-3 {
+      width: 120px; height: 120px;
+      top: 50%; left: 60%;
+      animation: orbDrift3 12s ease-in-out infinite;
+    }
+
+    @keyframes orbDrift1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-20px, 30px); }
+    }
+    @keyframes orbDrift2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(25px, -20px); }
+    }
+    @keyframes orbDrift3 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-15px, -25px); }
+    }
+
+    /* Dismiss button */
+    .dismiss {
+      position: fixed;
+      top: 12px; right: 12px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.5);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .dismiss:active {
+      transform: scale(0.92);
+      background: rgba(255,255,255,0.14);
+    }
+
+    /* Main content */
+    .content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+    }
+    .content.align-left { text-align: left; }
+
+    /* Gradient headline */
+    .headline {
+      font-family: var(--font-headline);
+      font-size: clamp(32px, 9vw, 52px);
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      white-space: pre-line;
+
+      background: var(--gradient-colors);
+      background-size: var(--gradient-size);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift var(--gradient-duration) ease infinite;
+
+      opacity: 0;
+      transform: translateY(16px);
+      animation: gradientShift var(--gradient-duration) ease infinite,
+                 fadeInUp 0.8s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Subheadline */
+    .subheadline {
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-top: 16px;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeInUp 0.7s 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* CTA */
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 32px;
+      padding: 16px 40px;
+      border-radius: 50px;
+      border: none;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      color: var(--bg-color);
+      background: var(--text-light);
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeInUp 0.6s 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .cta:active {
+      transform: scale(0.96) translateY(0);
+    }
+    .cta::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 52px;
+      background: var(--gradient-colors);
+      background-size: var(--gradient-size);
+      animation: gradientShift var(--gradient-duration) ease infinite;
+      z-index: -1;
+      opacity: 0.4;
+      filter: blur(12px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <h1 class="headline"></h1>
+    <p class="subheadline"></p>
+    <button class="cta"></button>
+  </div>
+
+  <script>
+    // â”€â”€ Helpers â”€â”€
+    function fireEvent(name, props) {
+      try {
+        if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+        else if (window.webkit?.messageHandlers?.clevertap) window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} }));
+        else if (window.clevertap) window.clevertap.event.push(name, props || {});
+      } catch (e) { console.log("CT Event:", name, props); }
+    }
+    function dismiss() {
+      fireEvent(CONFIG.events.bannerDismissed);
+      try { if (window.CleverTap) window.CleverTap.dismissInAppNotification(); } catch (e) {}
+      try { location.href = "wzrk://exit"; } catch (e) {}
+    }
+
+    // â”€â”€ Init â”€â”€
+    (function init() {
+      const root = document.documentElement;
+      const gradStr = `linear-gradient(${CONFIG.gradient.angle}deg, ${CONFIG.gradient.colors.join(", ")})`;
+      root.style.setProperty("--gradient-colors", gradStr);
+      root.style.setProperty("--gradient-size", CONFIG.gradient.backgroundSize);
+      root.style.setProperty("--gradient-duration", CONFIG.gradient.animationDuration + "s");
+      root.style.setProperty("--bg-color", CONFIG.background.color);
+      root.style.setProperty("--brand-primary", CONFIG.brand.primary);
+      root.style.setProperty("--font-headline", CONFIG.font.headline);
+      root.style.setProperty("--font-body", CONFIG.font.body);
+
+      // Load font
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = CONFIG.font.url;
+      document.head.appendChild(link);
+
+      // Background pattern
+      if (CONFIG.background.pattern !== "none") {
+        document.body.classList.add("pattern-" + CONFIG.background.pattern);
+      }
+
+      // Alignment
+      if (CONFIG.hero.alignment === "left") {
+        document.querySelector(".content").classList.add("align-left");
+      }
+
+      // Decorative orbs
+      if (CONFIG.decorativeOrbs) {
+        const colors = CONFIG.gradient.colors;
+        [colors[0], colors[1], colors[2] || colors[0]].forEach((c, i) => {
+          const orb = document.createElement("div");
+          orb.className = `orb orb-${i + 1}`;
+          orb.style.background = c;
+          document.body.appendChild(orb);
+        });
+      }
+
+      // Dismiss button
+      if (CONFIG.includeDismissButton) {
+        const btn = document.createElement("button");
+        btn.className = "dismiss";
+        btn.innerHTML = "âœ•";
+        btn.onclick = dismiss;
+        document.body.appendChild(btn);
+      }
+
+      // Content
+      document.querySelector(".headline").textContent = CONFIG.hero.headline;
+      document.querySelector(".subheadline").textContent = CONFIG.hero.subheadline;
+      const cta = document.querySelector(".cta");
+      cta.textContent = CONFIG.cta.text;
+      cta.onclick = function () {
+        fireEvent(CONFIG.events.bannerCTAClicked, { headline: CONFIG.hero.headline });
+        if (CONFIG.cta.url) location.href = CONFIG.cta.url;
+      };
+
+      // Fire viewed
+      setTimeout(() => fireEvent(CONFIG.events.bannerViewed, { headline: CONFIG.hero.headline }), 1200);
+    })();
+  </script>
+</body>
+
+</html>

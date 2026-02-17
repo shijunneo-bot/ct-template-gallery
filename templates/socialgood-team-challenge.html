@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SocialGood â€“ Community Challenge</title>
+<script>
+var CONFIG = {
+  brandColor: '#00E676',
+  brandDark: '#00C853',
+  brandName: 'SocialGood',
+  heading: 'Community Impact Challenge',
+  goal: 10000,
+  current: 8234,
+  unit: 'cashback actions',
+  reward: '$5,000 donated to charity',
+  rewardEmoji: 'ðŸŒ',
+  daysLeft: 6,
+  contributors: 342,
+  userContribution: 12,
+  userPctRank: 15,
+  eventName: 'SG_TeamChallenge',
+  deeplink: 'socialgood://shop',
+  ctaText: 'Contribute Now',
+  leaderboard: [
+    { name: 'Aiko T.', count: 47, avatar: 'ðŸ¥‡' },
+    { name: 'Marcus L.', count: 39, avatar: 'ðŸ¥ˆ' },
+    { name: 'Priya S.', count: 34, avatar: 'ðŸ¥‰' },
+    { name: 'Chen W.', count: 28, avatar: '4' },
+    { name: 'Sarah K.', count: 25, avatar: '5' }
+  ]
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0B0F1A;color:#F0F4F8;display:flex;align-items:center;justify-content:center}
+.card{width:100%;max-width:380px;background:#131929;border-radius:20px;padding:24px 20px;margin:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.close{position:absolute;top:14px;right:14px;background:none;border:none;color:#6B7A94;font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.brand{font-size:11px;font-weight:600;letter-spacing:.5px;color:#6B7A94;text-transform:uppercase;margin-bottom:10px}
+h2{font-size:20px;font-weight:700;margin-bottom:14px}
+.big-numbers{text-align:center;padding:16px 0;margin-bottom:16px}
+.current-num{font-size:40px;font-weight:800;letter-spacing:-1px}
+.goal-text{font-size:13px;color:#6B7A94;margin-top:2px}
+.progress-track{width:100%;height:10px;background:#1A2236;border-radius:5px;overflow:hidden;margin-bottom:6px}
+.progress-fill{height:100%;border-radius:5px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.meta-row{display:flex;justify-content:space-between;font-size:12px;color:#6B7A94;margin-bottom:20px}
+.meta-row b{color:#F0F4F8}
+.reward-banner{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(0,230,118,.06) 0%,rgba(0,200,83,.03) 100%);border:1px solid rgba(0,230,118,.15);border-radius:12px;margin-bottom:20px}
+.reward-emoji{font-size:24px}
+.reward-text{font-size:13px;color:#C9D1D9;line-height:1.35}
+.reward-text b{color:var(--bc)}
+.you-card{padding:12px 14px;background:#1A2236;border-radius:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.you-label{font-size:13px;color:#8B95A8}
+.you-label b{color:#F0F4F8;font-size:15px}
+.you-rank{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:600}
+.lb{margin-bottom:20px}
+.lb-title{font-size:12px;font-weight:600;color:#6B7A94;letter-spacing:.3px;text-transform:uppercase;margin-bottom:8px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.lb-row:last-child{border:none}
+.lb-pos{width:24px;text-align:center;font-size:14px}
+.lb-name{flex:1;font-size:13px;color:#C9D1D9}
+.lb-count{font-size:13px;font-weight:700}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#0B0F1A;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <button class="close" id="closeBtn" aria-label="Close">Ã—</button>
+  <div class="brand" id="brandLabel"></div>
+  <h2 id="heading"></h2>
+
+  <div class="big-numbers">
+    <div class="current-num" id="currentNum"></div>
+    <div class="goal-text" id="goalText"></div>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="meta-row">
+    <span><b id="contribCount"></b> contributors</span>
+    <span><b id="daysLeft"></b> days left</span>
+  </div>
+
+  <div class="reward-banner">
+    <span class="reward-emoji" id="rewardEmoji"></span>
+    <div class="reward-text">Goal reward: <b id="rewardText"></b></div>
+  </div>
+
+  <div class="you-card">
+    <div class="you-label">Your contribution: <b id="userCount"></b></div>
+    <div class="you-rank" id="userRank"></div>
+  </div>
+
+  <div class="lb">
+    <div class="lb-title">Top contributors</div>
+    <div id="lbList"></div>
+  </div>
+
+  <button class="btn" id="ctaBtn"></button>
+</div>
+<script>
+(function(){
+  var bc = CONFIG.brandColor;
+  document.documentElement.style.setProperty('--bc', bc);
+  document.getElementById('brandLabel').textContent = CONFIG.brandName;
+  document.getElementById('heading').textContent = CONFIG.heading;
+
+  var pct = Math.min(Math.round((CONFIG.current / CONFIG.goal) * 100), 100);
+  document.getElementById('currentNum').textContent = CONFIG.current.toLocaleString();
+  document.getElementById('currentNum').style.color = bc;
+  document.getElementById('goalText').textContent = 'of ' + CONFIG.goal.toLocaleString() + ' ' + CONFIG.unit;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressFill').style.background = 'linear-gradient(90deg,' + bc + ',' + CONFIG.brandDark + ')';
+  document.getElementById('contribCount').textContent = CONFIG.contributors;
+  document.getElementById('daysLeft').textContent = CONFIG.daysLeft;
+  document.getElementById('rewardEmoji').textContent = CONFIG.rewardEmoji;
+  document.getElementById('rewardText').textContent = CONFIG.reward;
+  document.getElementById('userCount').textContent = CONFIG.userContribution;
+
+  var rank = document.getElementById('userRank');
+  rank.textContent = 'Top ' + CONFIG.userPctRank + '%';
+  rank.style.background = bc + '18';
+  rank.style.color = bc;
+
+  // Leaderboard
+  var lbList = document.getElementById('lbList');
+  CONFIG.leaderboard.forEach(function(p){
+    var row = document.createElement('div');
+    row.className = 'lb-row';
+    row.innerHTML =
+      '<span class="lb-pos">' + p.avatar + '</span>' +
+      '<span class="lb-name">' + p.name + '</span>' +
+      '<span class="lb-count" style="color:' + bc + '">' + p.count + '</span>';
+    lbList.appendChild(row);
+  });
+
+  var btn = document.getElementById('ctaBtn');
+  btn.textContent = CONFIG.ctaText;
+  btn.style.background = bc;
+
+  function fireEvent(name, props){
+    try{
+      if(window.CleverTap) window.CleverTap.pushEvent(name, props);
+      else if(window.clevertap) window.clevertap.event.push(name, props);
+    }catch(e){}
+    try{
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
+        window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:name,properties:props}));
+      }
+    }catch(e){}
+  }
+
+  fireEvent(CONFIG.eventName + '_Viewed', {
+    Current: CONFIG.current,
+    Goal: CONFIG.goal,
+    Pct_Complete: pct,
+    User_Contribution: CONFIG.userContribution,
+    Days_Left: CONFIG.daysLeft
+  });
+
+  btn.addEventListener('click', function(){
+    fireEvent(CONFIG.eventName + '_CTA_Clicked', {
+      User_Contribution: CONFIG.userContribution,
+      Deeplink: CONFIG.deeplink
+    });
+    window.location.href = CONFIG.deeplink;
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', function(){
+    fireEvent(CONFIG.eventName + '_Dismissed', {
+      Pct_Complete: pct,
+      User_Contribution: CONFIG.userContribution
+    });
+    window.location.href = 'wzrk://exit';
+  });
+})();
+</script>
+</body>
+</html>
