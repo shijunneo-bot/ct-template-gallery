@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: false,
+      brand: { name:"FINN", primary:"#2563EB", primaryLight:"#60A5FA", primaryDark:"#1D4ED8", dark:"#0F172A", darkCard:"#1E293B", white:"#FFFFFF", accent:"#10B981" },
+      steps: [
+        { id:"welcome", headline:"Get Paid Early", description:"Access up to 50% of your earned wages before payday — no loans, no interest, no stress.", emoji:"👋", bgColor:"#0F172A", accentColor:"#2563EB" },
+        { id:"security", headline:"Bank-Level Security", description:"256-bit encryption protects every transaction. Your data stays yours — always.", emoji:"🔒", bgColor:"#0C1929", accentColor:"#7C3AED" },
+        { id:"instant", headline:"Instant Transfers", description:"Money hits your account in seconds, not days. Works with any bank in Southeast Asia.", emoji:"âš¡", bgColor:"#091420", accentColor:"#F59E0B" },
+        { id:"start", headline:"Ready to Go", description:"Connect your employer in 2 minutes. First withdrawal is free — see what you've already earned.", emoji:"🚀", bgColor:"#071225", accentColor:"#10B981" },
+      ],
+      navigation: { showDots:true, showSkip:true, skipText:"Skip", nextText:"Next", finalText:"Get Started" },
+      cta: { url:"finn://onboarding/connect-employer" },
+      events: { walkthroughViewed:"Onboarding_Viewed", stepViewed:"Onboarding_Step_Viewed", walkthroughCompleted:"Onboarding_Completed", walkthroughSkipped:"Onboarding_Skipped" },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--primary:#2563EB;--primary-light:#60A5FA;--dark:#0F172A;--text:#FFF;--text-muted:rgba(255,255,255,.5)}
+    body{background:var(--dark);height:100vh;font-family:'Sora',sans-serif;color:var(--text);overflow:hidden;-webkit-user-select:none;user-select:none;transition:background .5s ease}
+    .skip{position:fixed;top:16px;right:16px;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:rgba(255,255,255,.4);background:none;border:none;cursor:pointer;z-index:100;padding:8px 12px}.skip:active{color:rgba(255,255,255,.7)}.skip.hidden{display:none}
+
+    .viewport{position:relative;width:100%;height:100%;touch-action:pan-y}
+    .step{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px 160px;will-change:transform,opacity}
+    .step.hidden{visibility:hidden;pointer-events:none}
+
+    .step-visual{width:160px;height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:36px;position:relative}
+    .step-visual::before{content:'';position:absolute;width:140px;height:140px;border-radius:50%;opacity:.08;filter:blur(35px)}
+    .step-emoji{font-size:80px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.3));animation:emojiFloat 3s ease-in-out infinite}
+    @keyframes emojiFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    /* Decorative orbit ring around emoji */
+    .step-orbit{position:absolute;inset:-8px;border-radius:50%;border:2px solid transparent;border-top-color:rgba(255,255,255,.08);animation:orbitSpin 4s linear infinite}
+    @keyframes orbitSpin{to{transform:rotate(360deg)}}
+
+    .step-headline{font-size:26px;font-weight:800;text-align:center;margin-bottom:12px;line-height:1.2}
+    .step-desc{font-size:15px;color:var(--text-muted);text-align:center;line-height:1.6;max-width:300px}
+
+    .nav-area{position:fixed;bottom:0;left:0;right:0;padding:0 28px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:20px;z-index:50}
+    .dots{display:flex;gap:10px}
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s ease}.dot.active{width:28px;border-radius:4px;background:var(--primary)}
+
+    .next-btn{width:100%;max-width:340px;padding:17px;border-radius:16px;border:none;font-family:'Sora',sans-serif;font-size:16px;font-weight:800;cursor:pointer;color:var(--text);background:var(--primary);transition:transform .2s,box-shadow .2s,background .3s;position:relative;overflow:hidden}
+    .next-btn:active{transform:scale(.97)}
+    .next-btn.final{background:linear-gradient(135deg,var(--primary),#10B981);box-shadow:0 8px 30px rgba(37,99,235,.25)}
+    .next-btn.final::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.1) 50%,transparent 60%);animation:btnShimmer 2.5s infinite}
+    @keyframes btnShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  </style>
+</head>
+<body>
+  <button class="skip" id="skipBtn"></button>
+  <div class="viewport" id="viewport"></div>
+  <div class="nav-area">
+    <div class="dots" id="dots"></div>
+    <button class="next-btn" id="nextBtn"></button>
+  </div>
+
+  <script>
+    function fireEvent(n,p){try{if(window.CleverTap)window.CleverTap.pushEvent(n,p||{});else if(window.webkit?.messageHandlers?.clevertap)window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:n,properties:p||{}}));else if(window.clevertap)window.clevertap.event.push(n,p||{})}catch(e){console.log("CT:",n,p)}}
+
+    let cur=0;
+    const total=CONFIG.steps.length;
+    let touchStartX=0, touchDx=0, swiping=false;
+    const stepEls=[];
+
+    (function init(){
+      const root=document.documentElement;
+      root.style.setProperty("--primary",CONFIG.brand.primary);
+
+      // Skip
+      const skip=document.getElementById("skipBtn");
+      if(CONFIG.navigation.showSkip){skip.textContent=CONFIG.navigation.skipText;skip.onclick=()=>{fireEvent(CONFIG.events.walkthroughSkipped,{skipped_at_step:cur});if(CONFIG.cta.url)location.href=CONFIG.cta.url}}
+      else skip.style.display="none";
+
+      // Build steps
+      const vp=document.getElementById("viewport");
+      CONFIG.steps.forEach((s,i)=>{
+        const el=document.createElement("div");
+        el.className="step"+(i>0?" hidden":"");
+        el.style.transform=i===0?"translateX(0)":"translateX(100%)";
+        el.style.opacity=i===0?"1":"0";
+        el.innerHTML=`
+          <div class="step-visual" style="--accent:${s.accentColor}">
+            <div class="step-orbit" style="border-top-color:${s.accentColor}40"></div>
+            <span class="step-emoji">${s.emoji}</span>
+          </div>
+          <h2 class="step-headline">${s.headline}</h2>
+          <p class="step-desc">${s.description}</p>`;
+        el.querySelector(".step-visual").style.setProperty("--accent",s.accentColor);
+        const glow=el.querySelector(".step-visual::before");
+        vp.appendChild(el);
+        stepEls.push(el);
+      });
+
+      // Set glow colors via inline after
+      stepEls.forEach((el,i)=>{
+        const vis=el.querySelector(".step-visual");
+        vis.style.cssText+=`;--glow:${CONFIG.steps[i].accentColor}`;
+        // Use a real element for glow
+        const g=document.createElement("div");
+        g.style.cssText=`position:absolute;width:140px;height:140px;border-radius:50%;background:${CONFIG.steps[i].accentColor};opacity:.08;filter:blur(35px)`;
+        vis.insertBefore(g,vis.firstChild);
+      });
+
+      // Dots
+      if(CONFIG.navigation.showDots){
+        const dotsEl=document.getElementById("dots");
+        for(let i=0;i<total;i++){const d=document.createElement("div");d.className="dot"+(i===0?" active":"");d.dataset.i=i;dotsEl.appendChild(d)}
+      }
+
+      updateBtn();
+      document.getElementById("nextBtn").onclick=()=>{
+        if(cur<total-1)goTo(cur+1,"forward");
+        else{fireEvent(CONFIG.events.walkthroughCompleted);if(CONFIG.cta.url)location.href=CONFIG.cta.url}
+      };
+
+      // Native swipe
+      vp.addEventListener("touchstart",e=>{touchStartX=e.touches[0].clientX;swiping=true},{passive:true});
+      vp.addEventListener("touchend",e=>{
+        if(!swiping)return;swiping=false;
+        const dx=e.changedTouches[0].clientX-touchStartX;
+        if(Math.abs(dx)>50){
+          if(dx<0&&cur<total-1)goTo(cur+1,"forward");
+          else if(dx>0&&cur>0)goTo(cur-1,"backward");
+        }
+      },{passive:true});
+
+      // Mouse swipe fallback
+      let mouseDown=false,mouseStartX=0;
+      vp.addEventListener("mousedown",e=>{mouseDown=true;mouseStartX=e.clientX});
+      window.addEventListener("mouseup",e=>{
+        if(!mouseDown)return;mouseDown=false;
+        const dx=e.clientX-mouseStartX;
+        if(Math.abs(dx)>50){
+          if(dx<0&&cur<total-1)goTo(cur+1,"forward");
+          else if(dx>0&&cur>0)goTo(cur-1,"backward");
+        }
+      });
+
+      document.body.style.background=CONFIG.steps[0].bgColor;
+      fireEvent(CONFIG.events.walkthroughViewed,{total_steps:total});
+      fireEvent(CONFIG.events.stepViewed,{step_id:CONFIG.steps[0].id,step_number:1});
+    })();
+
+    function goTo(n,dir){
+      if(n===cur||n<0||n>=total)return;
+      const old=stepEls[cur], nw=stepEls[n];
+
+      // Position new off-screen
+      nw.classList.remove("hidden");
+      nw.style.transition="none";
+      nw.style.transform=dir==="forward"?"translateX(100%)":"translateX(-100%)";
+      nw.style.opacity="0";
+      nw.offsetHeight; // reflow
+
+      // Animate old out
+      old.style.transition="transform .45s cubic-bezier(.16,1,.3,1),opacity .45s ease";
+      old.style.transform=dir==="forward"?"translateX(-30%)":"translateX(30%)";
+      old.style.opacity="0";
+
+      // Animate new in
+      nw.style.transition="transform .45s cubic-bezier(.16,1,.3,1),opacity .45s ease";
+      nw.style.transform="translateX(0)";
+      nw.style.opacity="1";
+
+      setTimeout(()=>{old.classList.add("hidden")},500);
+
+      document.body.style.background=CONFIG.steps[n].bgColor;
+      document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("active",i===n));
+      cur=n;
+      updateBtn();
+
+      const skip=document.getElementById("skipBtn");
+      if(n===total-1)skip.classList.add("hidden");else skip.classList.remove("hidden");
+
+      fireEvent(CONFIG.events.stepViewed,{step_id:CONFIG.steps[n].id,step_number:n+1});
+    }
+
+    function updateBtn(){
+      const btn=document.getElementById("nextBtn");
+      const last=cur===total-1;
+      btn.textContent=last?CONFIG.navigation.finalText:CONFIG.navigation.nextText;
+      btn.classList.toggle("final",last);
+    }
+  </script>
+</body>
+</html>

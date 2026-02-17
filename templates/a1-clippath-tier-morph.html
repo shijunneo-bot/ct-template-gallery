@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "FWD",
+        appName: "Omne",
+        primary: "#E87722",
+        primaryDark: "#C45F0A",
+        primaryLight: "#FFF3E8",
+        secondary: "#1A1A2E",
+        accent: "#FFB347",
+        white: "#FFFFFF",
+        black: "#0A0A14",
+      },
+
+      upgrade: {
+        userName: "Sarah",
+        fromTier: 0,
+        toTier: 1,
+      },
+
+      tiers: [
+        {
+          id: "silver",
+          name: "Silver",
+          shardColor: "#94A3B8",
+          shardColorLight: "#CBD5E1",
+          glowColor: "rgba(148, 163, 184, 0.3)",
+          benefits: ["Basic coverage", "Annual health check"],
+        },
+        {
+          id: "gold",
+          name: "Gold",
+          shardColor: "#F59E0B",
+          shardColorLight: "#FCD34D",
+          glowColor: "rgba(245, 158, 11, 0.3)",
+          benefits: ["Priority claims", "Wellness rewards", "Family coverage"],
+        },
+        {
+          id: "platinum",
+          name: "Platinum",
+          shardColor: "#A78BFA",
+          shardColorLight: "#C4B5FD",
+          glowColor: "rgba(167, 139, 250, 0.3)",
+          benefits: ["Concierge service", "Global coverage", "VIP lounge access", "Zero waiting period"],
+        },
+      ],
+
+      cta: {
+        text: "Explore Gold Benefits",
+        url: "omne://tier/gold",
+      },
+
+      events: {
+        tierViewed:     "TierMorph_Viewed",
+        tierCTAClicked: "TierMorph_CTA_Clicked",
+        tierDismissed:  "TierMorph_Dismissed",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0A0A14;
+      --shard-from: #94A3B8;
+      --shard-to: #F59E0B;
+      --shard-glow: rgba(245, 158, 11, 0.3);
+      --text: #FFFFFF;
+      --text-muted: rgba(255,255,255,0.55);
+      --brand: #E87722;
+    }
+
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.02) 0%, transparent 60%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Sora', sans-serif;
+      color: var(--text);
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Dismiss */
+    .dismiss {
+      position: fixed; top: 12px; right: 12px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4);
+      font-size: 18px; cursor: pointer; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .dismiss:active { transform: scale(0.9); background: rgba(255,255,255,0.12); }
+
+    /* Greeting */
+    .greeting {
+      font-size: 14px; color: var(--text-muted);
+      margin-bottom: 8px;
+      opacity: 0; animation: fadeIn 0.6s 0.1s ease forwards;
+    }
+    .upgrade-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--brand);
+      margin-bottom: 24px;
+      opacity: 0; animation: fadeIn 0.6s 0.3s ease forwards;
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* Shard container */
+    .shard-stage {
+      position: relative;
+      width: 180px; height: 200px;
+      margin-bottom: 28px;
+    }
+
+    .shard {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      transition: clip-path 1.0s cubic-bezier(0.7, 0.3, 0, 1),
+                  background 1.0s cubic-bezier(0.7, 0.3, 0, 1);
+    }
+
+    /* Shield shape — 8 shards assembling a shield */
+    .shard-1 { clip-path: polygon(50% 0%, 80% 0%, 65% 25%, 50% 15%);
+               animation: shardIn 0.5s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-2 { clip-path: polygon(80% 0%, 100% 10%, 90% 35%, 65% 25%);
+               animation: shardIn 0.5s 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-3 { clip-path: polygon(20% 0%, 50% 0%, 50% 15%, 35% 25%);
+               animation: shardIn 0.5s 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-4 { clip-path: polygon(0% 10%, 20% 0%, 35% 25%, 10% 35%);
+               animation: shardIn 0.5s 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-5 { clip-path: polygon(10% 35%, 35% 25%, 50% 50%, 25% 60%);
+               animation: shardIn 0.5s 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-6 { clip-path: polygon(65% 25%, 90% 35%, 75% 60%, 50% 50%);
+               animation: shardIn 0.5s 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-7 { clip-path: polygon(25% 60%, 50% 50%, 50% 85%, 35% 75%);
+               animation: shardIn 0.5s 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .shard-8 { clip-path: polygon(50% 50%, 75% 60%, 65% 75%, 50% 85%);
+               animation: shardIn 0.5s 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes shardIn {
+      0% { opacity: 0; transform: scale(0.6); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Morph state — shards shift to new positions (trophy shape) */
+    .shard-stage.morphed .shard-1 { clip-path: polygon(40% 0%, 60% 0%, 55% 15%, 45% 15%); }
+    .shard-stage.morphed .shard-2 { clip-path: polygon(60% 0%, 85% 15%, 75% 30%, 55% 15%); }
+    .shard-stage.morphed .shard-3 { clip-path: polygon(15% 15%, 40% 0%, 45% 15%, 25% 30%); }
+    .shard-stage.morphed .shard-4 { clip-path: polygon(25% 30%, 45% 15%, 55% 15%, 75% 30%); }
+    .shard-stage.morphed .shard-5 { clip-path: polygon(30% 30%, 70% 30%, 65% 55%, 35% 55%); }
+    .shard-stage.morphed .shard-6 { clip-path: polygon(35% 55%, 65% 55%, 60% 65%, 40% 65%); }
+    .shard-stage.morphed .shard-7 { clip-path: polygon(40% 65%, 60% 65%, 60% 90%, 40% 90%); }
+    .shard-stage.morphed .shard-8 { clip-path: polygon(30% 90%, 70% 90%, 70% 100%, 30% 100%); }
+
+    /* Glow behind shards */
+    .shard-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--shard-glow);
+      filter: blur(40px);
+      opacity: 0;
+      transition: opacity 0.8s ease, background 1s ease;
+    }
+    .shard-stage.assembled .shard-glow { opacity: 1; }
+
+    /* Tier name */
+    .tier-name {
+      font-size: 28px; font-weight: 800;
+      margin-bottom: 4px;
+      opacity: 0; transform: translateY(12px);
+    }
+    .tier-name.show { animation: fadeInUp 0.6s ease forwards; }
+
+    .tier-subtitle {
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 24px;
+      opacity: 0; transform: translateY(8px);
+    }
+    .tier-subtitle.show { animation: fadeInUp 0.5s 0.1s ease forwards; }
+
+    /* Benefits */
+    .benefits {
+      list-style: none;
+      text-align: left;
+      width: 100%;
+      max-width: 280px;
+      margin-bottom: 28px;
+    }
+    .benefit {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0;
+      font-size: 14px; color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      opacity: 0; transform: translateY(10px);
+    }
+    .benefit.show { animation: fadeInUp 0.4s ease forwards; }
+    .benefit-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 16px 36px;
+      border-radius: 50px;
+      border: none;
+      font-family: 'Sora', sans-serif;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      color: var(--bg);
+      transition: transform 0.2s, box-shadow 0.2s;
+      opacity: 0; transform: translateY(10px);
+    }
+    .cta.show { animation: fadeInUp 0.5s ease forwards; }
+    .cta:active { transform: scale(0.96) translateY(0); }
+
+    /* Confetti */
+    .confetti-piece {
+      position: fixed;
+      width: 8px; height: 8px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .confetti-piece.fire {
+      animation: confettiBurst var(--dur) var(--delay) ease-out forwards;
+    }
+    @keyframes confettiBurst {
+      0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.3); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="greeting"></div>
+  <div class="upgrade-label">TIER UPGRADE</div>
+
+  <div class="shard-stage" id="shardStage">
+    <div class="shard-glow"></div>
+    <div class="shard shard-1"></div>
+    <div class="shard shard-2"></div>
+    <div class="shard shard-3"></div>
+    <div class="shard shard-4"></div>
+    <div class="shard shard-5"></div>
+    <div class="shard shard-6"></div>
+    <div class="shard shard-7"></div>
+    <div class="shard shard-8"></div>
+  </div>
+
+  <div class="tier-name" id="tierName"></div>
+  <div class="tier-subtitle" id="tierSub"></div>
+  <ul class="benefits" id="benefits"></ul>
+  <button class="cta" id="cta"></button>
+
+  <script>
+    // ── Helpers ──
+    function fireEvent(name, props) {
+      try {
+        if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+        else if (window.webkit?.messageHandlers?.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} }));
+        else if (window.clevertap) window.clevertap.event.push(name, props || {});
+      } catch (e) { console.log("CT Event:", name, props); }
+    }
+    function dismiss() {
+      fireEvent(CONFIG.events.tierDismissed);
+      try { location.href = "wzrk://exit"; } catch (e) {}
+    }
+
+    // ── Init ──
+    (function init() {
+      const from = CONFIG.tiers[CONFIG.upgrade.fromTier];
+      const to = CONFIG.tiers[CONFIG.upgrade.toTier];
+      const root = document.documentElement;
+
+      root.style.setProperty("--shard-from", from.shardColor);
+      root.style.setProperty("--shard-to", to.shardColor);
+      root.style.setProperty("--shard-glow", to.glowColor);
+      root.style.setProperty("--brand", CONFIG.brand.primary);
+
+      // Set shard initial colors
+      document.querySelectorAll(".shard").forEach(s => {
+        s.style.background = `linear-gradient(135deg, ${from.shardColor}, ${from.shardColorLight})`;
+      });
+
+      // Greeting
+      document.querySelector(".greeting").textContent =
+        CONFIG.upgrade.userName ? `Congratulations, ${CONFIG.upgrade.userName}!` : "Congratulations!";
+
+      // Dismiss
+      if (CONFIG.includeDismissButton) {
+        const btn = document.createElement("button");
+        btn.className = "dismiss";
+        btn.innerHTML = "✕";
+        btn.onclick = dismiss;
+        document.body.appendChild(btn);
+      }
+
+      // Phase 1: Shards assemble (handled by CSS animation delays 0.5s–1.2s)
+      const stage = document.getElementById("shardStage");
+      setTimeout(() => stage.classList.add("assembled"), 1300);
+
+      // Phase 2: Morph to new tier shape + change colors
+      setTimeout(() => {
+        stage.classList.add("morphed");
+        document.querySelectorAll(".shard").forEach(s => {
+          s.style.background = `linear-gradient(135deg, ${to.shardColor}, ${to.shardColorLight})`;
+        });
+        document.querySelector(".shard-glow").style.background = to.glowColor;
+      }, 2400);
+
+      // Phase 3: Reveal tier info
+      setTimeout(() => {
+        const nameEl = document.getElementById("tierName");
+        nameEl.textContent = to.name + " Member";
+        nameEl.style.background = `linear-gradient(135deg, ${to.shardColor}, ${to.shardColorLight})`;
+        nameEl.style.webkitBackgroundClip = "text";
+        nameEl.style.webkitTextFillColor = "transparent";
+        nameEl.classList.add("show");
+      }, 3200);
+
+      setTimeout(() => {
+        document.getElementById("tierSub").textContent = `You've been upgraded from ${from.name}`;
+        document.getElementById("tierSub").classList.add("show");
+      }, 3400);
+
+      // Benefits
+      const benefitsList = document.getElementById("benefits");
+      to.benefits.forEach((b, i) => {
+        const li = document.createElement("li");
+        li.className = "benefit";
+        li.innerHTML = `<span class="benefit-check" style="background:${to.shardColor}20;color:${to.shardColor}">✓</span>${b}`;
+        benefitsList.appendChild(li);
+        setTimeout(() => li.classList.add("show"), 3600 + i * 120);
+      });
+
+      // CTA
+      setTimeout(() => {
+        const cta = document.getElementById("cta");
+        cta.textContent = CONFIG.cta.text;
+        cta.style.background = `linear-gradient(135deg, ${to.shardColor}, ${to.shardColorLight})`;
+        cta.classList.add("show");
+        cta.onclick = () => {
+          fireEvent(CONFIG.events.tierCTAClicked, { from_tier: from.id, to_tier: to.id });
+          if (CONFIG.cta.url) location.href = CONFIG.cta.url;
+        };
+      }, 3600 + to.benefits.length * 120 + 200);
+
+      // Confetti on morph
+      setTimeout(() => fireConfetti(to), 2500);
+
+      // Fire viewed event
+      fireEvent(CONFIG.events.tierViewed, { from_tier: from.id, to_tier: to.id, user: CONFIG.upgrade.userName });
+    })();
+
+    function fireConfetti(tier) {
+      const colors = [tier.shardColor, tier.shardColorLight, CONFIG.brand.accent, "#FFFFFF"];
+      const shapes = ["square", "circle"];
+      for (let i = 0; i < 35; i++) {
+        const el = document.createElement("div");
+        el.className = "confetti-piece";
+        const size = 4 + Math.random() * 8;
+        el.style.width = size + "px";
+        el.style.height = size + "px";
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.borderRadius = shapes[Math.floor(Math.random() * shapes.length)] === "circle" ? "50%" : "2px";
+        el.style.left = "50%";
+        el.style.top = "38%";
+        el.style.setProperty("--tx", (Math.random() - 0.5) * 500 + "px");
+        el.style.setProperty("--ty", (Math.random() - 0.7) * 600 + "px");
+        el.style.setProperty("--rot", Math.random() * 720 + "deg");
+        el.style.setProperty("--dur", (1.5 + Math.random() * 1.5) + "s");
+        el.style.setProperty("--delay", Math.random() * 0.3 + "s");
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.classList.add("fire"));
+        setTimeout(() => el.remove(), 4000);
+      }
+    }
+  </script>
+</body>
+
+</html>

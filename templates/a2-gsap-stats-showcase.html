@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "CDG Zig",
+        tagline: "Your Ride, Your Way",
+        primary: "#0066CC",
+        primaryLight: "#3B9AFF",
+        accent: "#FFB347",
+        dark: "#0A0E1A",
+        darkCard: "#111827",
+        white: "#FFFFFF",
+        green: "#10B981",
+      },
+
+      headline: "Your February Recap",
+      subheadline: "Here's how you moved this month",
+
+      stats: [
+        { id: "rides",   value: 47,   suffix: "",      label: "Rides Completed",   emoji: "🚕", isDecimal: false },
+        { id: "saved",   value: 12.5,  suffix: " hrs",  label: "Time Saved vs MRT", emoji: "⏱️", isDecimal: true },
+        { id: "fave",    value: "Changi T4", suffix: "", label: "Top Destination",   emoji: "📍", isDecimal: false, isText: true },
+        { id: "rating",  value: 4.9,  suffix: " ★",    label: "Your Avg Rating",   emoji: "⭐", isDecimal: true },
+      ],
+
+      // Optional highlight / comparison
+      highlight: {
+        enabled: true,
+        text: "Top 12% of CDG Zig riders in SG",
+        emoji: "🏆",
+      },
+
+      cta: {
+        text: "Book Your Next Ride",
+        url: "cdgzig://book",
+      },
+
+      events: {
+        statsViewed:     "StatsShowcase_Viewed",
+        statsCTAClicked: "StatsShowcase_CTA_Clicked",
+        statsDismissed:  "StatsShowcase_Dismissed",
+      },
+
+      animation: {
+        staggerDelay: 0.15,
+        counterDuration: 1.5,
+        entryEase: "back.out(1.7)",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0066CC;
+      --primary-light: #3B9AFF;
+      --dark: #0A0E1A;
+      --dark-card: #111827;
+      --text: #FFFFFF;
+      --text-muted: rgba(255,255,255,0.5);
+    }
+
+    body {
+      background: var(--dark);
+      background-image: radial-gradient(ellipse at 50% 0%, rgba(0,102,204,0.08) 0%, transparent 60%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 48px 20px 32px;
+      font-family: 'Sora', sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .dismiss {
+      position: fixed; top: 12px; right: 12px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4);
+      font-size: 18px; cursor: pointer; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .dismiss:active { transform: scale(0.9); }
+
+    .headline {
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 4px;
+      opacity: 0;
+    }
+    .subheadline {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 28px;
+      opacity: 0;
+    }
+
+    .stats-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--dark-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    /* Shimmer on each card */
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+      animation: shimmer 4s infinite;
+      pointer-events: none;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .stat-emoji {
+      font-size: 32px;
+      flex-shrink: 0;
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+    }
+
+    .stat-info { flex: 1; }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-value .suffix {
+      font-size: 16px;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    .highlight {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      opacity: 0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .highlight-emoji { font-size: 18px; }
+
+    .cta {
+      padding: 16px 40px;
+      border-radius: 50px;
+      border: none;
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      opacity: 0;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .cta:active { transform: scale(0.96); }
+    .cta::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 53px;
+      z-index: -1;
+      opacity: 0.4;
+      filter: blur(14px);
+    }
+  </style>
+</head>
+
+<body>
+  <h1 class="headline" id="headline"></h1>
+  <p class="subheadline" id="subheadline"></p>
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="highlight" id="highlight"></div>
+  <button class="cta" id="cta"></button>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12/dist/gsap.min.js"></script>
+  <script>
+    // ── Helpers ──
+    function fireEvent(name, props) {
+      try {
+        if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+        else if (window.webkit?.messageHandlers?.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} }));
+        else if (window.clevertap) window.clevertap.event.push(name, props || {});
+      } catch (e) { console.log("CT Event:", name, props); }
+    }
+    function dismiss() {
+      fireEvent(CONFIG.events.statsDismissed);
+      try { location.href = "wzrk://exit"; } catch (e) {}
+    }
+
+    // ── Init ──
+    (function init() {
+      const root = document.documentElement;
+      root.style.setProperty("--primary", CONFIG.brand.primary);
+      root.style.setProperty("--primary-light", CONFIG.brand.primaryLight);
+      root.style.setProperty("--dark", CONFIG.brand.dark);
+      root.style.setProperty("--dark-card", CONFIG.brand.darkCard);
+
+      // Dismiss
+      if (CONFIG.includeDismissButton) {
+        const btn = document.createElement("button");
+        btn.className = "dismiss"; btn.innerHTML = "✕"; btn.onclick = dismiss;
+        document.body.appendChild(btn);
+      }
+
+      // Headline
+      document.getElementById("headline").textContent = CONFIG.headline;
+      document.getElementById("subheadline").textContent = CONFIG.subheadline;
+
+      // Build stat cards
+      const grid = document.getElementById("statsGrid");
+      CONFIG.stats.forEach((stat) => {
+        const card = document.createElement("div");
+        card.className = "stat-card";
+        card.innerHTML = `
+          <div class="stat-emoji">${stat.emoji}</div>
+          <div class="stat-info">
+            <div class="stat-value" id="sv-${stat.id}">${stat.isText ? "" : "0"}<span class="suffix">${stat.isText ? "" : stat.suffix}</span></div>
+            <div class="stat-label">${stat.label}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Highlight
+      const hl = document.getElementById("highlight");
+      if (CONFIG.highlight.enabled) {
+        hl.innerHTML = `<span class="highlight-emoji">${CONFIG.highlight.emoji}</span>${CONFIG.highlight.text}`;
+      } else {
+        hl.style.display = "none";
+      }
+
+      // CTA
+      const cta = document.getElementById("cta");
+      cta.textContent = CONFIG.cta.text;
+      cta.style.background = CONFIG.brand.primary;
+      cta.style.color = CONFIG.brand.white;
+      cta.querySelector("::after") // for glow
+      cta.onclick = () => {
+        fireEvent(CONFIG.events.statsCTAClicked);
+        if (CONFIG.cta.url) location.href = CONFIG.cta.url;
+      };
+
+      // ── GSAP Animation Sequence ──
+      const tl = gsap.timeline({ delay: 0.3 });
+
+      // Headline + subheadline
+      tl.to(".headline", { opacity: 1, duration: 0.6, ease: "power2.out" })
+        .to(".subheadline", { opacity: 1, duration: 0.5, ease: "power2.out" }, "-=0.3");
+
+      // Stat cards stagger in
+      tl.to(".stat-card", {
+        opacity: 1,
+        y: 0,
+        duration: 0.55,
+        stagger: CONFIG.animation.staggerDelay,
+        ease: CONFIG.animation.entryEase,
+      }, "-=0.1");
+
+      // Counter animations — start slightly before cards finish
+      CONFIG.stats.forEach((stat, i) => {
+        const el = document.getElementById("sv-" + stat.id);
+        if (!el) return;
+
+        if (stat.isText) {
+          // Text stats just appear
+          gsap.to(el, {
+            duration: 0.01,
+            delay: 0.8 + i * CONFIG.animation.staggerDelay,
+            onComplete: () => {
+              el.innerHTML = `${stat.value}<span class="suffix">${stat.suffix}</span>`;
+            }
+          });
+        } else {
+          // Numeric counters
+          const obj = { val: 0 };
+          gsap.to(obj, {
+            val: stat.value,
+            duration: CONFIG.animation.counterDuration,
+            delay: 0.7 + i * CONFIG.animation.staggerDelay,
+            ease: "power2.out",
+            onUpdate: () => {
+              const display = stat.isDecimal
+                ? obj.val.toFixed(1)
+                : Math.round(obj.val);
+              el.innerHTML = `${display}<span class="suffix">${stat.suffix}</span>`;
+            }
+          });
+        }
+
+        // Apply gradient to stat value
+        el.style.background = `linear-gradient(135deg, ${CONFIG.brand.primaryLight}, ${CONFIG.brand.primary})`;
+        el.style.webkitBackgroundClip = "text";
+        el.style.webkitTextFillColor = "transparent";
+      });
+
+      // Highlight
+      if (CONFIG.highlight.enabled) {
+        tl.to(".highlight", { opacity: 1, duration: 0.5, ease: "power2.out" }, "-=0.2");
+      }
+
+      // CTA
+      tl.to(".cta", { opacity: 1, duration: 0.5, ease: "power2.out" });
+
+      // Fire viewed
+      fireEvent(CONFIG.events.statsViewed, { stat_count: CONFIG.stats.length });
+    })();
+  </script>
+</body>
+
+</html>
