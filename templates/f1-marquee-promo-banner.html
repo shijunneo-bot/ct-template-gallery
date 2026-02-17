@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "Whirlpool",
+        primary: "#FFD100",
+        primaryDark: "#E6BC00",
+        dark: "#1A1A1A",
+        darkCard: "#252525",
+        text: "#FFFFFF",
+        accent: "#FF4444",
+      },
+
+      banner: {
+        headline: "Mega Appliance Sale",
+        subheadline: "Limited stocks Â· Ends midnight",
+        backgroundColor: "#1A1A1A",
+      },
+
+      // Each marquee row scrolls independently
+      rows: [
+        {
+          items: [
+            { text: "Washing Machine", tag: "40% OFF", emoji: "ðŸ«§" },
+            { text: "Air Conditioner", tag: "RM 400 Rebate", emoji: "â„ï¸" },
+            { text: "Refrigerator", tag: "Free Delivery", emoji: "ðŸ§Š" },
+            { text: "Microwave Oven", tag: "Buy 1 Free 1", emoji: "ðŸ³" },
+            { text: "Air Purifier", tag: "30% OFF", emoji: "ðŸŒ¿" },
+            { text: "Water Heater", tag: "RM 200 Rebate", emoji: "ðŸš¿" },
+          ],
+          direction: "left",
+          speed: 35, // seconds per full cycle
+          accentTag: true, // tag uses accent color
+        },
+        {
+          items: [
+            { text: "FREE Installation", emoji: "ðŸ”§" },
+            { text: "0% Instalment 24 Months", emoji: "ðŸ’³" },
+            { text: "Extended 5-Year Warranty", emoji: "ðŸ›¡ï¸" },
+            { text: "Trade-In Bonus RM300", emoji: "â™»ï¸" },
+            { text: "Same-Day Delivery KL", emoji: "ðŸšš" },
+            { text: "FREE Installation", emoji: "ðŸ”§" },
+          ],
+          direction: "right",
+          speed: 40,
+          accentTag: false,
+        },
+      ],
+
+      cta: {
+        text: "Shop the Sale â†’",
+        url: "whirlpool://sale/mega",
+      },
+
+      events: {
+        bannerViewed:     "MarqueeBanner_Viewed",
+        bannerCTAClicked: "MarqueeBanner_CTA_Clicked",
+        bannerDismissed:  "MarqueeBanner_Dismissed",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700;800&display=swap">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --primary:#FFD100;--primary-dark:#E6BC00;--dark:#1A1A1A;
+      --dark-card:#252525;--text:#FFF;--text-muted:rgba(255,255,255,.5);
+      --accent:#FF4444;
+    }
+    body{
+      background:var(--dark);min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;color:var(--text);
+      padding:44px 0 32px;overflow:hidden;
+      -webkit-user-select:none;user-select:none;
+    }
+    .dismiss{position:fixed;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}.dismiss:active{transform:scale(.9)}
+
+    @keyframes fadeIn{to{opacity:1}}
+    @keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
+
+    /* Header */
+    .header{text-align:center;padding:0 24px;margin-bottom:20px}
+    .h-badge{
+      display:inline-block;padding:4px 14px;border-radius:20px;
+      font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+      background:var(--accent);color:#fff;margin-bottom:10px;
+      opacity:0;animation:fadeIn .4s .2s ease forwards;
+    }
+    .h-headline{
+      font-size:24px;font-weight:800;margin-bottom:4px;line-height:1.2;
+      opacity:0;animation:fadeIn .5s .3s ease forwards;
+    }
+    .h-headline em{font-style:normal;color:var(--primary)}
+    .h-sub{font-size:13px;color:var(--text-muted);opacity:0;animation:fadeIn .5s .4s ease forwards}
+
+    /* Marquee container */
+    .marquee-section{
+      width:100%;overflow:hidden;margin-bottom:6px;
+      opacity:0;animation:fadeIn .5s .5s ease forwards;
+      position:relative;
+    }
+    /* Edge fade */
+    .marquee-section::before,.marquee-section::after{
+      content:'';position:absolute;top:0;bottom:0;width:32px;z-index:5;pointer-events:none;
+    }
+    .marquee-section::before{left:0;background:linear-gradient(to right,var(--dark),transparent)}
+    .marquee-section::after{right:0;background:linear-gradient(to left,var(--dark),transparent)}
+
+    .marquee-track{
+      display:flex;width:max-content;
+      animation-timing-function:linear;
+      animation-iteration-count:infinite;
+    }
+    .marquee-track.left{animation-name:scrollLeft}
+    .marquee-track.right{animation-name:scrollRight}
+    .marquee-track.paused{animation-play-state:paused}
+
+    @keyframes scrollLeft{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    @keyframes scrollRight{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+
+    /* Pill items */
+    .m-pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 18px;margin:0 5px;
+      border-radius:50px;
+      background:var(--dark-card);
+      border:1px solid rgba(255,255,255,.06);
+      white-space:nowrap;
+      flex-shrink:0;
+      transition:border-color .2s;
+    }
+    .m-pill:active{border-color:var(--primary)}
+    .m-emoji{font-size:16px}
+    .m-text{font-size:13px;font-weight:700;color:rgba(255,255,255,.85)}
+    .m-tag{
+      font-size:10px;font-weight:800;letter-spacing:.5px;
+      padding:3px 8px;border-radius:12px;
+      background:rgba(255,255,255,.08);color:var(--primary);
+    }
+    .m-tag.accent{background:rgba(255,68,68,.15);color:var(--accent)}
+
+    /* Separator line */
+    .sep{
+      width:40px;height:2px;border-radius:1px;
+      background:rgba(255,255,255,.06);margin:12px auto;
+    }
+
+    /* CTA */
+    .cta-wrap{
+      padding:0 24px;width:100%;max-width:380px;
+      opacity:0;animation:fadeInUp .5s .7s ease forwards;
+      transform:translateY(8px);
+    }
+    .cta{
+      display:flex;align-items:center;justify-content:center;
+      width:100%;padding:16px;border-radius:16px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:15px;font-weight:800;
+      cursor:pointer;color:var(--dark);background:var(--primary);
+      transition:transform .2s;position:relative;overflow:hidden;
+    }
+    .cta:active{transform:scale(.97)}
+    /* Shimmer */
+    .cta::after{
+      content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.2) 50%,transparent 60%);
+      animation:ctaShimmer 3s infinite;
+    }
+    @keyframes ctaShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+    /* Scarcity footer */
+    .scarcity{
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      margin-top:14px;font-size:11px;color:var(--text-muted);
+      opacity:0;animation:fadeIn .5s .9s ease forwards;
+    }
+    .scarcity-dot{
+      width:6px;height:6px;border-radius:50%;background:var(--accent);
+      animation:pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="h-badge">ENDS TONIGHT</div>
+    <h2 class="h-headline">Mega <em>Appliance</em> Sale</h2>
+    <p class="h-sub" id="hSub"></p>
+  </div>
+
+  <div id="marquees"></div>
+
+  <div class="sep"></div>
+
+  <div class="cta-wrap">
+    <button class="cta" id="cta"></button>
+  </div>
+
+  <div class="scarcity">
+    <span class="scarcity-dot"></span>
+    <span>2,847 people viewing this sale right now</span>
+  </div>
+
+  <script>
+    function fireEvent(n,p){try{if(window.CleverTap)window.CleverTap.pushEvent(n,p||{});else if(window.webkit?.messageHandlers?.clevertap)window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:n,properties:p||{}}));else if(window.clevertap)window.clevertap.event.push(n,p||{})}catch(e){console.log("CT:",n,p)}}
+    function dismiss(){fireEvent(CONFIG.events.bannerDismissed);try{location.href="wzrk://exit"}catch(e){}}
+
+    (function init(){
+      if(CONFIG.includeDismissButton){const b=document.createElement("button");b.className="dismiss";b.innerHTML="âœ•";b.onclick=dismiss;document.body.appendChild(b)}
+
+      document.getElementById("hSub").textContent=CONFIG.banner.subheadline;
+
+      // Build marquee rows
+      const wrap=document.getElementById("marquees");
+      CONFIG.rows.forEach((row,ri)=>{
+        const section=document.createElement("div");
+        section.className="marquee-section";
+
+        const track=document.createElement("div");
+        track.className=`marquee-track ${row.direction}`;
+        track.style.animationDuration=row.speed+"s";
+
+        // Duplicate items 4x for seamless loop
+        const buildPills=()=>{
+          let html="";
+          row.items.forEach(item=>{
+            const tagClass=row.accentTag?"m-tag accent":"m-tag";
+            const tagHtml=item.tag?`<span class="${tagClass}">${item.tag}</span>`:"";
+            html+=`<span class="m-pill"><span class="m-emoji">${item.emoji}</span><span class="m-text">${item.text}</span>${tagHtml}</span>`;
+          });
+          return html;
+        };
+        // Need at least 2 copies for translateX(-50%) loop
+        track.innerHTML=buildPills()+buildPills()+buildPills()+buildPills();
+
+        // Pause on touch
+        track.addEventListener("touchstart",()=>track.classList.add("paused"),{passive:true});
+        track.addEventListener("touchend",()=>track.classList.remove("paused"));
+
+        section.appendChild(track);
+        wrap.appendChild(section);
+      });
+
+      // CTA
+      const cta=document.getElementById("cta");
+      cta.textContent=CONFIG.cta.text;
+      cta.onclick=()=>{
+        fireEvent(CONFIG.events.bannerCTAClicked);
+        if(CONFIG.cta.url)location.href=CONFIG.cta.url;
+      };
+
+      fireEvent(CONFIG.events.bannerViewed,{row_count:CONFIG.rows.length});
+    })();
+  </script>
+</body>
+</html>

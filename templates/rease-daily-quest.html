@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "Rease",
+        tagline: "Rent it, Lease it, Rease it!",
+        teal: "#0D9488",
+        tealDark: "#0F766E",
+        tealDeep: "#134E4A",
+        tealLight: "#CCFBF1",
+        tealMid: "#5EEAD4",
+        green: "#10B981",
+        greenLight: "#D1FAE5",
+        amber: "#F59E0B",
+        amberLight: "#FEF3C7",
+        white: "#FFFFFF",
+        black: "#0A1A17",
+        grey: "#94A3B8",
+      },
+
+      // ðŸ… Weekly stamp board â€” dates when stamps were earned
+      // In production: pulled from CleverTap profile property
+      weeklyStamps: [
+        "2026-02-11",  // Wednesday
+        "2026-02-12",  // Thursday
+        // "2026-02-13", â€” missed Friday
+        "2026-02-14",  // Saturday
+        "2026-02-16",  // Monday
+      ],
+      weekStartDate: "2026-02-10",  // Monday start
+      stampsToReward: 7,
+
+      reward: {
+        title: "Free Listing Boost!",
+        subtitle: "Your next listing gets 7 days of priority placement â€” more eyeballs, more renters.",
+        code: "BOOST7",
+        emoji: "ðŸš€",
+      },
+
+      // ðŸ“‹ Today's challenges â€” swappable per day via CleverTap
+      challenges: [
+        {
+          id: "browse",
+          icon: "ðŸ”",
+          title: "Browse 3 listings",
+          description: "Explore what's available near you",
+          current: 1,      // progress so far today
+          target: 3,
+          completed: false,
+          ctaText: "Browse Now",
+          ctaUrl: "rease://browse",
+        },
+        {
+          id: "save",
+          icon: "â¤ï¸",
+          title: "Save an item to favourites",
+          description: "Tap the heart on something you'd rent",
+          current: 0,
+          target: 1,
+          completed: false,
+          ctaText: "Find Items",
+          ctaUrl: "rease://browse",
+        },
+        {
+          id: "list",
+          icon: "ðŸ“¸",
+          title: "List something you own",
+          description: "Got gear collecting dust? Start earning!",
+          current: 0,
+          target: 1,
+          completed: false,
+          ctaText: "List an Item",
+          ctaUrl: "rease://list",
+        },
+      ],
+
+      // Track whether today's stamp is already earned
+      todayStampEarned: false,
+
+      cta: {
+        text: "Keep Exploring",
+        url: "rease://home",
+      },
+
+      events: {
+        questViewed:      "Quest_Card_Viewed",
+        challengeTapped:  "Quest_Challenge_Tapped",
+        stampEarned:      "Quest_Stamp_Earned",
+        rewardUnlocked:   "Quest_Reward_Unlocked",
+        rewardCopied:     "Quest_Reward_Copied",
+        questDismissed:   "Quest_Card_Dismissed",
+      },
+    };
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rease â€” Daily Quests</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      background: #0A1A17;
+    }
+
+    .modal {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 16px 16px 24px;
+      position: relative; overflow-y: auto; overflow-x: hidden;
+      background: linear-gradient(170deg, #0A1A17 0%, #0F2620 35%, #0A1A17 100%);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modal::before {
+      content: '';
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 25% 15%, rgba(13,148,136,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 75% 85%, rgba(16,185,129,0.04) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .dismiss-btn {
+      position: fixed; top: 12px; right: 12px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(0,0,0,0.4); border: none;
+      color: rgba(255,255,255,0.5); font-size: 14px;
+      cursor: pointer; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .content {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 380px;
+    }
+
+    /* =============================================
+       HEADER
+       ============================================= */
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .brand-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(13,148,136,0.12);
+      border: 1px solid rgba(13,148,136,0.2);
+      border-radius: 100px; padding: 5px 14px;
+      margin-bottom: 8px;
+    }
+    .brand-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #0D9488;
+    }
+    .brand-badge span {
+      font-size: 11px; font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.3px;
+    }
+
+    .header-title {
+      font-size: 20px; font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.2; margin-bottom: 4px;
+    }
+    .header-title span { color: #5EEAD4; }
+
+    .header-sub {
+      font-size: 12px; font-weight: 400;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.4;
+    }
+
+    /* =============================================
+       STAMP BOARD (7-day)
+       ============================================= */
+    .stamp-board {
+      background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stamp-board-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .sb-title {
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,0.7);
+    }
+    .sb-counter {
+      font-size: 11px; font-weight: 700;
+      color: #5EEAD4;
+      background: rgba(94,234,212,0.1);
+      padding: 3px 10px; border-radius: 6px;
+    }
+
+    .stamp-row {
+      display: flex;
+      gap: 6px;
+      justify-content: space-between;
+    }
+
+    .stamp-slot {
+      flex: 1; max-width: 48px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+    }
+
+    .stamp-circle {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    /* States */
+    .stamp-circle.empty {
+      background: rgba(255,255,255,0.04);
+      border: 2px dashed rgba(255,255,255,0.12);
+    }
+    .stamp-circle.empty::after {
+      content: '';
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .stamp-circle.earned {
+      background: rgba(13,148,136,0.2);
+      border: 2px solid #0D9488;
+      box-shadow: 0 0 10px rgba(13,148,136,0.2);
+    }
+
+    .stamp-circle.today-available {
+      background: rgba(245,158,11,0.1);
+      border: 2px dashed #F59E0B;
+      animation: todayPulse 2s ease-in-out infinite;
+    }
+    @keyframes todayPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.2); }
+      50% { box-shadow: 0 0 0 4px rgba(245,158,11,0); }
+    }
+
+    .stamp-circle.reward {
+      background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(13,148,136,0.15) 100%);
+      border: 2px solid #F59E0B;
+    }
+
+    .stamp-day {
+      font-size: 9px; font-weight: 600;
+      color: rgba(255,255,255,0.25);
+      text-transform: uppercase;
+    }
+    .stamp-slot.earned .stamp-day { color: rgba(13,148,136,0.6); }
+    .stamp-slot.today .stamp-day { color: #F59E0B; }
+
+    /* Progress bar below stamps */
+    .stamp-progress {
+      margin-top: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sp-bar-bg {
+      flex: 1; height: 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px; overflow: hidden;
+    }
+    .sp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0D9488, #5EEAD4);
+      border-radius: 100px;
+      transition: width 0.8s ease;
+    }
+    .sp-label {
+      font-size: 10px; font-weight: 600;
+      color: rgba(255,255,255,0.3);
+      white-space: nowrap;
+    }
+
+    /* =============================================
+       TODAY'S CHALLENGES
+       ============================================= */
+    .section-label {
+      font-size: 12px; font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+
+    .challenge-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.25s ease;
+    }
+    .challenge-card:active { transform: scale(0.98); }
+    .challenge-card.completed {
+      border-color: rgba(13,148,136,0.3);
+      background: rgba(13,148,136,0.06);
+    }
+
+    .cc-top {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .cc-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      background: rgba(13,148,136,0.1);
+      border: 1px solid rgba(13,148,136,0.15);
+      flex-shrink: 0;
+    }
+    .challenge-card.completed .cc-icon {
+      background: rgba(13,148,136,0.2);
+      border-color: rgba(13,148,136,0.35);
+    }
+
+    .cc-info { flex: 1; }
+
+    .cc-title {
+      font-size: 14px; font-weight: 600;
+      color: #FFFFFF;
+      line-height: 1.3; margin-bottom: 2px;
+    }
+    .challenge-card.completed .cc-title {
+      color: rgba(255,255,255,0.5);
+      text-decoration: line-through;
+      text-decoration-color: rgba(13,148,136,0.4);
+    }
+
+    .cc-desc {
+      font-size: 11px; font-weight: 400;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .cc-badge {
+      font-size: 10px; font-weight: 700;
+      color: #10B981;
+      background: rgba(16,185,129,0.1);
+      padding: 3px 8px; border-radius: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .challenge-card.completed .cc-badge {
+      color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* Progress bar in challenge */
+    .cc-progress {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .cc-bar-bg {
+      flex: 1; height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px; overflow: hidden;
+    }
+    .cc-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, #0D9488, #10B981);
+      transition: width 0.6s ease;
+    }
+    .challenge-card.completed .cc-bar-fill {
+      background: linear-gradient(90deg, #0D9488, #5EEAD4);
+    }
+    .cc-progress-text {
+      font-size: 10px; font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      white-space: nowrap;
+    }
+
+    /* Check mark for completed */
+    .cc-check {
+      display: none;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #0D9488;
+      align-items: center; justify-content: center;
+      font-size: 11px; color: #fff;
+      flex-shrink: 0;
+      animation: checkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .challenge-card.completed .cc-check { display: flex; }
+    .challenge-card.completed .cc-badge { display: none; }
+    @keyframes checkPop {
+      from { transform: scale(0); }
+      to   { transform: scale(1); }
+    }
+
+    /* =============================================
+       REWARD OVERLAY
+       ============================================= */
+    .reward-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .reward-overlay.show {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .reward-modal {
+      width: 100%; max-width: 320px;
+      background: linear-gradient(145deg, #0F2620 0%, #0A1A17 100%);
+      border: 1px solid rgba(13,148,136,0.3);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      position: relative; overflow: hidden;
+      animation: modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .reward-modal::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #0D9488, #F59E0B);
+    }
+
+    .rm-emoji {
+      font-size: 56px; margin-bottom: 12px;
+      animation: checkPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .rm-badge {
+      display: inline-block;
+      font-size: 10px; font-weight: 700;
+      color: #F59E0B;
+      background: rgba(245,158,11,0.1);
+      padding: 4px 12px; border-radius: 6px;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+    .rm-title {
+      font-size: 20px; font-weight: 700;
+      color: #FFFFFF; margin-bottom: 6px;
+    }
+    .rm-sub {
+      font-size: 12px; color: rgba(255,255,255,0.45);
+      line-height: 1.5; margin-bottom: 16px;
+      max-width: 280px; margin-left: auto; margin-right: auto;
+    }
+
+    .promo-box {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,0.3);
+      border: 1.5px dashed rgba(94,234,212,0.3);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .promo-code {
+      flex: 1;
+      font-size: 18px; font-weight: 700;
+      color: #5EEAD4;
+      letter-spacing: 2px;
+      font-family: 'Courier New', monospace;
+      text-align: left;
+    }
+    .copy-btn {
+      font-size: 10px; font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.08);
+      border: none; border-radius: 6px;
+      padding: 5px 10px; cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-btn.copied { color: #5EEAD4; background: rgba(94,234,212,0.15); }
+
+    .rm-cta {
+      width: 100%; padding: 14px;
+      border-radius: 12px; border: none;
+      background: #0D9488; color: #fff;
+      font-family: inherit;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(13,148,136,0.3);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rm-cta:active { transform: scale(0.97); }
+
+    .rm-close {
+      margin-top: 12px;
+      background: none; border: none;
+      color: rgba(255,255,255,0.3);
+      font-family: inherit;
+      font-size: 12px; cursor: pointer;
+    }
+
+    /* =============================================
+       FOOTER CTA
+       ============================================= */
+    .footer-row {
+      margin-top: 6px;
+      text-align: center;
+    }
+    .footer-hint {
+      font-size: 11px; font-weight: 500;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 4px;
+    }
+    .footer-hint span { color: #F59E0B; }
+
+    #confettiCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 999;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="modal" id="modal">
+    <button class="dismiss-btn" id="dismissBtn" onclick="dismiss()">âœ•</button>
+
+    <div class="content">
+      <!-- Header -->
+      <div class="header">
+        <div class="brand-badge">
+          <div class="dot"></div>
+          <span>Rease</span>
+        </div>
+        <div class="header-title">
+          Today's <span>Quests</span>
+        </div>
+        <div class="header-sub">
+          Complete a challenge to earn today's stamp
+        </div>
+      </div>
+
+      <!-- Stamp Board -->
+      <div class="stamp-board" id="stampBoard"></div>
+
+      <!-- Challenges -->
+      <div class="section-label">Today's Challenges</div>
+      <div id="challengeList"></div>
+
+      <!-- Footer -->
+      <div class="footer-row">
+        <div class="footer-hint">Complete <span>any challenge</span> to earn today's stamp</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reward Overlay -->
+  <div class="reward-overlay" id="rewardOverlay">
+    <div class="reward-modal">
+      <div class="rm-emoji" id="rmEmoji">ðŸš€</div>
+      <div class="rm-badge">7-DAY REWARD UNLOCKED</div>
+      <div class="rm-title" id="rmTitle">Free Listing Boost!</div>
+      <div class="rm-sub" id="rmSub">Your next listing gets 7 days of priority placement â€” more eyeballs, more renters.</div>
+      <div class="promo-box" onclick="copyCode()">
+        <span class="promo-code" id="rmCode">BOOST7</span>
+        <button class="copy-btn" id="rmCopyBtn">Copy</button>
+      </div>
+      <button class="rm-cta" onclick="rewardCta()">List an Item Now</button>
+      <button class="rm-close" onclick="closeReward()">Back to quests</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <script>
+    // =============================================
+    // STATE
+    // =============================================
+    const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    const stamps = [...CONFIG.weeklyStamps];
+    const challenges = CONFIG.challenges;
+    let todayStampEarned = CONFIG.todayStampEarned || stamps.includes(todayStr);
+
+    if (!CONFIG.includeDismissButton) {
+      document.getElementById('dismissBtn').classList.add('hidden');
+    }
+
+    // =============================================
+    // STAMP BOARD
+    // =============================================
+    function buildStampBoard() {
+      const board = document.getElementById('stampBoard');
+      const weekStart = new Date(CONFIG.weekStartDate + 'T00:00:00');
+
+      let headerHTML = `
+        <div class="stamp-board-header">
+          <span class="sb-title">Weekly Stamp Board</span>
+          <span class="sb-counter">${stamps.length} / ${CONFIG.stampsToReward}</span>
+        </div>
+      `;
+
+      let stampHTML = '<div class="stamp-row">';
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const isEarned = stamps.includes(dateStr);
+        const isToday = dateStr === todayStr;
+        const isRewardSlot = i === 6; // last slot = reward
+
+        let circleClass = 'empty';
+        let content = '';
+        let slotExtra = '';
+
+        if (isEarned) {
+          circleClass = 'earned';
+          content = 'âœ“';
+          slotExtra = 'earned';
+        } else if (isToday && !todayStampEarned) {
+          circleClass = 'today-available';
+          content = 'ðŸ”¥';
+          slotExtra = 'today';
+        } else if (isRewardSlot && !isEarned) {
+          circleClass = 'reward';
+          content = 'ðŸŽ';
+        }
+
+        stampHTML += `
+          <div class="stamp-slot ${slotExtra}">
+            <div class="stamp-circle ${circleClass}">${content}</div>
+            <span class="stamp-day">${isToday ? 'Today' : DAYS[i]}</span>
+          </div>
+        `;
+      }
+
+      stampHTML += '</div>';
+
+      // Progress bar
+      const pct = (stamps.length / CONFIG.stampsToReward) * 100;
+      stampHTML += `
+        <div class="stamp-progress">
+          <div class="sp-bar-bg">
+            <div class="sp-bar-fill" style="width: ${pct}%"></div>
+          </div>
+          <span class="sp-label">${CONFIG.stampsToReward - stamps.length} stamps to go</span>
+        </div>
+      `;
+
+      board.innerHTML = headerHTML + stampHTML;
+    }
+
+    // =============================================
+    // CHALLENGES
+    // =============================================
+    function buildChallenges() {
+      const list = document.getElementById('challengeList');
+      list.innerHTML = '';
+
+      challenges.forEach((c, i) => {
+        const pct = Math.min((c.current / c.target) * 100, 100);
+        const isDone = c.completed || c.current >= c.target;
+
+        const card = document.createElement('div');
+        card.className = 'challenge-card' + (isDone ? ' completed' : '');
+        card.dataset.index = i;
+        card.onclick = () => handleChallengeTap(i);
+
+        card.innerHTML = `
+          <div class="cc-top">
+            <div class="cc-icon">${c.icon}</div>
+            <div class="cc-info">
+              <div class="cc-title">${c.title}</div>
+              <div class="cc-desc">${c.description}</div>
+            </div>
+            <span class="cc-badge">${isDone ? '' : c.ctaText}</span>
+            <div class="cc-check">âœ“</div>
+          </div>
+          <div class="cc-progress">
+            <div class="cc-bar-bg">
+              <div class="cc-bar-fill" style="width: ${pct}%"></div>
+            </div>
+            <span class="cc-progress-text">${Math.min(c.current, c.target)}/${c.target}</span>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+    }
+
+    function handleChallengeTap(index) {
+      const c = challenges[index];
+
+      pushEvent(CONFIG.events.challengeTapped, {
+        Challenge_ID: c.id,
+        Challenge_Title: c.title,
+        Progress: `${c.current}/${c.target}`,
+        Completed: c.completed || c.current >= c.target,
+      });
+
+      // If not yet completed, simulate progress (in production: deep link)
+      if (!(c.completed || c.current >= c.target)) {
+        c.current = Math.min(c.current + 1, c.target);
+
+        if (c.current >= c.target) {
+          c.completed = true;
+
+          // Award today's stamp (first completion of the day)
+          if (!todayStampEarned) {
+            todayStampEarned = true;
+            stamps.push(todayStr);
+            earnStamp();
+          }
+        }
+
+        buildChallenges();
+      }
+    }
+
+    function earnStamp() {
+      pushEvent(CONFIG.events.stampEarned, {
+        Stamps_Total: stamps.length,
+        Day: todayStr,
+      });
+
+      // Rebuild stamp board to show new stamp
+      buildStampBoard();
+
+      // Small confetti for stamp
+      setTimeout(() => {
+        if (typeof confetti !== 'undefined') {
+          const c = confetti.create(document.getElementById('confettiCanvas'), { resize: true, useWorker: true });
+          c({ particleCount: 30, spread: 50, origin: { y: 0.3 }, colors: ['#0D9488', '#5EEAD4', '#F59E0B'], ticks: 80 });
+        }
+      }, 200);
+
+      // Check if reward unlocked
+      if (stamps.length >= CONFIG.stampsToReward) {
+        setTimeout(() => showReward(), 1200);
+      }
+
+      // Update footer hint
+      const hint = document.querySelector('.footer-hint');
+      if (hint) {
+        hint.innerHTML = 'âœ“ <span>Stamp earned!</span> Keep going for bonus points';
+      }
+    }
+
+    // =============================================
+    // REWARD
+    // =============================================
+    function showReward() {
+      const r = CONFIG.reward;
+      document.getElementById('rmEmoji').textContent = r.emoji;
+      document.getElementById('rmTitle').textContent = r.title;
+      document.getElementById('rmSub').textContent = r.subtitle;
+      document.getElementById('rmCode').textContent = r.code;
+
+      document.getElementById('rewardOverlay').classList.add('show');
+
+      pushEvent(CONFIG.events.rewardUnlocked, {
+        Reward: r.title,
+        Code: r.code,
+        Stamps: stamps.length,
+      });
+
+      // Big confetti
+      setTimeout(() => {
+        if (typeof confetti !== 'undefined') {
+          const c = confetti.create(document.getElementById('confettiCanvas'), { resize: true, useWorker: true });
+          c({ particleCount: 80, spread: 100, origin: { y: 0.4 }, colors: ['#0D9488', '#5EEAD4', '#F59E0B', '#FFF', '#10B981'], ticks: 160 });
+          setTimeout(() => c({ particleCount: 50, spread: 120, origin: { y: 0.5 }, ticks: 120 }), 300);
+        }
+      }, 500);
+    }
+
+    window.closeReward = function () {
+      document.getElementById('rewardOverlay').classList.remove('show');
+    };
+
+    window.copyCode = function () {
+      const code = CONFIG.reward.code;
+      const btn = document.getElementById('rmCopyBtn');
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = code; ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e) {
+        if (navigator.clipboard) navigator.clipboard.writeText(code).catch(() => {});
+      }
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      pushEvent(CONFIG.events.rewardCopied, { Code: code });
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 3000);
+    };
+
+    window.rewardCta = function () {
+      pushEvent(CONFIG.events.challengeTapped, { Action: 'Reward_CTA', Code: CONFIG.reward.code });
+      if (CONFIG.cta.url) window.location.href = CONFIG.cta.url;
+    };
+
+    // =============================================
+    // DISMISS
+    // =============================================
+    window.dismiss = function () {
+      pushEvent(CONFIG.events.questDismissed, {
+        Stamps: stamps.length,
+        Challenges_Completed: challenges.filter(c => c.completed).length,
+      });
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.dismissInAppNotification) {
+          CleverTap.dismissInAppNotification(); return;
+        }
+      } catch (e) {}
+      window.location.href = 'wzrk://exit';
+    };
+
+    // =============================================
+    // CLEVERTAP
+    // =============================================
+    function pushEvent(name, props) {
+      const payload = props || {};
+      payload.Timestamp = new Date().toISOString();
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent)
+          CleverTap.pushEvent(name, JSON.stringify(payload));
+        if (typeof clevertap !== 'undefined' && clevertap.event)
+          clevertap.event.push(name, payload);
+        if (window.webkit?.messageHandlers?.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ type: 'event', name, props: payload }));
+      } catch (e) { console.log('[CT]', name, payload); }
+    }
+
+    // =============================================
+    // INIT
+    // =============================================
+    buildStampBoard();
+    buildChallenges();
+
+    pushEvent(CONFIG.events.questViewed, {
+      Stamps_Total: stamps.length,
+      Today_Stamp_Earned: todayStampEarned,
+      Challenges_Available: challenges.length,
+      Challenges_Completed: challenges.filter(c => c.completed).length,
+    });
+  </script>
+</body>
+</html>
