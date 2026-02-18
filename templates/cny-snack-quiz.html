@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- -------------------- Configurable Settings -------------------- -->
+  <script>
+    const CONFIG = {
+      // âŒ Whether to show the X button to close/dismiss the quiz (true = show, false = hide)
+      includeDismissButton: true,
+
+      // ðŸŒˆ Background color/gradient of the quiz modal
+      background: "linear-gradient(170deg, #B91C1C 0%, #991B1B 40%, #7F1D1D 100%)",
+
+      // ðŸŽ‰ Whether to enable the confetti effect on result reveal
+      enableConfettiOnReveal: true,
+
+      // ðŸ—£ï¸ Cover screen headline
+      coverTitle: {
+        text: "What CNY Snack <br>Are You? ðŸ§§",
+        fontSize: "28px",
+        color: "#FFF7ED",
+      },
+
+      // ðŸ’¬ Cover screen subtitle
+      coverSubtitle: {
+        text: "Answer 7 questions about your CNY habits and find out which festive snack matches your personality!",
+        fontSize: "13.5px",
+        color: "#FECACA",
+      },
+
+      // â–¶ï¸ Start button settings
+      startButton: {
+        text: "æ­å–œå‘è´¢! Let's Go",
+        background: "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)",
+        color: "#7F1D1D",
+      },
+
+      // ðŸŽ¨ Accent color
+      accentColor: "#FBBF24",
+
+      // ðŸŽ¨ Question screen background
+      questionBackground: "linear-gradient(170deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%)",
+
+      // ðŸ“‹ Question choice button styling
+      choiceStyle: {
+        background: "#ffffff",
+        border: "2px solid #FDE68A",
+        hoverBorder: "#F59E0B",
+        hoverBackground: "#FFFBEB",
+        selectedBorder: "#F59E0B",
+        selectedBackground: "#FEF3C7",
+        color: "#451A03",
+        fontSize: "13.5px",
+      },
+
+      // ðŸ›ï¸ CTA button on the result screen
+      claimButton: {
+        enabled: true,
+        text: "ðŸ§§  Claim My Ang Bao",
+        background: "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)",
+        color: "#7F1D1D",
+        url: "wzkr://thisleadstonowhere",
+      },
+
+      // ðŸ“‹ Copy instruction text settings
+      copyInstruction: {
+        color: "#94A3B8",
+        copiedColor: "#DC2626",
+      },
+
+      // ðŸ“Š CleverTap event settings
+      events: {
+        quizStarted: "CNY_Quiz_Started",
+        questionAnswered: "CNY_Quiz_Question_Answered",
+        quizCompleted: "CNY_Quiz_Completed",
+        resultClaimed: "CNY_Quiz_Result_Claimed",
+        quizDismissed: "CNY_Quiz_Dismissed",
+      },
+
+      // â“ Quiz questions
+      questions: [
+        {
+          text: "It's the first day of CNY. What time are you up?",
+          emoji: "ðŸŒ…",
+          choices: [
+            { text: "ðŸŒ™  Still awake from last night's mahjong session", traits: { bakKwa: 2, shrimpRoll: 1 } },
+            { text: "â˜€ï¸  Up early â€” someone has to set up the offerings", traits: { pineappleTart: 2, kuehBangkit: 1 } },
+            { text: "ðŸ˜´  Alarm at 10am, roll out by 11, fashionably late", traits: { loveLetter: 2, shrimpRoll: 1 } },
+            { text: "â°  Right on schedule â€” I planned the visiting order last week", traits: { pineappleTart: 2, loveLetter: 1 } },
+          ],
+        },
+        {
+          text: "The aunties start asking about your love life. You...",
+          emoji: "ðŸ’¬",
+          choices: [
+            { text: "ðŸ˜  Deflect with humour and grab another slice of bak kwa", traits: { bakKwa: 2, shrimpRoll: 1 } },
+            { text: "ðŸ˜Š  Smile, answer politely, and redirect to asking about THEIR kids", traits: { pineappleTart: 2, kuehBangkit: 1 } },
+            { text: "ðŸƒ  Excuse yourself to \"help in the kitchen\"", traits: { loveLetter: 2 } },
+            { text: "ðŸ—£ï¸  Own it â€” give them the full saga with dramatic flair", traits: { shrimpRoll: 2, bakKwa: 1 } },
+          ],
+        },
+        {
+          text: "Pick your ideal CNY outfit vibe:",
+          emoji: "ðŸ‘”",
+          choices: [
+            { text: "ðŸ”´  Full red â€” cheongsam/changshan, go big or go home", traits: { bakKwa: 2, shrimpRoll: 1 } },
+            { text: "ðŸŒ¸  Subtle floral with a tasteful red accent", traits: { loveLetter: 2, kuehBangkit: 1 } },
+            { text: "ðŸ‘•  Smart casual â€” clean, comfortable, no drama", traits: { pineappleTart: 2 } },
+            { text: "âœ¨  Something trendy â€” I've been saving this outfit for today", traits: { shrimpRoll: 2, loveLetter: 1 } },
+          ],
+        },
+        {
+          text: "The mahjong table is set. What's your role?",
+          emoji: "ðŸ€„",
+          choices: [
+            { text: "ðŸŽ¯  The shark â€” I came to win and I will collect", traits: { bakKwa: 2, pineappleTart: 1 } },
+            { text: "ðŸŽ²  I'll play but honestly I'm here for the snacks and gossip", traits: { shrimpRoll: 2, loveLetter: 1 } },
+            { text: "ðŸ“º  Observer â€” I'll watch, commentate, and judge silently", traits: { loveLetter: 2, kuehBangkit: 1 } },
+            { text: "ðŸ   I'm the host â€” making sure everyone has drinks and the tiles are clean", traits: { kuehBangkit: 2, pineappleTart: 1 } },
+          ],
+        },
+        {
+          text: "You're in charge of the reunion dinner menu. What's the vibe?",
+          emoji: "ðŸ¥¢",
+          choices: [
+            { text: "ðŸ²  Traditional steamboat â€” pork ribs soup base, no shortcuts", traits: { kuehBangkit: 2, pineappleTart: 1 } },
+            { text: "ðŸ¦  Restaurant booking â€” let someone else cook lah", traits: { loveLetter: 2, shrimpRoll: 1 } },
+            { text: "ðŸ”¥  Potluck â€” everyone brings their best dish, more variety", traits: { shrimpRoll: 2, bakKwa: 1 } },
+            { text: "ðŸ‘¨â€ðŸ³  Homemade spread â€” I've been prepping since last week", traits: { pineappleTart: 2, kuehBangkit: 1 } },
+          ],
+        },
+        {
+          text: "An uncle gives you a $2 ang bao. Your inner reaction?",
+          emoji: "ðŸ§§",
+          choices: [
+            { text: "ðŸ™  Grateful â€” it's the thought that counts, uncle", traits: { kuehBangkit: 2, pineappleTart: 1 } },
+            { text: "ðŸ˜‚  Already composing the group chat message about it", traits: { shrimpRoll: 2, bakKwa: 1 } },
+            { text: "ðŸ¤·  Don't even check â€” I'll open them all later in one go", traits: { loveLetter: 2 } },
+            { text: "ðŸ“Š  Mentally updating my ang bao P&L spreadsheet", traits: { pineappleTart: 2, bakKwa: 1 } },
+          ],
+        },
+        {
+          text: "It's day 3 of CNY. How are you holding up?",
+          emoji: "ðŸ˜®â€ðŸ’¨",
+          choices: [
+            { text: "ðŸ”‹  Still going strong â€” got 4 more houses to visit", traits: { bakKwa: 2, shrimpRoll: 1 } },
+            { text: "ðŸ›‹ï¸  Recharged at home between visits, pacing myself", traits: { pineappleTart: 2, loveLetter: 1 } },
+            { text: "ðŸ“±  Socialised out â€” switching to texting my CNY greetings instead", traits: { loveLetter: 2, kuehBangkit: 1 } },
+            { text: "ðŸŽ‰  Hosting round 2 at my place â€” the more the merrier", traits: { shrimpRoll: 2, kuehBangkit: 1 } },
+          ],
+        },
+      ],
+
+      // ðŸŽ Quiz results
+      results: {
+        pineappleTart: {
+          title: "Pineapple Tart ðŸ",
+          emoji: "ðŸ",
+          vibe: "The Reliable Classic",
+          color: "#D97706",
+          bgGradient: "linear-gradient(170deg, #FFFBEB 0%, #FEF3C7 40%, #FDE68A 100%)",
+          description: "You're the MVP of every CNY table. Dependable, well-loved, and you bring the right balance of sweet and buttery to everything you do. People count on you â€” and you always deliver.",
+          promoCode: "TART2026",
+          promoText: "Huat ah! Here's 15% off your next order ðŸ",
+          promoSubtext: "Valid until 28 Feb 2026 Â· Use at checkout",
+        },
+        bakKwa: {
+          title: "Bak Kwa ðŸ¥©",
+          emoji: "ðŸ¥©",
+          vibe: "Bold & Unapologetic",
+          color: "#DC2626",
+          bgGradient: "linear-gradient(170deg, #FEF2F2 0%, #FEE2E2 40%, #FECACA 100%)",
+          description: "Intense, smoky, and impossible to ignore. You bring the flavour and the energy wherever you go. Some say you're a lot â€” but those people just can't handle the heat. One piece is never enough.",
+          promoCode: "BAKWA2026",
+          promoText: "Ong ah! Enjoy a $10 reward on us ðŸ¥©",
+          promoSubtext: "Valid until 28 Feb 2026 Â· Use at checkout",
+        },
+        loveLetter: {
+          title: "Love Letter ðŸ’Œ",
+          emoji: "ðŸ’Œ",
+          vibe: "Quietly Refined",
+          color: "#7C3AED",
+          bgGradient: "linear-gradient(170deg, #FAF5FF 0%, #F3E8FF 40%, #E9D5FF 100%)",
+          description: "Thin, delicate, and surprisingly complex. You're the understated one in the room, but people who know you know you're pure gold. Elegant without trying. A connoisseur's choice.",
+          promoCode: "LOVE2026",
+          promoText: "Sweet! Here's 20% off for you ðŸ’Œ",
+          promoSubtext: "Valid until 28 Feb 2026 Â· Use at checkout",
+        },
+        kuehBangkit: {
+          title: "Kueh Bangkit ðŸŒ¸",
+          emoji: "ðŸŒ¸",
+          vibe: "Old Soul, Warm Heart",
+          color: "#DB2777",
+          bgGradient: "linear-gradient(170deg, #FDF2F8 0%, #FCE7F3 40%, #FBCFE8 100%)",
+          description: "You melt in people's hearts. Traditional, comforting, and a little nostalgic â€” you remind everyone of the good old days. You might look simple, but your flavour? Unforgettable.",
+          promoCode: "KUEH2026",
+          promoText: "Heng ah! Here's a $8 treat for you ðŸŒ¸",
+          promoSubtext: "Valid until 28 Feb 2026 Â· Use at checkout",
+        },
+        shrimpRoll: {
+          title: "Shrimp Roll ðŸ¦",
+          emoji: "ðŸ¦",
+          vibe: "Life of the Party",
+          color: "#EA580C",
+          bgGradient: "linear-gradient(170deg, #FFF7ED 0%, #FFEDD5 40%, #FED7AA 100%)",
+          description: "Crispy, fun, and gone before anyone realises. You're the social butterfly of CNY â€” bouncing from table to table, keeping the energy up, and somehow always near the snack tray. Impossible not to love.",
+          promoCode: "CRISPY2026",
+          promoText: "Huat ah! Score a free gift with your next order ðŸ¦",
+          promoSubtext: "Valid until 28 Feb 2026 Â· Min. spend applies",
+        },
+      },
+    };
+  </script>
+  <!-- -------------------- End of Configurable Settings -------------------- -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What CNY Snack Are You?</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap');
+
+    :root {
+      --accent: #FBBF24;
+      --red: #DC2626;
+      --shimmer-hue-1: 45deg;
+      --shimmer-hue-2: 38deg;
+    }
+
+    @property --mask {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 33deg;
+    }
+
+    @keyframes shimmerSpin {
+      0% { --mask: 0deg; }
+      100% { --mask: 360deg; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a0505;
+    }
+
+    /* ========== MODAL ========== */
+    .modal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      max-height: 600px;
+      max-width: 340px;
+      padding: 24px 20px;
+      justify-content: center;
+      width: 100%;
+      text-align: center;
+      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.5s ease;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,215,0,0.1);
+    }
+
+    /* Decorative CNY lantern shapes */
+    .modal::before {
+      content: 'ðŸ®';
+      position: absolute;
+      font-size: 60px;
+      top: -8px;
+      left: -8px;
+      opacity: 0.15;
+      transform: rotate(-15deg);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .modal::after {
+      content: 'ðŸ®';
+      position: absolute;
+      font-size: 44px;
+      bottom: -4px;
+      right: -4px;
+      opacity: 0.1;
+      transform: rotate(20deg);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Gold corner borders (CNY frame feel) */
+    .corner-deco {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-color: rgba(251,191,36,0.25);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .corner-deco.tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+    .corner-deco.tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
+    .corner-deco.bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
+    .corner-deco.br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+
+    /* ========== CLOSE BUTTON ========== */
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      appearance: none;
+      border: 0;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.6);
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 20;
+      font-family: inherit;
+      font-weight: 700;
+    }
+    .close-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* ========== SCREENS ========== */
+    .screen {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .screen.active { display: flex; }
+
+    /* ========== COVER SCREEN ========== */
+    .cover-hero {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 60%), rgba(255,255,255,0.08);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 30px rgba(251,191,36,0.2), inset 0 0 30px rgba(255,255,255,0.05);
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+      border: 2px solid rgba(251,191,36,0.2);
+    }
+    /* Sparkle particles */
+    .cover-hero::before {
+      content: 'âœ¨';
+      position: absolute;
+      font-size: 20px;
+      top: 2px;
+      right: 4px;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+    .cover-hero::after {
+      content: 'âœ¨';
+      position: absolute;
+      font-size: 14px;
+      bottom: 8px;
+      left: 2px;
+      animation: sparkle 2s ease-in-out infinite 0.8s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: rgba(251,191,36,0.2);
+      color: #FDE68A;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(251,191,36,0.15);
+    }
+
+    .cover-title {
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+    .cover-subtitle {
+      line-height: 1.55;
+      margin-top: 10px;
+      padding: 0 6px;
+    }
+    .btn-start {
+      margin-top: 20px;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(251,191,36,0.35);
+    }
+    .btn-start:hover { box-shadow: 0 6px 28px rgba(251,191,36,0.45); transform: translateY(-1px); }
+    .btn-start:active { transform: scale(0.97); }
+
+    .cover-meta {
+      margin-top: 16px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      font-weight: 700;
+    }
+    .cover-meta span { color: var(--accent); }
+
+    /* ========== QUESTION SCREEN ========== */
+    .q-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .progress-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .q-step {
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+
+    .q-emoji {
+      font-size: 46px;
+      margin: 10px 0 6px;
+      line-height: 1;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .q-text {
+      font-size: 16.5px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #451A03;
+      margin-bottom: 12px;
+      padding: 0 2px;
+      min-height: 46px;
+    }
+    .choices {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .choice-btn {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 14px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1.4;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .choice-btn:active { transform: scale(0.98); }
+    .choice-btn.selected { font-weight: 700; box-shadow: 0 2px 12px rgba(245,158,11,0.2); }
+
+    /* ========== LOADING SCREEN ========== */
+    .loading-stack {
+      display: flex;
+      gap: 8px;
+      font-size: 42px;
+      margin-bottom: 16px;
+    }
+    .loading-stack span {
+      animation: juggle 1.4s ease-in-out infinite;
+    }
+    .loading-stack span:nth-child(2) { animation-delay: 0.15s; }
+    .loading-stack span:nth-child(3) { animation-delay: 0.3s; }
+    .loading-stack span:nth-child(4) { animation-delay: 0.45s; }
+    .loading-stack span:nth-child(5) { animation-delay: 0.6s; }
+    @keyframes juggle {
+      0%, 100% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-14px) scale(1.1); }
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .loading-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--red);
+      opacity: 0.3;
+      animation: dotPulse 1.2s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .loading-text { font-size: 17px; font-weight: 800; color: #FFF7ED; }
+    .loading-subtext { font-size: 13px; color: #FECACA; margin-top: 4px; font-weight: 600; }
+
+    /* ========== RESULT SCREEN ========== */
+    .result-emoji {
+      font-size: 62px;
+      margin-bottom: 6px;
+      line-height: 1;
+      animation: resultPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes resultPop {
+      0% { transform: scale(0) rotate(-25deg); }
+      60% { transform: scale(1.2) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .result-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .result-title {
+      font-size: 25px;
+      font-weight: 900;
+      color: #1E293B;
+      letter-spacing: -0.3px;
+    }
+    .result-vibe {
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 2px;
+      font-style: italic;
+    }
+    .result-desc {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #475569;
+      margin-top: 8px;
+      padding: 0 4px;
+    }
+
+    /* ========== PROMO CARD ========== */
+    .promo-wrapper {
+      width: 100%;
+      position: relative;
+      border-radius: 18px;
+      overflow: visible;
+      margin-top: 14px;
+    }
+    .promo-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 14px 14px 10px;
+      background: #ffffff;
+      border-radius: 18px;
+      width: 100%;
+      box-sizing: border-box;
+      cursor: pointer;
+      transition: transform 0.12s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 2px dashed #FDE68A;
+      position: relative;
+    }
+    .promo-card:active { transform: scale(0.98); }
+
+    /* Ang bao tab decoration */
+    .promo-card::before {
+      content: 'ðŸ§§';
+      position: absolute;
+      font-size: 18px;
+      top: -12px;
+      right: 14px;
+    }
+
+    .promo-label { font-size: 12.5px; font-weight: 700; color: #64748B; }
+    .promo-code-row { display: flex; align-items: center; gap: 6px; }
+    .promo-code { font-size: 23px; font-weight: 900; letter-spacing: 2px; }
+    .copy-btn {
+      appearance: none;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      transition: transform 0.1s;
+    }
+    .copy-btn:active { transform: scale(0.85); }
+    .copy-instruction { font-size: 11.5px; font-weight: 600; transition: color 0.2s; }
+    .promo-subtext { font-size: 10.5px; color: #94A3B8; font-weight: 600; margin-top: 2px; }
+
+    /* Shimmer */
+    .shimmer {
+      position: absolute;
+      inset: -40px;
+      border-radius: inherit;
+      mix-blend-mode: plus-lighter;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      mask-image: conic-gradient(from var(--mask, 0deg),
+          transparent 0%, transparent 10%, black 36%, black 45%,
+          transparent 50%, transparent 60%, black 85%, black 95%, transparent 100%);
+      mask-size: cover;
+      animation: shimmerSpin 3s linear infinite both -0.5s;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    .shimmer::before {
+      content: "";
+      border-radius: inherit;
+      position: absolute;
+      inset: 40px;
+      opacity: 1;
+      box-shadow: 0 0 3px 1px hsl(var(--shimmer-hue-1) 90% 65%),
+        0 0 10px 6px hsl(var(--shimmer-hue-2) 80% 50%);
+      z-index: -1;
+    }
+    .promo-wrapper.shimmer-active .shimmer {
+      opacity: 1;
+      visibility: visible;
+      animation: shimmerSpin 2s linear infinite;
+    }
+
+    @keyframes pulsate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .pulsate { animation: pulsate 1.5s ease-in-out 3; }
+
+    /* Buttons */
+    .btn-claim {
+      margin-top: 14px;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(251,191,36,0.3);
+    }
+    .btn-claim:hover { box-shadow: 0 6px 24px rgba(251,191,36,0.4); transform: translateY(-1px); }
+    .btn-claim:active { transform: scale(0.97); }
+
+    .btn-retake {
+      margin-top: 8px;
+      padding: 8px 20px;
+      background: transparent;
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(0,0,0,0.3);
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .btn-retake:hover { color: rgba(0,0,0,0.5); }
+
+    /* Transitions */
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Screen-specific overrides */
+    .modal.on-q .close-btn,
+    .modal.on-r .close-btn { color: rgba(0,0,0,0.3); background: rgba(0,0,0,0.05); }
+    .modal.on-q .corner-deco,
+    .modal.on-r .corner-deco { border-color: rgba(0,0,0,0.06); }
+  </style>
+</head>
+
+<body>
+  <div class="modal" id="modal">
+    <div class="corner-deco tl"></div>
+    <div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div>
+    <div class="corner-deco br"></div>
+    <button class="close-btn" id="closeBtn" aria-label="Close">âœ•</button>
+
+    <!-- ===== COVER ===== -->
+    <div id="screen-cover" class="screen active">
+      <div class="cover-hero">ðŸ</div>
+      <span class="cover-badge">ðŸ§§ CNY Personality Quiz</span>
+      <h1 class="cover-title" id="coverTitle"></h1>
+      <p class="cover-subtitle" id="coverSubtitle"></p>
+      <button class="btn-start" id="btnStart"></button>
+      <p class="cover-meta">â±ï¸ Takes <span>1 min</span> Â· ðŸ§§ Reward at the end</p>
+    </div>
+
+    <!-- ===== QUESTION ===== -->
+    <div id="screen-question" class="screen">
+      <div class="q-header">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="q-step" id="qStep"></span>
+      </div>
+      <div class="q-emoji" id="qEmoji"></div>
+      <p class="q-text" id="qText"></p>
+      <div class="choices" id="choicesContainer"></div>
+    </div>
+
+    <!-- ===== LOADING ===== -->
+    <div id="screen-loading" class="screen">
+      <div class="loading-stack">
+        <span>ðŸ</span><span>ðŸ¥©</span><span>ðŸ’Œ</span><span>ðŸŒ¸</span><span>ðŸ¦</span>
+      </div>
+      <p class="loading-text">Finding your CNY snack twin...</p>
+      <p class="loading-subtext">Checking the goodies table</p>
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- ===== RESULT ===== -->
+    <div id="screen-result" class="screen">
+      <div class="result-emoji" id="rEmoji"></div>
+      <span class="result-badge" id="rBadge"></span>
+      <h2 class="result-title" id="rTitle"></h2>
+      <p class="result-vibe" id="rVibe"></p>
+      <p class="result-desc" id="rDesc"></p>
+
+      <div class="promo-wrapper" id="promoWrapper">
+        <span class="shimmer"></span>
+        <div class="promo-card" id="promoCard">
+          <span class="promo-label" id="promoLabel"></span>
+          <div class="promo-code-row">
+            <span class="promo-code" id="promoCode"></span>
+            <button class="copy-btn" id="copyBtn" title="Copy code">
+              <svg width="18" height="19" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M13 13.8444V17.8444C13 18.4444 12.6 18.8444 12 18.8444H3C2.4 18.8444 2 18.4444 2 17.8444V8.84442C2 8.24442 2.4 7.84442 3 7.84442H7V3.84442C7 3.24442 7.4 2.84442 8 2.84442H17C17.6 2.84442 18 3.24442 18 3.84442V12.8444C18 13.4444 17.6 13.8444 17 13.8444H13ZM12 13.8444H8C7.4 13.8444 7 13.4444 7 12.8444V8.84442H3V17.8444H12V13.8444ZM17 3.84442H8V12.8444H17V3.84442Z"
+                  fill="#4A4C4C" />
+              </svg>
+            </button>
+          </div>
+          <div class="copy-instruction" id="copyInstruction">Tap to copy code</div>
+          <div class="promo-subtext" id="promoSubtext"></div>
+        </div>
+      </div>
+
+      <button class="btn-claim" id="btnClaim"></button>
+      <button class="btn-retake" id="btnRetake">â†» Try Again</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const modal        = document.getElementById('modal');
+      const closeBtn     = document.getElementById('closeBtn');
+      const btnStart     = document.getElementById('btnStart');
+      const progressFill = document.getElementById('progressFill');
+      const qStep        = document.getElementById('qStep');
+      const qEmoji       = document.getElementById('qEmoji');
+      const qText        = document.getElementById('qText');
+      const choices      = document.getElementById('choicesContainer');
+      const rEmoji       = document.getElementById('rEmoji');
+      const rBadge       = document.getElementById('rBadge');
+      const rTitle       = document.getElementById('rTitle');
+      const rVibe        = document.getElementById('rVibe');
+      const rDesc        = document.getElementById('rDesc');
+      const promoWrapper = document.getElementById('promoWrapper');
+      const promoCard    = document.getElementById('promoCard');
+      const promoLabel   = document.getElementById('promoLabel');
+      const promoCode    = document.getElementById('promoCode');
+      const promoSubtext = document.getElementById('promoSubtext');
+      const copyBtn      = document.getElementById('copyBtn');
+      const copyInst     = document.getElementById('copyInstruction');
+      const btnClaim     = document.getElementById('btnClaim');
+      const btnRetake    = document.getElementById('btnRetake');
+
+      const DISMISS = 'wzkr://thisleadstonowhere';
+      let curQ = 0, scores = {};
+
+      // ========== APPLY CONFIG ==========
+      modal.style.background = CONFIG.background;
+      if (!CONFIG.includeDismissButton) closeBtn.style.display = 'none';
+      closeBtn.addEventListener('click', () => {
+        pushEvent(CONFIG.events.quizDismissed, { Screen: activeScreen() });
+        window.location.href = DISMISS;
+      });
+
+      document.getElementById('coverTitle').innerHTML = CONFIG.coverTitle.text;
+      document.getElementById('coverTitle').style.fontSize = CONFIG.coverTitle.fontSize;
+      document.getElementById('coverTitle').style.color = CONFIG.coverTitle.color;
+      document.getElementById('coverSubtitle').textContent = CONFIG.coverSubtitle.text;
+      document.getElementById('coverSubtitle').style.fontSize = CONFIG.coverSubtitle.fontSize;
+      document.getElementById('coverSubtitle').style.color = CONFIG.coverSubtitle.color;
+      btnStart.textContent = CONFIG.startButton.text;
+      btnStart.style.background = CONFIG.startButton.background;
+      btnStart.style.color = CONFIG.startButton.color;
+      progressFill.style.background = CONFIG.accentColor;
+      copyInst.style.color = CONFIG.copyInstruction.color;
+
+      if (CONFIG.claimButton.enabled) {
+        btnClaim.textContent = CONFIG.claimButton.text;
+        btnClaim.style.background = CONFIG.claimButton.background;
+        btnClaim.style.color = CONFIG.claimButton.color;
+      } else { btnClaim.style.display = 'none'; }
+
+      // ========== HELPERS ==========
+      function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const s = document.getElementById(id);
+        s.classList.add('active');
+        s.classList.remove('fade-in');
+        void s.offsetWidth;
+        s.classList.add('fade-in');
+      }
+      function activeScreen() {
+        const s = document.querySelector('.screen.active');
+        return s ? s.id.replace('screen-', '') : 'unknown';
+      }
+
+      // CleverTap (dual-SDK safe)
+      function pushEvent(name, props) {
+        if (!name) return;
+        try {
+          if (typeof clevertap !== 'undefined' && clevertap.event) clevertap.event.push(name, props || {});
+          if (typeof CleverTap !== 'undefined' && CleverTap.event) CleverTap.event.push(name, props || {});
+        } catch (e) { console.log('[CT]', name, props); }
+      }
+      function pushProfile(props) {
+        try {
+          if (typeof clevertap !== 'undefined' && clevertap.profile) clevertap.profile.push({ Site: props });
+          if (typeof CleverTap !== 'undefined' && CleverTap.profile) CleverTap.profile.push({ Site: props });
+        } catch (e) { console.log('[CT Profile]', props); }
+      }
+
+      // ========== QUIZ ENGINE ==========
+      function startQuiz() {
+        curQ = 0; scores = {};
+        modal.className = 'modal on-q';
+        modal.style.background = CONFIG.questionBackground;
+        pushEvent(CONFIG.events.quizStarted, { Total_Questions: CONFIG.questions.length });
+        showScreen('screen-question');
+        renderQ();
+      }
+
+      function renderQ() {
+        const q = CONFIG.questions[curQ];
+        const total = CONFIG.questions.length;
+        progressFill.style.width = (curQ / total * 100) + '%';
+        qStep.textContent = (curQ + 1) + '/' + total;
+
+        qEmoji.style.animation = 'none';
+        void qEmoji.offsetWidth;
+        qEmoji.style.animation = 'popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+        qEmoji.textContent = q.emoji || '';
+        qText.textContent = q.text;
+
+        choices.innerHTML = '';
+        q.choices.forEach((c, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = c.text;
+          btn.style.background = CONFIG.choiceStyle.background;
+          btn.style.border = CONFIG.choiceStyle.border;
+          btn.style.color = CONFIG.choiceStyle.color;
+          btn.style.fontSize = CONFIG.choiceStyle.fontSize;
+          btn.addEventListener('mouseenter', () => {
+            if (!btn.classList.contains('selected')) {
+              btn.style.borderColor = CONFIG.choiceStyle.hoverBorder;
+              btn.style.background = CONFIG.choiceStyle.hoverBackground;
+            }
+          });
+          btn.addEventListener('mouseleave', () => {
+            if (!btn.classList.contains('selected')) {
+              btn.style.background = CONFIG.choiceStyle.background;
+              btn.style.border = CONFIG.choiceStyle.border;
+            }
+          });
+          btn.addEventListener('click', () => pick(i));
+          choices.appendChild(btn);
+        });
+      }
+
+      function pick(idx) {
+        const c = CONFIG.questions[curQ].choices[idx];
+        if (c.traits) Object.entries(c.traits).forEach(([t, p]) => { scores[t] = (scores[t] || 0) + p; });
+
+        const btns = choices.querySelectorAll('.choice-btn');
+        btns.forEach(b => {
+          b.style.background = CONFIG.choiceStyle.background;
+          b.style.border = CONFIG.choiceStyle.border;
+          b.classList.remove('selected');
+          b.style.pointerEvents = 'none';
+        });
+        btns[idx].classList.add('selected');
+        btns[idx].style.borderColor = CONFIG.choiceStyle.selectedBorder;
+        btns[idx].style.background = CONFIG.choiceStyle.selectedBackground;
+
+        pushEvent(CONFIG.events.questionAnswered, { Question_Number: curQ + 1, Choice: c.text });
+
+        setTimeout(() => {
+          curQ++;
+          if (curQ < CONFIG.questions.length) renderQ();
+          else { progressFill.style.width = '100%'; showLoading(); }
+        }, 380);
+      }
+
+      function showLoading() {
+        modal.style.background = CONFIG.background;
+        modal.className = 'modal';
+        showScreen('screen-loading');
+        setTimeout(showResult, 2600);
+      }
+
+      function showResult() {
+        let best = '', hi = -1;
+        Object.entries(scores).forEach(([t, s]) => { if (s > hi) { hi = s; best = t; } });
+        const r = CONFIG.results[best];
+        if (!r) return;
+
+        modal.className = 'modal on-r';
+        modal.style.background = r.bgGradient;
+        document.documentElement.style.setProperty('--shimmer-hue-1', getHue(r.color) + 'deg');
+        document.documentElement.style.setProperty('--shimmer-hue-2', getHue(r.color) + 'deg');
+
+        rEmoji.textContent = r.emoji;
+        rBadge.textContent = r.vibe;
+        rBadge.style.background = r.color + '18';
+        rBadge.style.color = r.color;
+        rTitle.textContent = r.title;
+        rVibe.textContent = '"' + r.vibe + '"';
+        rVibe.style.color = r.color;
+        rDesc.textContent = r.description;
+        promoLabel.textContent = r.promoText;
+        promoCode.textContent = r.promoCode;
+        promoCode.style.color = r.color;
+        promoSubtext.textContent = r.promoSubtext;
+        promoCard.style.borderColor = r.color + '30';
+
+        promoWrapper.classList.add('shimmer-active');
+        promoCard.classList.add('pulsate');
+        showScreen('screen-result');
+
+        if (CONFIG.enableConfettiOnReveal) fireConfetti(r.color);
+
+        pushEvent(CONFIG.events.quizCompleted, {
+          Result: r.title, Result_Key: best, Promo_Code: r.promoCode,
+          Questions_Answered: CONFIG.questions.length, Scores: JSON.stringify(scores),
+        });
+        pushProfile({
+          CNY_Snack_Personality: r.title, CNY_Snack_Key: best, CNY_Quiz_Promo_Code: r.promoCode,
+        });
+      }
+
+      function getHue(hex) {
+        const r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+        let h = 0;
+        if (d !== 0) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; }
+        return Math.round(h * 60 + 360) % 360;
+      }
+
+      // ========== CLIPBOARD ==========
+      function doCopy() {
+        const t = promoCode.textContent;
+        if (!t) return;
+        if (navigator.clipboard && navigator.clipboard.writeText)
+          navigator.clipboard.writeText(t).then(onCopied).catch(() => fbCopy(t));
+        else fbCopy(t);
+      }
+      function onCopied() {
+        copyInst.textContent = 'âœ… Copied!';
+        copyInst.style.color = CONFIG.copyInstruction.copiedColor;
+        setTimeout(() => { copyInst.textContent = 'Tap to copy code'; copyInst.style.color = CONFIG.copyInstruction.color; }, 2000);
+      }
+      function fbCopy(t) {
+        const inp = document.createElement('input');
+        inp.setAttribute('readonly', ''); inp.value = t;
+        inp.style.cssText = 'position:absolute;left:-9999px';
+        document.body.appendChild(inp);
+        if (/ipad|iphone/i.test(navigator.userAgent)) {
+          const rng = document.createRange(); rng.selectNodeContents(inp);
+          const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rng);
+          inp.setSelectionRange(0, t.length);
+        } else { inp.focus(); inp.select(); }
+        try { document.execCommand('copy'); onCopied(); } catch (e) { alert('Code: ' + t); }
+        document.body.removeChild(inp);
+      }
+      copyBtn.addEventListener('click', e => { e.stopPropagation(); doCopy(); });
+      promoCard.addEventListener('click', doCopy);
+
+      // ========== CONFETTI ==========
+      function fireConfetti(accent) {
+        const colors = [accent || '#DC2626', '#FBBF24', '#ffffff', '#DC2626', '#F59E0B', '#EF4444'];
+        const N = 120, grav = 0.3;
+        const cv = document.createElement('canvas');
+        cv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+        document.body.appendChild(cv);
+        const cx = cv.getContext('2d');
+        cv.width = window.innerWidth; cv.height = window.innerHeight;
+        const ps = [], rr = (a, b) => Math.random() * (b - a) + a;
+        for (let i = 0; i < N; i++) ps.push({
+          x: cv.width / 2, y: cv.height * 0.5,
+          w: rr(5, 12), h: rr(7, 15),
+          ang: rr(0, 360), tilt: rr(0.05, 0.12),
+          col: colors[Math.floor(Math.random() * colors.length)],
+          vx: rr(-10, 10), vy: rr(-16, -7),
+          op: 1, dec: rr(0.007, 0.015),
+        });
+        function tick() {
+          cx.clearRect(0, 0, cv.width, cv.height);
+          for (let i = ps.length - 1; i >= 0; i--) {
+            const p = ps[i]; p.x += p.vx; p.y += p.vy; p.vy += grav;
+            p.op -= p.dec; p.ang += p.tilt * 180 / Math.PI;
+            if (p.op <= 0 || p.y > cv.height + 20) { ps.splice(i, 1); continue; }
+            cx.save(); cx.globalAlpha = Math.max(p.op, 0); cx.fillStyle = p.col;
+            cx.translate(p.x, p.y); cx.rotate(p.ang * Math.PI / 180);
+            cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cx.restore();
+          }
+          if (ps.length) requestAnimationFrame(tick); else cv.remove();
+        }
+        tick();
+      }
+
+      // ========== BUTTONS ==========
+      btnStart.addEventListener('click', startQuiz);
+      btnClaim.addEventListener('click', () => {
+        pushEvent(CONFIG.events.resultClaimed, { Result: rTitle.textContent, Promo_Code: promoCode.textContent });
+        if (CONFIG.claimButton.url) window.location.href = CONFIG.claimButton.url;
+      });
+      btnRetake.addEventListener('click', () => {
+        modal.className = 'modal';
+        modal.style.background = CONFIG.background;
+        promoWrapper.classList.remove('shimmer-active');
+        promoCard.classList.remove('pulsate');
+        showScreen('screen-cover');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cart Recovery</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0D0F13;--card:#171B22;--card2:#1E2330;
+    --border:rgba(255,255,255,0.06);
+    --blue:#3B82F6;--blue-glow:rgba(59,130,246,0.15);
+    --amber:#F59E0B;--amber-glow:rgba(245,158,11,0.12);
+    --red:#EF4444;--green:#22C55E;
+    --text:#EAEAEA;--muted:rgba(255,255,255,0.4);
+  }
+  body{
+    font-family:'DM Sans',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-end;
+    overflow:hidden;
+  }
+
+  /* Bottom sheet style */
+  .sheet{
+    width:100%;background:var(--card);
+    border-radius:20px 20px 0 0;
+    border:1px solid var(--border);border-bottom:none;
+    animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    overflow:hidden;
+  }
+  @keyframes slideUp{
+    0%{opacity:0;transform:translateY(100%)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+
+  /* Handle */
+  .sheet-handle{
+    width:36px;height:4px;background:rgba(255,255,255,0.12);
+    border-radius:2px;margin:10px auto;
+  }
+
+  /* Header */
+  .sheet-header{padding:4px 20px 16px;text-align:center}
+  .header-emoji{font-size:32px;margin-bottom:8px}
+  .header-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+  .header-sub{font-size:13px;color:var(--muted);line-height:1.5}
+
+  /* Abandoned item card */
+  .item-card{
+    display:flex;gap:14px;padding:16px;
+    margin:0 16px;background:var(--card2);
+    border:1px solid var(--border);border-radius:14px;
+  }
+  .item-thumb{
+    width:72px;height:72px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;flex-shrink:0;
+    background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.03));
+  }
+  .item-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .item-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item-detail{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .item-price-row{display:flex;align-items:center;gap:8px}
+  .item-price{font-size:16px;font-weight:700;color:#fff}
+  .item-original{font-size:12px;color:var(--muted);text-decoration:line-through}
+  .item-badge{
+    font-size:10px;font-weight:600;padding:3px 7px;border-radius:6px;
+    background:rgba(239,68,68,0.12);color:var(--red);
+  }
+
+  /* Urgency strip */
+  .urgency{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px;margin:12px 16px;
+    background:var(--amber-glow);border:1px solid rgba(245,158,11,0.15);
+    border-radius:10px;
+  }
+  .urgency-dot{
+    width:6px;height:6px;border-radius:50%;background:var(--amber);
+    animation:pulse 1.5s ease infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .urgency-text{font-size:12px;font-weight:600;color:var(--amber)}
+
+  /* Sweetener */
+  .sweetener{
+    display:flex;align-items:center;gap:10px;
+    padding:14px;margin:0 16px;
+    background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(34,197,94,0.02));
+    border:1px dashed rgba(34,197,94,0.25);border-radius:12px;
+  }
+  .sweet-icon{font-size:20px;flex-shrink:0}
+  .sweet-body{flex:1}
+  .sweet-title{font-size:13px;font-weight:600;color:var(--green)}
+  .sweet-desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* CTAs */
+  .cta-area{padding:16px 16px 24px;display:flex;flex-direction:column;gap:8px}
+  .btn-primary{
+    width:100%;padding:16px;border:none;border-radius:14px;
+    background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;
+    font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  }
+  .btn-primary:active{transform:scale(0.97)}
+  .btn-secondary{
+    width:100%;padding:12px;border:none;border-radius:12px;
+    background:transparent;color:var(--muted);
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+    cursor:pointer;
+  }
+
+  /* Social proof */
+  .social-proof{
+    text-align:center;padding:0 16px 4px;
+    font-size:11px;color:var(--muted);
+  }
+  .proof-dot{
+    display:inline-block;width:5px;height:5px;border-radius:50%;
+    background:var(--green);margin-right:4px;vertical-align:middle;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // CONFIG
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  const CONFIG = {
+    includeDismissButton: true,
+
+    brand: {
+      name: "ShopApp",
+      primary: "#3B82F6",
+    },
+
+    // The abandoned item â€” pull from CT profile or campaign vars
+    item: {
+      name: "Nike Air Max 270 React",
+      detail: "Size: US 10 Â· Colour: Black/White",
+      price: "RM 649",
+      originalPrice: "RM 799",
+      discount: "19% OFF",
+      emoji: "ðŸ‘Ÿ",
+      // Deep link back to product
+      productUrl: "app://product/nike-am270?ref=cart_recovery",
+    },
+
+    messaging: {
+      headerEmoji: "ðŸ‘‹",
+      headline: "Still thinking about it?",
+      subtext: "You left something great in your cart",
+      urgencyText: "Only 3 left in your size",
+      sweetenerTitle: "Here's 10% extra â€” just for you",
+      sweetenerDesc: "Code COMEBACK10 auto-applied at checkout",
+      ctaText: "Complete My Order",
+      skipText: "Not right now",
+      socialProof: "127 people bought this today",
+    },
+
+    tracking: {
+      eventPrefix: "CartRecovery",
+    },
+  };
+</script>
+
+<div class="sheet">
+  <div class="sheet-handle"></div>
+
+  <div class="sheet-header">
+    <div class="header-emoji" id="headerEmoji"></div>
+    <div class="header-title" id="headerTitle"></div>
+    <div class="header-sub" id="headerSub"></div>
+  </div>
+
+  <!-- Abandoned item -->
+  <div class="item-card">
+    <div class="item-thumb" id="itemThumb"></div>
+    <div class="item-body">
+      <div class="item-name" id="itemName"></div>
+      <div class="item-detail" id="itemDetail"></div>
+      <div class="item-price-row">
+        <span class="item-price" id="itemPrice"></span>
+        <span class="item-original" id="itemOriginal"></span>
+        <span class="item-badge" id="itemBadge"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Urgency -->
+  <div class="urgency">
+    <div class="urgency-dot"></div>
+    <div class="urgency-text" id="urgencyText"></div>
+  </div>
+
+  <!-- Sweetener offer -->
+  <div class="sweetener">
+    <div class="sweet-icon">ðŸŽ</div>
+    <div class="sweet-body">
+      <div class="sweet-title" id="sweetTitle"></div>
+      <div class="sweet-desc" id="sweetDesc"></div>
+    </div>
+  </div>
+
+  <!-- Social proof -->
+  <div class="social-proof" id="socialProof"></div>
+
+  <!-- CTAs -->
+  <div class="cta-area">
+    <button class="btn-primary" id="btnPrimary" onclick="recoverCart()"></button>
+    <button class="btn-secondary" id="btnSkip" onclick="skipRecovery()"></button>
+  </div>
+</div>
+
+<script>
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // INIT
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  const { brand, item, messaging, tracking } = CONFIG;
+
+  document.getElementById('headerEmoji').textContent = messaging.headerEmoji;
+  document.getElementById('headerTitle').textContent = messaging.headline;
+  document.getElementById('headerSub').textContent = messaging.subtext;
+  document.getElementById('itemThumb').textContent = item.emoji;
+  document.getElementById('itemName').textContent = item.name;
+  document.getElementById('itemDetail').textContent = item.detail;
+  document.getElementById('itemPrice').textContent = item.price;
+  document.getElementById('itemOriginal').textContent = item.originalPrice;
+  document.getElementById('itemBadge').textContent = item.discount;
+  document.getElementById('urgencyText').textContent = messaging.urgencyText;
+  document.getElementById('sweetTitle').textContent = messaging.sweetenerTitle;
+  document.getElementById('sweetDesc').textContent = messaging.sweetenerDesc;
+  document.getElementById('socialProof').innerHTML =
+    '<span class="proof-dot"></span>' + messaging.socialProof;
+  document.getElementById('btnPrimary').textContent = messaging.ctaText;
+  document.getElementById('btnSkip').textContent = messaging.skipText;
+
+  // Hide elements if not configured
+  if (!item.originalPrice) document.getElementById('itemOriginal').style.display = 'none';
+  if (!item.discount) document.getElementById('itemBadge').style.display = 'none';
+
+  trackEvent(tracking.eventPrefix + '_Viewed', {
+    item_name: item.name,
+    item_price: item.price
+  });
+
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ACTIONS
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  function recoverCart() {
+    trackEvent(tracking.eventPrefix + '_Recovered', {
+      item_name: item.name,
+      item_price: item.price
+    });
+    if (item.productUrl) window.location.href = item.productUrl;
+    try { window.location.href = 'wzrk://exit'; } catch(e) {}
+  }
+
+  function skipRecovery() {
+    trackEvent(tracking.eventPrefix + '_Skipped', {
+      item_name: item.name
+    });
+    try { window.location.href = 'wzrk://exit'; } catch(e) {}
+  }
+
+  function trackEvent(name, props) {
+    console.log('CT Event:', name, props || {});
+    if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+    if (window.clevertap) window.clevertap.event.push(name, props || {});
+    try { window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} })); } catch(e) {}
+  }
+</script>
+</body>
+</html>

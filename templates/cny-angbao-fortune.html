@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ==================== CONFIGURABLE SETTINGS ==================== -->
+  <script>
+    const CONFIG = {
+      // âŒ Whether to show the X button to close/dismiss (true = show, false = hide)
+      includeDismissButton: true,
+
+      // ðŸ§ª Demo mode: set to a number (1â€“15) to simulate that CNY day, or false for real dates
+      demoDay: 1,
+
+      // ðŸ“… Campaign start date (Day 1 of CNY). Format: "YYYY-MM-DD"
+      campaignStartDate: "2026-02-17",
+
+      // ðŸŒˆ Background gradients per screen
+      background: "linear-gradient(170deg, #B91C1C 0%, #991B1B 40%, #7F1D1D 100%)",
+      wallBackground: "linear-gradient(170deg, #FFF7ED 0%, #FEF3C7 50%, #FECDD3 100%)",
+      fortuneBackground: "linear-gradient(170deg, #FFFBEB 0%, #FEF3C7 60%, #FDE68A 100%)",
+
+      // ðŸŽ‰ Whether to enable the confetti effect on ang bao reveal
+      enableConfettiOnReveal: true,
+
+      // ðŸ—£ï¸ Cover screen
+      coverTitle: {
+        text: "15 Days of<br>Fortune ðŸ§§",
+        fontSize: "28px",
+        color: "#FFF7ED",
+      },
+      coverSubtitle: {
+        text: "Open a lucky ang bao every day of CNY and receive personalised zodiac blessings for the Year of the Horse ðŸ´",
+        fontSize: "13px",
+        color: "#FECACA",
+      },
+
+      // â–¶ï¸ Start button
+      startButton: {
+        text: "ðŸ§§ Begin My Fortune Journey",
+        background: "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)",
+        color: "#7F1D1D",
+      },
+
+      // ðŸŽ¨ Accent color
+      accentColor: "#FBBF24",
+
+      // ðŸ“Š CleverTap event settings
+      events: {
+        fortuneStarted: "CNY_Fortune_Started",
+        fortuneOpened: "CNY_Fortune_Opened",
+        fortuneShared: "CNY_Fortune_Shared",
+        fortuneCompleted: "CNY_Fortune_Completed",
+        fortuneDismissed: "CNY_Fortune_Dismissed",
+      },
+
+      // ðŸ² Zodiac definitions
+      zodiacs: [
+        { key: "rat",     emoji: "ðŸ€", cn: "é¼ ", en: "Rat",     years: "1960, 1972, 1984, 1996, 2008, 2020" },
+        { key: "ox",      emoji: "ðŸ‚", cn: "ç‰›", en: "Ox",      years: "1961, 1973, 1985, 1997, 2009, 2021" },
+        { key: "tiger",   emoji: "ðŸ…", cn: "è™Ž", en: "Tiger",   years: "1962, 1974, 1986, 1998, 2010, 2022" },
+        { key: "rabbit",  emoji: "ðŸ‡", cn: "å…”", en: "Rabbit",  years: "1963, 1975, 1987, 1999, 2011, 2023" },
+        { key: "dragon",  emoji: "ðŸ‰", cn: "é¾™", en: "Dragon",  years: "1964, 1976, 1988, 2000, 2012, 2024" },
+        { key: "snake",   emoji: "ðŸ", cn: "è›‡", en: "Snake",   years: "1965, 1977, 1989, 2001, 2013, 2025" },
+        { key: "horse",   emoji: "ðŸ´", cn: "é©¬", en: "Horse",   years: "1966, 1978, 1990, 2002, 2014, 2026" },
+        { key: "goat",    emoji: "ðŸ", cn: "ç¾Š", en: "Goat",    years: "1967, 1979, 1991, 2003, 2015" },
+        { key: "monkey",  emoji: "ðŸµ", cn: "çŒ´", en: "Monkey",  years: "1968, 1980, 1992, 2004, 2016" },
+        { key: "rooster", emoji: "ðŸ”", cn: "é¸¡", en: "Rooster", years: "1969, 1981, 1993, 2005, 2017" },
+        { key: "dog",     emoji: "ðŸ¶", cn: "ç‹—", en: "Dog",     years: "1970, 1982, 1994, 2006, 2018" },
+        { key: "pig",     emoji: "ðŸ·", cn: "çŒª", en: "Pig",     years: "1971, 1983, 1995, 2007, 2019" },
+      ],
+
+      // ðŸ“œ 15 Days of CNY â€” traditions and per-zodiac fortunes
+      // Days 1â€“3 fully populated. Days 4â€“15 have placeholder fortunes (extend later).
+      days: [
+        // â•â•â•â•â•â•â•â•â•â• DAY 1 Â· åˆä¸€ â•â•â•â•â•â•â•â•â•â•
+        {
+          day: 1, cnyDay: "åˆä¸€", theme: "New Beginnings",
+          tradition: "On åˆä¸€, firecrackers chase away Nian the monster. Families open their doors wide for å¼€é—¨å¤§å‰ â€” inviting a year's worth of good fortune in. Elders give red envelopes, and no sweeping allowed (you'll sweep away your luck!).",
+          fortunes: {
+            rat:     { blessing: "The Horse's fire clashes with your waters, but remember â€” steam powers engines. Channel tension into momentum today. A small act of courage sets the tone for your whole year.", luckyNumber: 8, luckyColour: "#4A90D9", colourName: "Ocean Blue" },
+            ox:      { blessing: "Your steady nature is your superpower this year. While others rush, you build. Today, plant one seed of intention â€” it will grow quietly and bear fruit by autumn.", luckyNumber: 3, luckyColour: "#2D8B57", colourName: "Jade Green" },
+            tiger:   { blessing: "The Fire Horse is your natural ally! Bold moves are cosmically supported today. That thing you've been hesitating on? The universe just gave you a green light. Leap.", luckyNumber: 9, luckyColour: "#E74C3C", colourName: "Prosperity Red" },
+            rabbit:  { blessing: "Plans may need to flex this year, but detours often reveal better paths. Today, stay open to surprise invitations â€” the best fortune arrives through unexpected doors.", luckyNumber: 4, luckyColour: "#E8B4D8", colourName: "Peach Blossom" },
+            dragon:  { blessing: "2026 asks you to be your own hero. Self-reliance is your theme. Today, trust your instincts over advice â€” the foundation you build now will outlast everything.", luckyNumber: 1, luckyColour: "#FFD700", colourName: "Imperial Gold" },
+            snake:   { blessing: "Same Fire family â€” you understand the Horse's intensity. Collaboration flows naturally this year. Today, reach out to someone you admire. That connection changes everything.", luckyNumber: 2, luckyColour: "#C0392B", colourName: "Cinnabar Red" },
+            horse:   { blessing: "This is YOUR year! The Fire Horse returns after 60 years. Transformation is not optional â€” it's destiny. Today, honour the energy by being unapologetically yourself.", luckyNumber: 7, luckyColour: "#E67E22", colourName: "Tangerine" },
+            goat:    { blessing: "Gentle strength is your gift this year. The Horse's energy may feel fast, but you receive steady, nurturing support. Today, let yourself be cared for â€” accept the kindness offered.", luckyNumber: 6, luckyColour: "#A8D5BA", colourName: "Soft Sage" },
+            monkey:  { blessing: "Mixed signals may come your way, but your cleverness cuts through fog. Today, trust your instincts first, advice second. That gut feeling? It's right.", luckyNumber: 5, luckyColour: "#9B59B6", colourName: "Royal Purple" },
+            rooster: { blessing: "Diligence opens doors that talent alone cannot. Today, show up fully â€” someone important is watching. Your consistency this year becomes your competitive edge.", luckyNumber: 8, luckyColour: "#F39C12", colourName: "Amber Gold" },
+            dog:     { blessing: "You're a natural ally of the Horse! Group endeavours flourish, allies appear, and your loyalty is rewarded doubly. Today, say yes to the invitation. Community is your fortune.", luckyNumber: 3, luckyColour: "#3498DB", colourName: "Sky Blue" },
+            pig:     { blessing: "Adaptation is your lesson this year, but growth always requires stretching. Today, try one thing differently â€” a new route, a new dish, a new conversation. Small changes compound.", luckyNumber: 2, luckyColour: "#1ABC9C", colourName: "Emerald Teal" },
+          },
+        },
+        // â•â•â•â•â•â•â•â•â•â• DAY 2 Â· åˆäºŒ â•â•â•â•â•â•â•â•â•â•
+        {
+          day: 2, cnyDay: "åˆäºŒ", theme: "Family Bonds",
+          tradition: "åˆäºŒ is å›žå¨˜å®¶ â€” married daughters visit their parents' home with their husbands. Gifts and ang baos are exchanged, and lunch is shared at the parents' table. It's a day for renewing the bonds that distance stretches thin.",
+          fortunes: {
+            rat:     { blessing: "Family dynamics may feel charged today â€” the Horse year stirs things up. But honest words heal faster than polite silence. Say what you mean, gently.", luckyNumber: 6, luckyColour: "#5DADE2", colourName: "Clear Sky" },
+            ox:      { blessing: "Your dependability is the anchor your family needs. Today, the quiet things you do won't go unnoticed â€” someone finally sees the load you've been carrying.", luckyNumber: 9, luckyColour: "#27AE60", colourName: "Lucky Clover" },
+            tiger:   { blessing: "Your charisma lights up the reunion table. Today, use your boldness to bridge a gap between two people who need reconnecting. You're the catalyst.", luckyNumber: 1, luckyColour: "#E74C3C", colourName: "Fiery Red" },
+            rabbit:  { blessing: "Home is where you recharge. Today, don't feel guilty about stepping away for 10 minutes of quiet â€” you give more when your cup is full.", luckyNumber: 7, luckyColour: "#D5A6BD", colourName: "Rose Quartz" },
+            dragon:  { blessing: "Your presence commands attention, but today is about listening. The elder who tells you the same story every year? There's wisdom in there you've been missing.", luckyNumber: 5, luckyColour: "#F1C40F", colourName: "Sunbeam" },
+            snake:   { blessing: "Your intuition reads the room before anyone speaks. Today, use that gift to de-escalate before tensions rise. A well-timed joke saves the dinner.", luckyNumber: 8, luckyColour: "#8E44AD", colourName: "Deep Orchid" },
+            horse:   { blessing: "In your zodiac year, family bonds ground your galloping energy. Today, slow down. The best fortune isn't in the ang bao â€” it's in the laughter around the table.", luckyNumber: 2, luckyColour: "#E67E22", colourName: "Warm Amber" },
+            goat:    { blessing: "You're the peacekeeper, the one who remembers everyone's favourite dish. Today, your warmth is the ingredient that makes reunion special. You are enough.", luckyNumber: 4, luckyColour: "#82E0AA", colourName: "Mint Harmony" },
+            monkey:  { blessing: "Your playfulness makes the children adore you. Today, that energy also charms the adults â€” use it to float an idea you've been sitting on.", luckyNumber: 3, luckyColour: "#F5B041", colourName: "Honeycomb" },
+            rooster: { blessing: "Your eye for detail catches the cousin who's quieter than usual. Today, be the one who checks in. A small question opens a big door.", luckyNumber: 6, luckyColour: "#EC7063", colourName: "Coral Warmth" },
+            dog:     { blessing: "Loyalty runs deep in you, and family feels it. Today, your honest presence matters more than any gift. Just being there IS the gift.", luckyNumber: 9, luckyColour: "#5499C7", colourName: "Trust Blue" },
+            pig:     { blessing: "Your generosity shines at reunion. Today, give freely â€” not just money, but time, attention, patience. What you pour out returns tenfold this year.", luckyNumber: 1, luckyColour: "#48C9B0", colourName: "Prosperity Jade" },
+          },
+        },
+        // â•â•â•â•â•â•â•â•â•â• DAY 3 Â· åˆä¸‰ â•â•â•â•â•â•â•â•â•â•
+        {
+          day: 3, cnyDay: "åˆä¸‰", theme: "Rest & Recharge",
+          tradition: "åˆä¸‰ is èµ¤å£ (Red Mouth / ChÃ¬ KÇ’u) â€” a day when arguments are most likely. Tradition says to stay home and avoid visiting, lest quarrels follow. In Hakka custom, it's the Day of the Poor Devil. Use it wisely: rest, reflect, reset.",
+          fortunes: {
+            rat:     { blessing: "Rest is not retreat â€” it's reloading. Today, let the world spin without you for a few hours. The clarity that comes from stillness is your secret weapon this year.", luckyNumber: 4, luckyColour: "#7FB3D8", colourName: "Still Water" },
+            ox:      { blessing: "You rarely stop, but today the stars insist: pause. Your body has been carrying more than your mind admits. A slow morning today prevents a breakdown next month.", luckyNumber: 7, luckyColour: "#52BE80", colourName: "Forest Rest" },
+            tiger:   { blessing: "Even tigers nap in the sun. Today, resist the urge to do. The boldest move right now is stillness â€” let your next plan reveal itself in the quiet.", luckyNumber: 2, luckyColour: "#D4AC0D", colourName: "Tiger's Eye" },
+            rabbit:  { blessing: "This is YOUR kind of day â€” peace, quiet, home. Today, lean into what recharges you without guilt. Read, bake, nap, daydream. You're not wasting time, you're investing it.", luckyNumber: 6, luckyColour: "#D2B4DE", colourName: "Lavender Cloud" },
+            dragon:  { blessing: "Dragons rarely sit still, but reflection sharpens your fire. Today, journal one thing you want to release this year and one thing you want to build. Then let it rest.", luckyNumber: 8, luckyColour: "#F4D03F", colourName: "Quiet Gold" },
+            snake:   { blessing: "Solitude is where you do your best thinking. Today, let your mind wander â€” the insight that surfaces during rest is worth more than a week of hustling.", luckyNumber: 3, luckyColour: "#AF7AC5", colourName: "Mystic Plum" },
+            horse:   { blessing: "The hardest lesson for a Horse: not everything needs to happen today. Rest isn't weakness, it's strategy. Today, refill the tank â€” 2026 is a marathon, not a sprint.", luckyNumber: 5, luckyColour: "#EB984E", colourName: "Sunset Rest" },
+            goat:    { blessing: "You've been holding space for everyone else â€” today, hold space for yourself. Tea, a blanket, and zero obligations. This is sacred, not selfish.", luckyNumber: 1, luckyColour: "#ABEBC6", colourName: "Healing Green" },
+            monkey:  { blessing: "Your busy mind needs downtime too. Today, let yourself be bored â€” that's where your best ideas incubate. The next breakthrough is hiding in the silence.", luckyNumber: 9, luckyColour: "#BB8FCE", colourName: "Dreamy Violet" },
+            rooster: { blessing: "You've been up early, organised, on point. Today, sleep in. Let the schedule dissolve for 24 hours. You'll return sharper than ever tomorrow.", luckyNumber: 4, luckyColour: "#F0B27A", colourName: "Toasted Honey" },
+            dog:     { blessing: "Loyal to a fault, you often forget yourself. Today, the stars say: you deserve the same devotion you give others. Rest deeply. No one needs saving today.", luckyNumber: 7, luckyColour: "#85C1E9", colourName: "Calm Shore" },
+            pig:     { blessing: "Indulge without apology today. That show you've been meaning to watch, that snack you love â€” this is the day. Pleasure is productive when it refuels your soul.", luckyNumber: 2, luckyColour: "#76D7C4", colourName: "Spa Teal" },
+          },
+        },
+        // â•â•â•â•â•â•â•â•â•â• DAYS 4â€“15 Â· Placeholder structure â•â•â•â•â•â•â•â•â•â•
+        // Traditions are real; fortunes use a shared placeholder per day.
+        // To extend: add per-zodiac fortunes object like Days 1â€“3 above.
+        { day: 4, cnyDay: "åˆå››", theme: "Welcome the Gods", tradition: "åˆå›› is when the Kitchen God (ç¶ç¥ž) returns from heaven after reporting to the Jade Emperor. Families light candles and incense, and prepare offerings of fruit, fish, and chicken to welcome him home.", fortunes: null },
+        { day: 5, cnyDay: "åˆäº”", theme: "Wealth Arrives", tradition: "åˆäº” is the birthday of the God of Fortune (è´¢ç¥ž). Firecrackers are lit at dawn to get his attention. All CNY taboos are officially broken today â€” you can finally sweep the floor!", fortunes: null },
+        { day: 6, cnyDay: "åˆå…­", theme: "Fresh Start", tradition: "åˆå…­ is é€ç©· â€” sending away the spirits of poverty. Families throw out accumulated rubbish from the festivities and deep-clean their homes. Out with the old energy, in with the new.", fortunes: null },
+        { day: 7, cnyDay: "åˆä¸ƒ", theme: "Everyone's Birthday", tradition: "åˆä¸ƒ is äººæ—¥ (RÃ©n RÃ¬) â€” the birthday of all humans! NÃ¼ Wa created people on this day. In Singapore & Malaysia, it's Lou Hei / Yee Sang time â€” toss that prosperity salad as high as you can!", fortunes: null },
+        { day: 8, cnyDay: "åˆå…«", theme: "Prosperity & Growth", tradition: "åˆå…« is linked to the lucky number 8 (å…« sounds like å‘, meaning prosperity). It's also the birthday of millet â€” honouring the grains that sustained civilisation. A great day to set financial intentions.", fortunes: null },
+        { day: 9, cnyDay: "åˆä¹", theme: "Gratitude & Reverence", tradition: "åˆä¹ is the Jade Emperor's birthday â€” the supreme deity in Taoism. The Hokkien community marks this with grand prayers, sugarcane offerings, and midnight celebrations. For Hokkiens, this is bigger than Day 1!", fortunes: null },
+        { day: 10, cnyDay: "åˆå", theme: "Celebrate the Earth", tradition: "åˆå is the birthday of stone â€” a day to appreciate the earth and the materials that build our lives. Traditionally a quiet day to rest from festivities and find grounding.", fortunes: null },
+        { day: 11, cnyDay: "åä¸€", theme: "Feast & Share", tradition: "åä¸€ is when fathers-in-law host sons-in-law for dinner. Dragon dances appear in some communities. It's a day of extended family generosity and showing appreciation through food.", fortunes: null },
+        { day: 12, cnyDay: "åäºŒ", theme: "Prepare for the Finale", tradition: "åäºŒ marks the transition â€” festive feasting gives way to lighter eating and lantern preparation. Families begin setting up lanterns and decorations for the grand finale.", fortunes: null },
+        { day: 13, cnyDay: "åä¸‰", theme: "Honour Guan Yu", tradition: "åä¸‰ is dedicated to General Guan Yu (å…³ç¾½), the God of War and Righteousness. Businesses pray for a competitive edge and winning fortune in the year ahead.", fortunes: null },
+        { day: 14, cnyDay: "åå››", theme: "Lantern Prep", tradition: "åå›› is final preparation day for the Lantern Festival. Streets fill with lanterns, riddle papers are hung, and the air buzzes with anticipation for tomorrow's grand celebration.", fortunes: null },
+        { day: 15, cnyDay: "åäº”", theme: "Lantern Festival ðŸ®", tradition: "åäº” is å…ƒå®µèŠ‚ â€” the Lantern Festival and Chap Goh Mei! The first full moon of the year. Eat tangyuan (glutinous rice balls) for unity, solve lantern riddles, and in Malaysia/Singapore, single ladies throw mandarin oranges into the sea for love!", fortunes: null },
+      ],
+
+      // ðŸ”® Fallback fortunes for days without per-zodiac content (Days 4â€“15)
+      fallbackFortunes: {
+        rat:     { blessing: "Navigate with patience today. The Horse year tests you, but every challenge sharpens your resourcefulness.", luckyNumber: 8, luckyColour: "#4A90D9", colourName: "Ocean Blue" },
+        ox:      { blessing: "Steady progress continues. Your persistence is building something others can't see yet.", luckyNumber: 3, luckyColour: "#2D8B57", colourName: "Jade Green" },
+        tiger:   { blessing: "The Fire Horse amplifies your courage. Bold moves continue to be supported â€” trust the momentum.", luckyNumber: 9, luckyColour: "#E74C3C", colourName: "Prosperity Red" },
+        rabbit:  { blessing: "Flexibility reveals better paths. Stay open to change â€” the detour IS the destination.", luckyNumber: 4, luckyColour: "#E8B4D8", colourName: "Peach Blossom" },
+        dragon:  { blessing: "Self-reliance remains your theme. Foundations built with your own hands stand the longest.", luckyNumber: 1, luckyColour: "#FFD700", colourName: "Imperial Gold" },
+        snake:   { blessing: "Strategic moves flow naturally. Your intuition is especially sharp â€” act on it.", luckyNumber: 2, luckyColour: "#C0392B", colourName: "Cinnabar Red" },
+        horse:   { blessing: "Your zodiac year continues to transform you. Embrace the intensity â€” you're becoming who you're meant to be.", luckyNumber: 7, luckyColour: "#E67E22", colourName: "Tangerine" },
+        goat:    { blessing: "Gentle strength carries you forward. Confidence rebuilds day by day â€” trust the process.", luckyNumber: 6, luckyColour: "#A8D5BA", colourName: "Soft Sage" },
+        monkey:  { blessing: "Cleverness cuts through confusion. Trust your gut over the noise â€” clarity is coming.", luckyNumber: 5, luckyColour: "#9B59B6", colourName: "Royal Purple" },
+        rooster: { blessing: "Diligence continues to open doors. Your consistent effort is being noticed by the right people.", luckyNumber: 8, luckyColour: "#F39C12", colourName: "Amber Gold" },
+        dog:     { blessing: "Allies and group efforts flourish. Your loyalty is rewarded â€” lean into community.", luckyNumber: 3, luckyColour: "#3498DB", colourName: "Sky Blue" },
+        pig:     { blessing: "Adaptation leads to growth. Small changes compound into transformation â€” keep experimenting.", luckyNumber: 2, luckyColour: "#1ABC9C", colourName: "Emerald Teal" },
+      },
+    };
+  </script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <title>15 Days of Fortune</title>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #1a0a0a;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========== MODAL ========== */
+    .modal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      max-height: 600px;
+      max-width: 340px;
+      padding: 24px 18px;
+      justify-content: center;
+      width: 100%;
+      text-align: center;
+      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.5s ease;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,215,0,0.1);
+    }
+
+    /* CNY lantern watermarks */
+    .modal::before {
+      content: 'ðŸ®';
+      position: absolute;
+      font-size: 56px;
+      top: -8px;
+      left: -8px;
+      opacity: 0.12;
+      transform: rotate(-15deg);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .modal::after {
+      content: 'ðŸ®';
+      position: absolute;
+      font-size: 40px;
+      bottom: -4px;
+      right: -4px;
+      opacity: 0.08;
+      transform: rotate(20deg);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Gold corner borders */
+    .corner-deco {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-color: rgba(251,191,36,0.25);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .corner-deco.tl { top: 10px; left: 10px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+    .corner-deco.tr { top: 10px; right: 10px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
+    .corner-deco.bl { bottom: 10px; left: 10px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
+    .corner-deco.br { bottom: 10px; right: 10px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+
+    /* ========== CLOSE BUTTON ========== */
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      appearance: none;
+      border: 0;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.6);
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 20;
+      font-family: inherit;
+      font-weight: 700;
+    }
+    .close-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* ========== SCREENS ========== */
+    .screen {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .screen.active { display: flex; }
+
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ========== COVER SCREEN ========== */
+    .cover-hero {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(251,191,36,0.15);
+    }
+    .cover-hero-emoji {
+      font-size: 56px;
+      animation: angBaoFloat 2.5s ease-in-out infinite;
+    }
+    @keyframes angBaoFloat {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-8px) rotate(3deg); }
+    }
+    /* Sparkle particles */
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #FBBF24;
+      border-radius: 50%;
+      opacity: 0;
+      animation: sparkleFloat 2s ease-in-out infinite;
+    }
+    .sparkle:nth-child(2) { top: 10%; right: 10%; animation-delay: 0.4s; width: 4px; height: 4px; }
+    .sparkle:nth-child(3) { bottom: 15%; left: 15%; animation-delay: 0.8s; width: 5px; height: 5px; }
+    .sparkle:nth-child(4) { top: 20%; left: 5%; animation-delay: 1.2s; width: 3px; height: 3px; }
+    @keyframes sparkleFloat {
+      0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+      50% { opacity: 0.8; transform: translateY(-12px) scale(1.2); }
+    }
+
+    .cover-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(251,191,36,0.3);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #FBBF24;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .cover-title {
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+    .cover-subtitle {
+      line-height: 1.5;
+      margin-bottom: 20px;
+      padding: 0 8px;
+    }
+
+    .start-btn {
+      appearance: none;
+      border: 0;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(245,158,11,0.3);
+    }
+    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.4); }
+    .start-btn:active { transform: translateY(0); }
+
+    /* ========== ZODIAC PICKER ========== */
+    .zodiac-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #451A03;
+      margin-bottom: 4px;
+    }
+    .zodiac-subtitle {
+      font-size: 12px;
+      color: #92400E;
+      margin-bottom: 14px;
+    }
+    .zodiac-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .zodiac-btn {
+      appearance: none;
+      border: 2px solid #FDE68A;
+      background: #FFFBEB;
+      border-radius: 14px;
+      padding: 8px 4px 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .zodiac-btn:hover { border-color: #F59E0B; background: #FEF3C7; transform: translateY(-2px); }
+    .zodiac-btn.selected { border-color: #D97706; background: #FDE68A; transform: scale(1.05); box-shadow: 0 2px 10px rgba(217,119,6,0.25); }
+    .zodiac-btn-emoji { font-size: 26px; line-height: 1; }
+    .zodiac-btn-cn { font-size: 12px; font-weight: 800; color: #92400E; }
+    .zodiac-btn-en { font-size: 9px; color: #B45309; font-weight: 700; }
+
+    .zodiac-confirm {
+      appearance: none;
+      border: 0;
+      padding: 12px 32px;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+    .zodiac-confirm.ready { opacity: 1; pointer-events: auto; }
+    .zodiac-confirm.ready:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
+
+    /* ========== ANG BAO WALL ========== */
+    .wall-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .wall-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #451A03;
+    }
+    .wall-zodiac-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: #FDE68A;
+      color: #92400E;
+      padding: 2px 10px;
+      border-radius: 12px;
+    }
+    .wall-change-zodiac {
+      appearance: none;
+      border: 0;
+      background: none;
+      color: #B45309;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+      padding: 0 2px;
+    }
+    .wall-change-zodiac:hover { opacity: 1; }
+    .wall-subtitle {
+      font-size: 11.5px;
+      color: #92400E;
+      margin-bottom: 14px;
+    }
+
+    .wall-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 14px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 2px;
+    }
+
+    .envelope {
+      aspect-ratio: 0.72;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: default;
+      transition: all 0.25s;
+      position: relative;
+      border: 2px solid transparent;
+    }
+
+    /* Locked envelope */
+    .envelope.locked {
+      background: linear-gradient(145deg, #FEE2E2 0%, #FECACA 100%);
+      border-color: #FECACA;
+      opacity: 0.5;
+    }
+    .envelope.locked .env-emoji { font-size: 24px; filter: grayscale(0.5); }
+    .envelope.locked .env-day { font-size: 10px; color: #B91C1C; font-weight: 700; opacity: 0.5; }
+
+    /* Preview (next day) */
+    .envelope.preview {
+      background: linear-gradient(145deg, #FEE2E2 0%, #FECACA 100%);
+      border-color: #E5A1A1;
+      opacity: 0.7;
+      animation: previewPulse 2s ease-in-out infinite;
+    }
+    .envelope.preview .env-emoji { font-size: 24px; filter: grayscale(0.3); }
+    .envelope.preview .env-day { font-size: 10px; color: #B91C1C; font-weight: 700; }
+    .envelope.preview .env-label { font-size: 8px; color: #DC2626; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    @keyframes previewPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.85; } }
+
+    /* Today's envelope */
+    .envelope.today {
+      background: linear-gradient(145deg, #DC2626 0%, #B91C1C 50%, #991B1B 100%);
+      border-color: #FBBF24;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(185,28,28,0.35), 0 0 0 2px rgba(251,191,36,0.3);
+      animation: todayGlow 1.8s ease-in-out infinite;
+    }
+    .envelope.today:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 6px 20px rgba(185,28,28,0.5); }
+    .envelope.today .env-emoji { font-size: 28px; animation: angBaoFloat 2s ease-in-out infinite; }
+    .envelope.today .env-day { font-size: 11px; color: #FBBF24; font-weight: 800; }
+    .envelope.today .env-label { font-size: 8px; color: #FDE68A; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    @keyframes todayGlow {
+      0%, 100% { box-shadow: 0 4px 16px rgba(185,28,28,0.35), 0 0 0 2px rgba(251,191,36,0.3); }
+      50% { box-shadow: 0 4px 20px rgba(185,28,28,0.5), 0 0 0 3px rgba(251,191,36,0.5); }
+    }
+
+    /* Opened envelope */
+    .envelope.opened {
+      background: linear-gradient(145deg, #FEF3C7 0%, #FDE68A 100%);
+      border-color: #F59E0B;
+    }
+    .envelope.opened .env-emoji { font-size: 22px; }
+    .envelope.opened .env-day { font-size: 10px; color: #92400E; font-weight: 700; }
+    .envelope.opened .env-check { position: absolute; top: 4px; right: 6px; font-size: 12px; }
+
+    /* Missed envelope */
+    .envelope.missed {
+      background: linear-gradient(145deg, #F3F4F6 0%, #E5E7EB 100%);
+      border-color: #D1D5DB;
+      opacity: 0.6;
+    }
+    .envelope.missed .env-emoji { font-size: 22px; filter: grayscale(0.8); }
+    .envelope.missed .env-day { font-size: 10px; color: #6B7280; font-weight: 700; }
+    .envelope.missed .env-label { font-size: 8px; color: #9CA3AF; font-weight: 700; }
+
+    .env-emoji { line-height: 1; }
+    .env-day { margin-top: 2px; }
+    .env-label { margin-top: 1px; }
+    .env-check {}
+
+    .wall-progress {
+      width: 100%;
+      height: 6px;
+      background: #FDE68A;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .wall-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #DC2626 0%, #F59E0B 100%);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .wall-progress-text {
+      font-size: 11px;
+      color: #92400E;
+      font-weight: 700;
+    }
+
+    /* ========== ANG BAO REVEAL SCREEN ========== */
+    .reveal-container {
+      position: relative;
+      width: 190px;
+      height: 270px;
+      perspective: 900px;
+      margin: 12px 0 14px;
+    }
+
+    .angbao {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .angbao:hover:not(.opening) { transform: scale(1.03); }
+
+    /* Ang bao envelope body */
+    .angbao-body {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(170deg, #E53E3E 0%, #C53030 50%, #9B2C2C 100%);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: visible;
+      box-shadow: 0 6px 24px rgba(155,44,44,0.4);
+      z-index: 2;
+    }
+
+    /* Gold diamond decoration */
+    .angbao-diamond {
+      width: 66px;
+      height: 66px;
+      border: 3px solid rgba(251,191,36,0.4);
+      border-radius: 8px;
+      transform: rotate(45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .angbao-diamond::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(251,191,36,0.2);
+      border-radius: 5px;
+    }
+    .angbao-diamond-emoji {
+      font-size: 28px;
+      transform: rotate(-45deg);
+    }
+
+    /* Gold filigree lines on body */
+    .angbao-body::before {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(251,191,36,0.3), transparent);
+    }
+    .angbao-body::after {
+      content: '';
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(251,191,36,0.3), transparent);
+    }
+
+    .angbao-text {
+      font-size: 12px;
+      color: #FBBF24;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    /* â”€â”€ Flap (triangular top) â”€â”€ */
+    .angbao-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      z-index: 3;
+      transform-origin: top center;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .angbao-flap-face {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    /* Front of flap â€” red with gold trim */
+    .angbao-flap-front {
+      background: linear-gradient(170deg, #DC2626 0%, #B91C1C 100%);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 10px;
+      backface-visibility: hidden;
+    }
+    .angbao-flap-front::after {
+      content: '';
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(251,191,36,0.4), transparent);
+      margin-top: 8px;
+    }
+    /* Back of flap â€” darker red */
+    .angbao-flap-back {
+      background: linear-gradient(170deg, #991B1B 0%, #7F1D1D 100%);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      border-radius: 16px 16px 0 0;
+      transform: rotateX(180deg);
+      backface-visibility: hidden;
+    }
+
+    /* Gold seal circle on flap */
+    .angbao-seal {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: #7F1D1D;
+      box-shadow: 0 2px 8px rgba(245,158,11,0.4);
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    }
+
+    /* Flap opened state */
+    .angbao.opening .angbao-flap {
+      transform: rotateX(-170deg);
+    }
+    .angbao.opening .angbao-seal {
+      opacity: 0;
+      transform: translateX(-50%) scale(0.5);
+    }
+
+    /* â”€â”€ Fortune card inside â”€â”€ */
+    .angbao-inner-card {
+      position: absolute;
+      top: 20px;
+      left: 14px;
+      right: 14px;
+      bottom: 20px;
+      background: linear-gradient(170deg, #FFFBEB 0%, #FEF3C7 60%, #FDE68A 100%);
+      border-radius: 10px;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: 0.3s;
+      overflow: hidden;
+      padding: 12px;
+    }
+    .angbao-inner-card::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 1px dashed rgba(217,119,6,0.2);
+      border-radius: 7px;
+      pointer-events: none;
+    }
+    .inner-card-zodiac { font-size: 36px; }
+    .inner-card-text {
+      font-size: 14px;
+      font-weight: 800;
+      color: #92400E;
+      text-align: center;
+    }
+    .inner-card-sub {
+      font-size: 11px;
+      font-weight: 700;
+      color: #B45309;
+    }
+    .inner-card-sparkle {
+      font-size: 18px;
+      animation: sparkleRotate 2s linear infinite;
+    }
+    @keyframes sparkleRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Card rise animation */
+    .angbao.opening .angbao-inner-card {
+      transform: translateY(-110px);
+    }
+
+    /* Phase 2: card rises fully out and scales up */
+    .angbao.card-rising .angbao-inner-card {
+      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+      transform: translateY(-180px) scale(1.08);
+    }
+    .angbao.card-rising .angbao-body {
+      transition: opacity 0.4s ease;
+      opacity: 0.3;
+    }
+
+    .reveal-tap-hint {
+      font-size: 12px;
+      color: #92400E;
+      font-weight: 700;
+      animation: hintPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes hintPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+    .reveal-day-info {
+      font-size: 13px;
+      color: #92400E;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    /* Wiggle on idle */
+    .angbao:not(.opening) {
+      animation: angbaoIdle 3s ease-in-out infinite;
+    }
+    @keyframes angbaoIdle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(1.5deg); }
+      75% { transform: rotate(-1.5deg); }
+    }
+
+    /* ========== FORTUNE CARD SCREEN ========== */
+    .fortune-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 18px 16px;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid #FDE68A;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ang bao tab decoration */
+    .fortune-card::before {
+      content: 'ðŸ§§';
+      position: absolute;
+      top: -6px;
+      right: 14px;
+      font-size: 22px;
+      transform: rotate(12deg);
+    }
+
+    .fortune-day-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .fortune-theme {
+      font-size: 16px;
+      font-weight: 900;
+      color: #451A03;
+      margin-bottom: 6px;
+    }
+
+    .fortune-tradition {
+      font-size: 11.5px;
+      color: #78350F;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      padding: 10px;
+      background: #FFFBEB;
+      border-radius: 12px;
+      border-left: 3px solid #FBBF24;
+      text-align: left;
+    }
+
+    .fortune-zodiac-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .fortune-zodiac-emoji { font-size: 24px; }
+    .fortune-zodiac-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #B45309;
+    }
+
+    .fortune-blessing {
+      font-size: 13px;
+      color: #451A03;
+      line-height: 1.55;
+      margin-bottom: 14px;
+      text-align: left;
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    .fortune-lucky-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .fortune-lucky-item {
+      flex: 1;
+      background: #FFFBEB;
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .fortune-lucky-label {
+      font-size: 9px;
+      color: #B45309;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .fortune-lucky-value {
+      font-size: 16px;
+      font-weight: 900;
+      color: #451A03;
+    }
+    .fortune-colour-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      border: 2px solid rgba(0,0,0,0.08);
+    }
+    .fortune-colour-name {
+      font-size: 10px;
+      color: #78350F;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .fortune-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .fortune-btn {
+      flex: 1;
+      appearance: none;
+      border: 0;
+      padding: 10px 12px;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .fortune-btn:hover { transform: translateY(-1px); }
+    .fortune-btn.primary {
+      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+      color: #7F1D1D;
+    }
+    .fortune-btn.secondary {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    /* ========== CONFETTI ========== */
+    canvas#confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ========== UTILS ========== */
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="confetti"></canvas>
+
+  <div class="modal" id="modal">
+    <!-- Gold corner decorations -->
+    <div class="corner-deco tl"></div>
+    <div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div>
+    <div class="corner-deco br"></div>
+
+    <!-- Close button -->
+    <button class="close-btn" id="btnClose" onclick="dismiss()">âœ•</button>
+
+    <!-- â•â•â•â•â•â•â• SCREEN: COVER â•â•â•â•â•â•â• -->
+    <div class="screen active" id="screen-cover">
+      <div class="cover-hero">
+        <span class="cover-hero-emoji">ðŸ§§</span>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+      </div>
+      <div class="cover-badge">Year of the Horse 2026</div>
+      <div class="cover-title" id="coverTitle"></div>
+      <div class="cover-subtitle" id="coverSub"></div>
+      <button class="start-btn" id="btnStart" onclick="handleStart()"></button>
+    </div>
+
+    <!-- â•â•â•â•â•â•â• SCREEN: ZODIAC PICKER â•â•â•â•â•â•â• -->
+    <div class="screen" id="screen-zodiac">
+      <div class="zodiac-title">What's your zodiac? ðŸ²</div>
+      <div class="zodiac-subtitle">Tap your birth year animal</div>
+      <div class="zodiac-grid" id="zodiacGrid"></div>
+      <div id="zodiacYears" style="font-size:10px;color:#B45309;font-weight:600;min-height:16px;margin-bottom:4px;"></div>
+      <button class="zodiac-confirm" id="btnZodiacConfirm" onclick="confirmZodiac()">Confirm âžœ</button>
+    </div>
+
+    <!-- â•â•â•â•â•â•â• SCREEN: ANG BAO WALL â•â•â•â•â•â•â• -->
+    <div class="screen" id="screen-wall">
+      <div class="wall-header">
+        <div class="wall-title">Your Fortune Wall</div>
+        <div class="wall-zodiac-badge" id="wallBadge"></div>
+        <button class="wall-change-zodiac" id="btnChangeZodiac" onclick="changeZodiac()">Change</button>
+      </div>
+      <div class="wall-subtitle" id="wallSubtitle"></div>
+      <div class="wall-grid" id="wallGrid"></div>
+      <div class="wall-progress"><div class="wall-progress-fill" id="wallProgressFill"></div></div>
+      <div class="wall-progress-text" id="wallProgressText"></div>
+    </div>
+
+    <!-- â•â•â•â•â•â•â• SCREEN: ANG BAO REVEAL â•â•â•â•â•â•â• -->
+    <div class="screen" id="screen-reveal">
+      <div class="reveal-day-info" id="revealDayInfo"></div>
+      <div class="reveal-container">
+        <div class="angbao" id="angbao" onclick="openAngBao()">
+          <!-- Inner fortune card (behind body, rises up) -->
+          <div class="angbao-inner-card" id="angbaoInnerCard">
+            <span class="inner-card-sparkle">âœ¨</span>
+            <span class="inner-card-zodiac" id="innerCardZodiac">ðŸ´</span>
+            <span class="inner-card-text">Your fortune<br>awaits...</span>
+            <span class="inner-card-sub" id="innerCardTheme"></span>
+          </div>
+          <!-- Envelope body -->
+          <div class="angbao-body">
+            <div class="angbao-diamond">
+              <span class="angbao-diamond-emoji" id="angbaoDiamondEmoji">ç¦</span>
+            </div>
+            <div class="angbao-text">TAP TO OPEN</div>
+          </div>
+          <!-- Flap with gold seal -->
+          <div class="angbao-flap" id="angbaoFlap">
+            <div class="angbao-flap-face angbao-flap-front"></div>
+            <div class="angbao-flap-face angbao-flap-back"></div>
+            <div class="angbao-seal" id="angbaoSeal">ç¦</div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal-tap-hint" id="revealHint">Tap the ang bao to reveal your fortune</div>
+    </div>
+
+    <!-- â•â•â•â•â•â•â• SCREEN: FORTUNE CARD â•â•â•â•â•â•â• -->
+    <div class="screen" id="screen-fortune">
+      <div class="fortune-card" id="fortuneCard">
+        <div class="fortune-day-badge" id="fortuneDayBadge"></div>
+        <div class="fortune-theme" id="fortuneTheme"></div>
+        <div class="fortune-tradition" id="fortuneTradition"></div>
+        <div class="fortune-zodiac-header">
+          <span class="fortune-zodiac-emoji" id="fortuneZodiacEmoji"></span>
+          <span class="fortune-zodiac-label" id="fortuneZodiacLabel"></span>
+        </div>
+        <div class="fortune-blessing" id="fortuneBlessing"></div>
+        <div class="fortune-lucky-row">
+          <div class="fortune-lucky-item">
+            <div class="fortune-lucky-label">Lucky Number</div>
+            <div class="fortune-lucky-value" id="fortuneLuckyNum"></div>
+          </div>
+          <div class="fortune-lucky-item">
+            <div class="fortune-lucky-label">Lucky Colour</div>
+            <div class="fortune-lucky-value"><span class="fortune-colour-swatch" id="fortuneColourSwatch"></span></div>
+            <div class="fortune-colour-name" id="fortuneColourName"></div>
+          </div>
+          <div class="fortune-lucky-item">
+            <div class="fortune-lucky-label">Day</div>
+            <div class="fortune-lucky-value" id="fortuneDayNum"></div>
+            <div class="fortune-colour-name" id="fortuneDayCn"></div>
+          </div>
+        </div>
+        <div class="fortune-actions">
+          <button class="fortune-btn secondary" onclick="backToWall()">â† Back</button>
+          <button class="fortune-btn primary" onclick="shareFortune()">Share ðŸ§§</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ENGINE (DO NOT EDIT BELOW) ==================== -->
+  <script>
+    // ===== STATE =====
+    let selectedZodiac = null;
+    let progress = {}; // { 1: 'opened', 2: 'opened', ... }
+    let currentRevealDay = null;
+
+    // ===== INIT =====
+    const modal = document.getElementById('modal');
+    const btnClose = document.getElementById('btnClose');
+
+    // Apply CONFIG
+    modal.style.background = CONFIG.background;
+    if (!CONFIG.includeDismissButton) btnClose.style.display = 'none';
+
+    document.getElementById('coverTitle').innerHTML = CONFIG.coverTitle.text;
+    document.getElementById('coverTitle').style.fontSize = CONFIG.coverTitle.fontSize;
+    document.getElementById('coverTitle').style.color = CONFIG.coverTitle.color;
+    document.getElementById('coverSub').innerHTML = CONFIG.coverSubtitle.text;
+    document.getElementById('coverSub').style.fontSize = CONFIG.coverSubtitle.fontSize;
+    document.getElementById('coverSub').style.color = CONFIG.coverSubtitle.color;
+
+    const btnStart = document.getElementById('btnStart');
+    btnStart.textContent = CONFIG.startButton.text;
+    btnStart.style.background = CONFIG.startButton.background;
+    btnStart.style.color = CONFIG.startButton.color;
+
+    const btnZodiacConfirm = document.getElementById('btnZodiacConfirm');
+    btnZodiacConfirm.style.background = CONFIG.startButton.background;
+    btnZodiacConfirm.style.color = CONFIG.startButton.color;
+
+    // ===== HELPERS =====
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const s = document.getElementById(id);
+      s.classList.add('active');
+      s.classList.remove('fade-in');
+      void s.offsetWidth;
+      s.classList.add('fade-in');
+    }
+
+    function pushEvent(name, props) {
+      if (!name) return;
+      try {
+        if (typeof clevertap !== 'undefined' && clevertap.event) clevertap.event.push(name, props || {});
+        if (typeof CleverTap !== 'undefined' && CleverTap.event) CleverTap.event.push(name, props || {});
+      } catch (e) { console.log('[CT Event]', name, props); }
+    }
+    function pushProfile(props) {
+      try {
+        if (typeof clevertap !== 'undefined' && clevertap.profile) clevertap.profile.push({ Site: props });
+        if (typeof CleverTap !== 'undefined' && CleverTap.profile) CleverTap.profile.push({ Site: props });
+      } catch (e) { console.log('[CT Profile]', props); }
+    }
+
+    // ===== DATE LOGIC =====
+    function getCampaignDay() {
+      if (CONFIG.demoDay !== false && CONFIG.demoDay >= 1 && CONFIG.demoDay <= 15) {
+        return CONFIG.demoDay;
+      }
+      const start = new Date(CONFIG.campaignStartDate + 'T00:00:00');
+      const now = new Date();
+      const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+      return Math.max(0, Math.min(diff, 16)); // 0 = before campaign, 16 = after campaign
+    }
+
+    // ===== PERSISTENCE (Dual: localStorage + CleverTap) =====
+    function loadState() {
+      try {
+        const stored = localStorage.getItem('cny_fortune_state');
+        if (stored) {
+          const state = JSON.parse(stored);
+          selectedZodiac = state.zodiac || null;
+          progress = state.progress || {};
+        }
+      } catch (e) { console.log('[State] localStorage read error'); }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('cny_fortune_state', JSON.stringify({
+          zodiac: selectedZodiac,
+          progress: progress,
+        }));
+      } catch (e) { console.log('[State] localStorage write error'); }
+      // Sync to CleverTap profile
+      const openedDays = Object.keys(progress).filter(k => progress[k] === 'opened').join(',');
+      pushProfile({
+        CNY_Zodiac: selectedZodiac,
+        CNY_Fortune_Day: getCampaignDay(),
+        CNY_Fortune_Progress: openedDays,
+        CNY_Fortune_Total_Opened: openedDays.split(',').filter(Boolean).length,
+      });
+    }
+
+    // ===== ZODIAC PICKER =====
+    function buildZodiacPicker() {
+      const grid = document.getElementById('zodiacGrid');
+      grid.innerHTML = '';
+      CONFIG.zodiacs.forEach(z => {
+        const btn = document.createElement('button');
+        btn.className = 'zodiac-btn';
+        btn.innerHTML = `
+          <span class="zodiac-btn-emoji">${z.emoji}</span>
+          <span class="zodiac-btn-cn">${z.cn}</span>
+          <span class="zodiac-btn-en">${z.en}</span>
+        `;
+        btn.addEventListener('click', () => selectZodiac(z.key, btn));
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectZodiac(key, btn) {
+      document.querySelectorAll('.zodiac-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedZodiac = key;
+      const z = CONFIG.zodiacs.find(z => z.key === key);
+      document.getElementById('zodiacYears').textContent = z ? `Born in: ${z.years}` : '';
+      btnZodiacConfirm.classList.add('ready');
+    }
+
+    function confirmZodiac() {
+      if (!selectedZodiac) return;
+      pushEvent(CONFIG.events.fortuneStarted, {
+        Zodiac: selectedZodiac,
+        Zodiac_Emoji: CONFIG.zodiacs.find(z => z.key === selectedZodiac)?.emoji,
+      });
+      saveState();
+      showWall();
+    }
+
+    function changeZodiac() {
+      // Go back to zodiac picker â€” progress is kept, only zodiac changes
+      modal.style.background = CONFIG.wallBackground;
+      btnClose.style.color = 'rgba(120,53,15,0.4)';
+      buildZodiacPicker();
+      // Pre-select current zodiac
+      setTimeout(() => {
+        const btns = document.querySelectorAll('.zodiac-btn');
+        const idx = CONFIG.zodiacs.findIndex(z => z.key === selectedZodiac);
+        if (idx >= 0 && btns[idx]) {
+          btns[idx].classList.add('selected');
+          const z = CONFIG.zodiacs[idx];
+          document.getElementById('zodiacYears').textContent = `Born in: ${z.years}`;
+          btnZodiacConfirm.classList.add('ready');
+        }
+      }, 50);
+      showScreen('screen-zodiac');
+    }
+
+    // ===== ANG BAO WALL =====
+    function showWall() {
+      const today = getCampaignDay();
+      const z = CONFIG.zodiacs.find(z => z.key === selectedZodiac);
+
+      modal.style.background = CONFIG.wallBackground;
+      btnClose.style.color = 'rgba(120,53,15,0.4)';
+
+      document.getElementById('wallBadge').textContent = z ? `${z.emoji} ${z.en}` : '';
+
+      // Subtitle based on today
+      if (today <= 0) {
+        document.getElementById('wallSubtitle').textContent = 'CNY hasn\'t started yet â€” come back on Day 1!';
+      } else if (today > 15) {
+        document.getElementById('wallSubtitle').textContent = 'All 15 days revealed! æ­å–œå‘è´¢!';
+      } else {
+        const dayData = CONFIG.days.find(d => d.day === today);
+        document.getElementById('wallSubtitle').textContent = dayData ? `Day ${today} Â· ${dayData.cnyDay} Â· ${dayData.theme}` : '';
+      }
+
+      // Build grid â€” progressive reveal: show days 1 to (today + 1)
+      const grid = document.getElementById('wallGrid');
+      grid.innerHTML = '';
+      const showUpTo = Math.min(today + 1, 15);
+
+      for (let day = 1; day <= showUpTo; day++) {
+        const env = document.createElement('div');
+        env.className = 'envelope';
+
+        if (progress[day] === 'opened') {
+          env.classList.add('opened');
+          env.innerHTML = `
+            <span class="env-check">âœ…</span>
+            <span class="env-emoji">ðŸ§§</span>
+            <span class="env-day">Day ${day}</span>
+          `;
+          env.style.cursor = 'pointer';
+          env.addEventListener('click', () => goToReveal(day));
+        } else if (day === today && today >= 1 && today <= 15) {
+          env.classList.add('today');
+          env.innerHTML = `
+            <span class="env-emoji">ðŸ§§</span>
+            <span class="env-day">Day ${day}</span>
+            <span class="env-label">Tap to open!</span>
+          `;
+          env.addEventListener('click', () => goToReveal(day));
+        } else if (day === today + 1) {
+          env.classList.add('preview');
+          env.innerHTML = `
+            <span class="env-emoji">ðŸ§§</span>
+            <span class="env-day">Day ${day}</span>
+            <span class="env-label">Tomorrow</span>
+          `;
+        } else if (day < today) {
+          env.classList.add('missed');
+          env.innerHTML = `
+            <span class="env-emoji">ðŸ§§</span>
+            <span class="env-day">Day ${day}</span>
+            <span class="env-label">Missed</span>
+          `;
+        } else {
+          env.classList.add('locked');
+          env.innerHTML = `
+            <span class="env-emoji">ðŸ”’</span>
+            <span class="env-day">Day ${day}</span>
+          `;
+        }
+
+        grid.appendChild(env);
+      }
+
+      // Progress bar
+      const opened = Object.keys(progress).filter(k => progress[k] === 'opened').length;
+      const pct = (opened / 15) * 100;
+      document.getElementById('wallProgressFill').style.width = pct + '%';
+      document.getElementById('wallProgressText').textContent = `${opened} of 15 fortunes revealed`;
+
+      showScreen('screen-wall');
+    }
+
+    // ===== ANG BAO REVEAL =====
+    function goToReveal(day) {
+      currentRevealDay = day;
+      const dayData = CONFIG.days.find(d => d.day === day);
+
+      modal.style.background = CONFIG.wallBackground;
+      document.getElementById('revealDayInfo').textContent = dayData
+        ? `Day ${day} Â· ${dayData.cnyDay} Â· ${dayData.theme}`
+        : `Day ${day}`;
+
+      // Reset ang bao state
+      const angbao = document.getElementById('angbao');
+      angbao.classList.remove('opening', 'card-rising');
+      angbao.style.pointerEvents = '';
+      angbao.style.animation = '';
+
+      // Reset inner card position
+      const innerCard = document.getElementById('angbaoInnerCard');
+      innerCard.style.transform = '';
+      innerCard.style.transition = '';
+
+      // Reset flap
+      const flap = document.getElementById('angbaoFlap');
+      flap.style.transform = '';
+
+      // Reset seal
+      const seal = document.getElementById('angbaoSeal');
+      seal.style.opacity = '';
+      seal.style.transform = '';
+
+      // Reset body opacity
+      angbao.querySelector('.angbao-body').style.opacity = '';
+
+      // Set zodiac emoji
+      const z = CONFIG.zodiacs.find(z => z.key === selectedZodiac);
+      document.getElementById('angbaoDiamondEmoji').textContent = z ? z.emoji : 'ç¦';
+      document.getElementById('innerCardZodiac').textContent = z ? z.emoji : 'âœ¨';
+      document.getElementById('innerCardTheme').textContent = dayData ? dayData.theme : '';
+
+      // Reset hint text
+      document.getElementById('revealHint').textContent = 'Tap the ang bao to reveal your fortune';
+
+      showScreen('screen-reveal');
+    }
+
+    function openAngBao() {
+      if (!currentRevealDay) return;
+      const angbao = document.getElementById('angbao');
+      if (angbao.classList.contains('opening')) return;
+
+      // Stop idle wiggle
+      angbao.style.animation = 'none';
+      angbao.style.pointerEvents = 'none';
+
+      // Update hint
+      document.getElementById('revealHint').textContent = '';
+
+      // Phase 1: Flap opens, card peeks up
+      angbao.classList.add('opening');
+
+      // Only fire events + save on first open
+      const isFirstOpen = progress[currentRevealDay] !== 'opened';
+      if (isFirstOpen) {
+        progress[currentRevealDay] = 'opened';
+        saveState();
+
+        const dayData = CONFIG.days.find(d => d.day === currentRevealDay);
+        pushEvent(CONFIG.events.fortuneOpened, {
+          Day: currentRevealDay,
+          CNY_Day: dayData?.cnyDay || '',
+          Theme: dayData?.theme || '',
+          Zodiac: selectedZodiac,
+        });
+
+        // Check completion
+        const opened = Object.keys(progress).filter(k => progress[k] === 'opened').length;
+        if (opened >= 15) {
+          pushEvent(CONFIG.events.fortuneCompleted, {
+            Zodiac: selectedZodiac,
+            Total_Opened: opened,
+            Missed_Days: 15 - opened,
+          });
+        }
+      }
+
+      // Confetti at card peek
+      if (CONFIG.enableConfettiOnReveal) {
+        setTimeout(() => fireConfetti(), 600);
+      }
+
+      // Phase 2: Card rises further, body fades
+      setTimeout(() => {
+        angbao.classList.add('card-rising');
+      }, 1100);
+
+      // Phase 3: Transition to fortune card screen
+      setTimeout(() => {
+        showFortune(currentRevealDay);
+      }, 1900);
+    }
+
+    // ===== FORTUNE CARD =====
+    function showFortune(day) {
+      const dayData = CONFIG.days.find(d => d.day === day);
+      if (!dayData) return;
+
+      modal.style.background = CONFIG.fortuneBackground;
+      btnClose.style.color = 'rgba(120,53,15,0.4)';
+
+      const z = CONFIG.zodiacs.find(z => z.key === selectedZodiac);
+
+      // Get fortune â€” per-zodiac if available, fallback otherwise
+      let fortune;
+      if (dayData.fortunes && dayData.fortunes[selectedZodiac]) {
+        fortune = dayData.fortunes[selectedZodiac];
+      } else {
+        fortune = CONFIG.fallbackFortunes[selectedZodiac] || {
+          blessing: "May this day bring you peace and prosperity.",
+          luckyNumber: 8,
+          luckyColour: "#FBBF24",
+          colourName: "Gold",
+        };
+      }
+
+      document.getElementById('fortuneDayBadge').textContent = `${dayData.cnyDay} Â· Day ${day} of 15`;
+      document.getElementById('fortuneTheme').textContent = dayData.theme;
+      document.getElementById('fortuneTradition').textContent = dayData.tradition;
+      document.getElementById('fortuneZodiacEmoji').textContent = z ? z.emoji : '';
+      document.getElementById('fortuneZodiacLabel').textContent = z ? `Your ${z.en} Fortune` : 'Your Fortune';
+      document.getElementById('fortuneBlessing').textContent = `"${fortune.blessing}"`;
+      document.getElementById('fortuneLuckyNum').textContent = fortune.luckyNumber;
+      document.getElementById('fortuneColourSwatch').style.background = fortune.luckyColour;
+      document.getElementById('fortuneColourName').textContent = fortune.colourName;
+      document.getElementById('fortuneDayNum').textContent = day;
+      document.getElementById('fortuneDayCn').textContent = dayData.cnyDay;
+
+      showScreen('screen-fortune');
+    }
+
+    function backToWall() {
+      showWall();
+    }
+
+    function shareFortune() {
+      pushEvent(CONFIG.events.fortuneShared, {
+        Day: currentRevealDay || 0,
+        Zodiac: selectedZodiac,
+      });
+      // Attempt native share
+      const z = CONFIG.zodiacs.find(z => z.key === selectedZodiac);
+      const dayData = CONFIG.days.find(d => d.day === currentRevealDay);
+      const text = `ðŸ§§ My Day ${currentRevealDay} CNY Fortune (${z?.emoji} ${z?.en}): "${dayData?.theme}" â€” Open yours!`;
+      if (navigator.share) {
+        navigator.share({ title: '15 Days of Fortune ðŸ§§', text: text }).catch(() => {});
+      } else {
+        // Fallback: copy to clipboard
+        const input = document.createElement('input');
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(input);
+        const btn = document.querySelector('.fortune-btn.primary');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied! âœ“';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      }
+    }
+
+    // ===== DISMISS =====
+    function dismiss() {
+      pushEvent(CONFIG.events.fortuneDismissed, {
+        Day: getCampaignDay(),
+        Zodiac: selectedZodiac || 'none',
+        Screen: document.querySelector('.screen.active')?.id || 'unknown',
+      });
+      try { window.location.href = 'wzkr://thisleadstonowhere'; } catch (e) {}
+    }
+
+    // ===== CONFETTI ENGINE =====
+    function fireConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#DC2626', '#FBBF24', '#F59E0B', '#EF4444', '#FFD700', '#FCA5A5', '#FDE68A'];
+      for (let i = 0; i < 100; i++) {
+        particles.push({
+          x: canvas.width * 0.5 + (Math.random() - 0.5) * 200,
+          y: canvas.height * 0.4,
+          vx: (Math.random() - 0.5) * 8,
+          vy: -Math.random() * 12 - 4,
+          w: Math.random() * 8 + 4,
+          h: Math.random() * 5 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 12,
+          gravity: 0.25 + Math.random() * 0.1,
+          opacity: 1,
+        });
+      }
+
+      let frame = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if (p.opacity <= 0) return;
+          alive = true;
+          p.x += p.vx;
+          p.vy += p.gravity;
+          p.y += p.vy;
+          p.rotation += p.rotationSpeed;
+          if (frame > 40) p.opacity -= 0.015;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frame++;
+        if (alive && frame < 180) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(draw);
+    }
+
+    // ===== HANDLE START =====
+    function handleStart() {
+      if (selectedZodiac) {
+        // Returning user â€” go straight to wall
+        showWall();
+      } else {
+        // New user â€” show zodiac picker
+        modal.style.background = CONFIG.wallBackground;
+        btnClose.style.color = 'rgba(120,53,15,0.4)';
+        buildZodiacPicker();
+        showScreen('screen-zodiac');
+      }
+    }
+
+    // ===== BOOT =====
+    loadState();
+
+    // If user already has a zodiac, check if today's ang bao needs opening
+    if (selectedZodiac) {
+      const today = getCampaignDay();
+      if (today >= 1 && today <= 15 && progress[today] !== 'opened') {
+        // Show cover briefly then auto-route to wall
+        // (cover acts as re-engagement moment)
+      }
+    }
+  </script>
+</body>
+
+</html>
