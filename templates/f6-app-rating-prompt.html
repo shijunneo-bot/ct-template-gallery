@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "SOCAR",
+        primary: "#00C853",
+        primaryDark: "#00A844",
+        dark: "#0A0A0A",
+        darkCard: "#161616",
+        text: "#FFFFFF",
+      },
+
+      step1: {
+        emoji: "🚗",
+        headline: "Enjoying SOCAR?",
+        body: "Your last ride was 3 days ago. How's your experience so far?",
+        positiveText: "Love it!",
+        negativeText: "Could be better",
+      },
+
+      step2: {
+        headline: "Awesome! Rate us on the store?",
+        body: "Your rating helps other drivers find us",
+        storeUrl: "https://apps.apple.com/app/socar", // or Play Store
+        rateText: "Rate 5 Stars ⭐",
+        laterText: "Maybe Later",
+      },
+
+      step3Negative: {
+        headline: "We'd love to improve",
+        body: "What can we do better?",
+        options: [
+          { id: "pricing", label: "Pricing", emoji: "💰" },
+          { id: "availability", label: "Car availability", emoji: "🔍" },
+          { id: "cleanliness", label: "Car cleanliness", emoji: "🧹" },
+          { id: "app_ux", label: "App experience", emoji: "📱" },
+          { id: "support", label: "Customer support", emoji: "💬" },
+          { id: "other", label: "Something else", emoji: "📝" },
+        ],
+        submitText: "Send Feedback",
+        multiSelect: true,
+      },
+
+      thankYou: {
+        positive: { emoji: "🎉", headline: "You're the best!", body: "Thanks for supporting SOCAR" },
+        negative: { emoji: "🙏", headline: "Thanks for telling us", body: "We'll work on making it better" },
+        autoDismissSeconds: 3,
+      },
+
+      events: {
+        ratingViewed:       "AppRating_Viewed",
+        satisfactionAnswer: "AppRating_Satisfaction",
+        storeRedirect:      "AppRating_Store_Redirect",
+        rateLater:          "AppRating_Later",
+        feedbackSubmitted:  "AppRating_Feedback_Submitted",
+        ratingDismissed:    "AppRating_Dismissed",
+      },
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --primary:#00C853;--primary-dark:#00A844;
+      --dark:#0A0A0A;--dark-card:#161616;
+      --text:#FFF;--text-muted:rgba(255,255,255,.45);
+      --border:rgba(255,255,255,.06);
+    }
+    body{
+      background:var(--dark);min-height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;color:var(--text);
+      padding:24px 20px;overflow:hidden;
+    }
+    .dismiss{position:fixed;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}.dismiss:active{transform:scale(.9)}
+
+    @keyframes fadeIn{to{opacity:1}}
+    @keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
+    @keyframes emojiPop{0%{opacity:0;transform:scale(0)}60%{transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+
+    .card{
+      background:var(--dark-card);border:1px solid var(--border);
+      border-radius:24px;padding:32px 24px;
+      width:100%;max-width:340px;text-align:center;
+      position:relative;overflow:hidden;
+      opacity:0;transform:translateY(12px);
+      animation:fadeInUp .5s .1s ease forwards;
+    }
+    .card::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+
+    /* Screens */
+    .scr{display:none;flex-direction:column;align-items:center}
+    .scr.on{display:flex}
+
+    .scr-emoji{font-size:48px;margin-bottom:16px;opacity:0;transform:scale(0)}
+    .scr-emoji.pop{animation:emojiPop .5s cubic-bezier(.16,1,.3,1) forwards}
+    .scr-headline{font-size:20px;font-weight:800;margin-bottom:6px;line-height:1.3}
+    .scr-body{font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px}
+
+    /* Step 1 buttons */
+    .s1-actions{display:flex;gap:10px;width:100%}
+    .s1-btn{
+      flex:1;padding:14px 8px;border-radius:14px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
+      cursor:pointer;transition:transform .2s;
+    }
+    .s1-btn:active{transform:scale(.96)}
+    .s1-positive{background:var(--primary);color:#000}
+    .s1-negative{background:rgba(255,255,255,.06);color:var(--text-muted)}
+
+    /* Step 2 star animation */
+    .star-row{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
+    .star{
+      font-size:32px;cursor:pointer;opacity:.2;
+      transition:opacity .2s,transform .2s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .star.lit{opacity:1;transform:scale(1.1)}
+    .star:active{transform:scale(.9)}
+
+    .s2-actions{display:flex;flex-direction:column;gap:8px;width:100%}
+    .s2-rate{
+      padding:14px;border-radius:14px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;
+      cursor:pointer;background:var(--primary);color:#000;
+      transition:transform .2s;
+    }
+    .s2-rate:active{transform:scale(.96)}
+    .s2-later{
+      padding:10px;border:none;background:none;
+      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+      color:var(--text-muted);cursor:pointer;
+    }
+
+    /* Step 3 negative feedback */
+    .fb-options{
+      display:flex;flex-wrap:wrap;gap:8px;
+      justify-content:center;margin-bottom:18px;
+    }
+    .fb-chip{
+      display:flex;align-items:center;gap:5px;
+      padding:10px 14px;border-radius:50px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      font-size:12px;font-weight:600;color:var(--text-muted);
+      cursor:pointer;transition:all .2s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .fb-chip.selected{
+      background:rgba(0,200,83,.1);border-color:rgba(0,200,83,.3);
+      color:var(--primary);
+    }
+    .fb-chip:active{transform:scale(.95)}
+    .fb-emoji{font-size:14px}
+
+    .fb-submit{
+      width:100%;padding:14px;border-radius:14px;border:none;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;
+      cursor:pointer;background:rgba(255,255,255,.08);color:var(--text-muted);
+      transition:all .2s;
+    }
+    .fb-submit.ready{background:var(--primary);color:#000}
+    .fb-submit:active{transform:scale(.96)}
+
+    /* Thank you */
+    .ty-progress{
+      width:60px;height:3px;border-radius:2px;
+      background:rgba(255,255,255,.06);margin-top:16px;overflow:hidden;
+    }
+    .ty-bar{height:100%;border-radius:2px;background:var(--primary);width:0}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- Step 1: Satisfaction check -->
+    <div class="scr on" id="scr1">
+      <div class="scr-emoji pop" id="s1Emoji"></div>
+      <h2 class="scr-headline" id="s1Head"></h2>
+      <p class="scr-body" id="s1Body"></p>
+      <div class="s1-actions">
+        <button class="s1-btn s1-negative" id="s1Neg"></button>
+        <button class="s1-btn s1-positive" id="s1Pos"></button>
+      </div>
+    </div>
+
+    <!-- Step 2: Store redirect (happy path) -->
+    <div class="scr" id="scr2">
+      <div class="scr-emoji" id="s2Emoji">⭐</div>
+      <h2 class="scr-headline" id="s2Head"></h2>
+      <p class="scr-body" id="s2Body"></p>
+      <div class="star-row" id="starRow"></div>
+      <div class="s2-actions">
+        <button class="s2-rate" id="s2Rate"></button>
+        <button class="s2-later" id="s2Later"></button>
+      </div>
+    </div>
+
+    <!-- Step 3: Feedback (unhappy path) -->
+    <div class="scr" id="scr3">
+      <div class="scr-emoji" id="s3Emoji">💬</div>
+      <h2 class="scr-headline" id="s3Head"></h2>
+      <p class="scr-body" id="s3Body"></p>
+      <div class="fb-options" id="fbOpts"></div>
+      <button class="fb-submit" id="fbSubmit"></button>
+    </div>
+
+    <!-- Thank you -->
+    <div class="scr" id="scrTy">
+      <div class="scr-emoji" id="tyEmoji"></div>
+      <h2 class="scr-headline" id="tyHead"></h2>
+      <p class="scr-body" id="tyBody"></p>
+      <div class="ty-progress"><div class="ty-bar" id="tyBar"></div></div>
+    </div>
+  </div>
+
+  <script>
+    function fireEvent(n,p){try{if(window.CleverTap)window.CleverTap.pushEvent(n,p||{});else if(window.webkit?.messageHandlers?.clevertap)window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:n,properties:p||{}}));else if(window.clevertap)window.clevertap.event.push(n,p||{})}catch(e){console.log("CT:",n,p)}}
+    function dismiss(){fireEvent(CONFIG.events.ratingDismissed);try{location.href="wzrk://exit"}catch(e){}}
+
+    let starRating=5;
+    const selectedFeedback=new Set();
+
+    function showScr(id){
+      document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on"));
+      const el=document.getElementById(id);
+      el.classList.add("on");
+      const emoji=el.querySelector(".scr-emoji");
+      if(emoji){emoji.classList.remove("pop");void emoji.offsetWidth;emoji.classList.add("pop")}
+    }
+
+    (function init(){
+      if(CONFIG.includeDismissButton){const b=document.createElement("button");b.className="dismiss";b.innerHTML="✕";b.onclick=dismiss;document.body.appendChild(b)}
+
+      // Step 1
+      document.getElementById("s1Emoji").textContent=CONFIG.step1.emoji;
+      document.getElementById("s1Head").textContent=CONFIG.step1.headline;
+      document.getElementById("s1Body").textContent=CONFIG.step1.body;
+      document.getElementById("s1Pos").textContent=CONFIG.step1.positiveText;
+      document.getElementById("s1Neg").textContent=CONFIG.step1.negativeText;
+
+      document.getElementById("s1Pos").onclick=()=>{
+        fireEvent(CONFIG.events.satisfactionAnswer,{answer:"positive"});
+        showScr("scr2");
+      };
+      document.getElementById("s1Neg").onclick=()=>{
+        fireEvent(CONFIG.events.satisfactionAnswer,{answer:"negative"});
+        showScr("scr3");
+      };
+
+      // Step 2
+      document.getElementById("s2Head").textContent=CONFIG.step2.headline;
+      document.getElementById("s2Body").textContent=CONFIG.step2.body;
+      document.getElementById("s2Rate").textContent=CONFIG.step2.rateText;
+      document.getElementById("s2Later").textContent=CONFIG.step2.laterText;
+
+      // Stars
+      const starRow=document.getElementById("starRow");
+      for(let i=1;i<=5;i++){
+        const s=document.createElement("span");
+        s.className="star"+(i<=5?" lit":"");
+        s.textContent="★";
+        s.dataset.val=i;
+        s.addEventListener("click",()=>{
+          starRating=i;
+          starRow.querySelectorAll(".star").forEach((st,idx)=>{
+            st.classList.toggle("lit",idx<i);
+          });
+        });
+        starRow.appendChild(s);
+      }
+
+      document.getElementById("s2Rate").onclick=()=>{
+        fireEvent(CONFIG.events.storeRedirect,{stars:starRating});
+        if(CONFIG.step2.storeUrl)window.open(CONFIG.step2.storeUrl,"_blank");
+        setTimeout(()=>showThankYou("positive"),500);
+      };
+      document.getElementById("s2Later").onclick=()=>{
+        fireEvent(CONFIG.events.rateLater);
+        try{location.href="wzrk://exit"}catch(e){}
+      };
+
+      // Step 3
+      document.getElementById("s3Head").textContent=CONFIG.step3Negative.headline;
+      document.getElementById("s3Body").textContent=CONFIG.step3Negative.body;
+      document.getElementById("fbSubmit").textContent=CONFIG.step3Negative.submitText;
+
+      const fbOpts=document.getElementById("fbOpts");
+      CONFIG.step3Negative.options.forEach(opt=>{
+        const chip=document.createElement("div");
+        chip.className="fb-chip";
+        chip.dataset.id=opt.id;
+        chip.innerHTML=`<span class="fb-emoji">${opt.emoji}</span>${opt.label}`;
+        chip.addEventListener("click",()=>{
+          if(CONFIG.step3Negative.multiSelect){
+            chip.classList.toggle("selected");
+            if(selectedFeedback.has(opt.id))selectedFeedback.delete(opt.id);
+            else selectedFeedback.add(opt.id);
+          }else{
+            fbOpts.querySelectorAll(".fb-chip").forEach(c=>c.classList.remove("selected"));
+            selectedFeedback.clear();
+            chip.classList.add("selected");
+            selectedFeedback.add(opt.id);
+          }
+          document.getElementById("fbSubmit").classList.toggle("ready",selectedFeedback.size>0);
+        });
+        fbOpts.appendChild(chip);
+      });
+
+      document.getElementById("fbSubmit").onclick=()=>{
+        if(selectedFeedback.size===0)return;
+        fireEvent(CONFIG.events.feedbackSubmitted,{
+          issues:Array.from(selectedFeedback).join(","),
+          issue_count:selectedFeedback.size,
+        });
+        showThankYou("negative");
+      };
+
+      fireEvent(CONFIG.events.ratingViewed);
+    })();
+
+    function showThankYou(type){
+      showScr("scrTy");
+      const data=CONFIG.thankYou[type];
+      document.getElementById("tyEmoji").textContent=data.emoji;
+      document.getElementById("tyHead").textContent=data.headline;
+      document.getElementById("tyBody").textContent=data.body;
+
+      const dur=CONFIG.thankYou.autoDismissSeconds;
+      if(dur>0){
+        const bar=document.getElementById("tyBar");
+        setTimeout(()=>{bar.style.transitionDuration=dur+"s";bar.style.width="100%"},300);
+        setTimeout(()=>{try{location.href="wzrk://exit"}catch(e){}},dur*1000+500);
+      }
+    }
+  </script>
+</body>
+</html>
