@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "미소",
+        nameEn: "Miso",
+        tagline: "대한민국 1등 홈서비스",
+        blue: "#2563EB",
+        blueDark: "#1D4ED8",
+        blueDeep: "#1E3A8A",
+        blueLight: "#DBEAFE",
+        bluePale: "#EFF6FF",
+        black: "#0F172A",
+        card: "#1E293B",
+        cardLight: "#334155",
+        white: "#FFFFFF",
+        green: "#10B981",
+        red: "#EF4444",
+        amber: "#F59E0B",
+        grey: "#94A3B8",
+      },
+
+      // Survey questions
+      questions: [
+        {
+          id: "cleanliness",
+          type: "arc",
+          label: "청소 만족도",
+          labelEn: "Cleaning Satisfaction",
+          subtext: "오늘 청소 서비스는 어떠셨나요?",
+          subtextEn: "How satisfied were you with today's cleaning?",
+          min: 0, max: 100, default: 50,
+          emojis: ["😞","😕","😐","🙂","😊","✨"],
+          emojiThresholds: [0, 20, 40, 60, 80, 95],
+        },
+        {
+          id: "rebook",
+          type: "slider",
+          label: "재예약 의향",
+          labelEn: "Likelihood to Rebook",
+          subtext: "미소를 다시 이용하실 의향이 있으신가요?",
+          subtextEn: "How likely are you to book Miso again?",
+          min: 0, max: 10, default: 5, step: 1,
+          leftLabel: "전혀 없음",
+          rightLabel: "매우 높음",
+          leftLabelEn: "Not at all",
+          rightLabelEn: "Definitely",
+        },
+        {
+          id: "professionalism",
+          type: "slider",
+          label: "매니저 평가",
+          labelEn: "Cleaner Rating",
+          subtext: "담당 매니저의 전문성은 어떠셨나요?",
+          subtextEn: "How would you rate your cleaner's professionalism?",
+          min: 0, max: 10, default: 5, step: 1,
+          leftLabel: "불만족",
+          rightLabel: "매우 만족",
+          leftLabelEn: "Poor",
+          rightLabelEn: "Excellent",
+        },
+      ],
+
+      // Service context (passed from CleverTap profile/event)
+      service: {
+        type: "가사도우미",
+        typeEn: "Home Cleaning",
+        duration: "2시간",
+        cleanerName: "김미영 매니저",
+        date: "오늘",
+      },
+
+      cta: {
+        submit: "제출하기 · Submit",
+        reward: "🎁 설문 완료 시 ₩2,000 크레딧 적립!",
+        rewardEn: "Complete for â'©2,000 credit!",
+      },
+
+      testMode: new URLSearchParams(window.location.search).get("test") === "true",
+    };
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>미소 서비스 만족도</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: #0F172A;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .modal {
+      width: 100%; max-width: 380px;
+      background: #0F172A;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* ---- Dismiss ---- */
+    .dismiss-btn {
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 14px; z-index: 10;
+      transition: all 0.2s;
+    }
+    .dismiss-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.6); }
+
+    /* ---- Header ---- */
+    .header {
+      text-align: center;
+      padding: 24px 20px 12px;
+      position: relative;
+    }
+    .header::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 140px;
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 50%, #3B82F6 100%);
+      border-radius: 20px 20px 0 0;
+      z-index: 0;
+    }
+    .header-content { position: relative; z-index: 1; }
+    .brand-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .brand-dot {
+      width: 6px; height: 6px;
+      background: #60A5FA;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+    .header-title {
+      font-size: 20px; font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .header-sub {
+      font-size: 12px; color: rgba(255,255,255,0.6);
+      line-height: 1.4;
+    }
+    .service-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.08);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      margin-top: 8px;
+    }
+
+    /* ---- Reward Banner ---- */
+    .reward-banner {
+      margin: 0 16px 12px;
+      padding: 8px 14px;
+      background: linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(16,185,129,0.12) 100%);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 12px; font-weight: 600;
+      color: #60A5FA;
+    }
+
+    /* ---- Progress Dots ---- */
+    .progress-dots {
+      display: flex; justify-content: center; gap: 8px;
+      padding: 8px 0 16px;
+    }
+    .pdot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .pdot.active {
+      background: #2563EB;
+      width: 24px;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(37,99,235,0.4);
+    }
+    .pdot.done {
+      background: #10B981;
+    }
+
+    /* ---- Question Slides ---- */
+    .slides-container {
+      position: relative;
+      overflow: hidden;
+      min-height: 290px;
+    }
+    .slide {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 0 20px 16px;
+      opacity: 0;
+      transform: translateX(80px);
+      transition: all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      pointer-events: none;
+    }
+    .slide.active {
+      opacity: 1; transform: translateX(0);
+      pointer-events: auto;
+    }
+    .slide.exit-left {
+      opacity: 0; transform: translateX(-80px);
+    }
+
+    .q-label {
+      font-size: 15px; font-weight: 800;
+      color: #FFFFFF;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+    .q-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* ---- Arc Dial ---- */
+    .arc-container {
+      display: flex; flex-direction: column;
+      align-items: center; padding: 0 10px;
+    }
+    .arc-svg-wrap {
+      position: relative;
+      width: 220px; height: 130px;
+      margin-bottom: 8px;
+    }
+    .arc-emoji {
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      font-size: 36px;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+    }
+    .arc-value {
+      text-align: center;
+      font-size: 42px; font-weight: 900;
+      color: #FFFFFF;
+      line-height: 1;
+      margin-bottom: 2px;
+      transition: color 0.3s;
+    }
+    .arc-value-label {
+      text-align: center;
+      font-size: 11px; font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    /* Touch area for arc */
+    .arc-touch {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: pointer;
+      touch-action: none;
+    }
+    /* Thumb on arc */
+    .arc-thumb {
+      width: 22px; height: 22px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      position: absolute;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4), 0 0 0 3px rgba(37,99,235,0.3);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: box-shadow 0.2s;
+    }
+    .arc-thumb.dragging {
+      box-shadow: 0 2px 16px rgba(0,0,0,0.5), 0 0 0 5px rgba(37,99,235,0.5);
+      width: 26px; height: 26px;
+    }
+
+    /* ---- Horizontal Slider ---- */
+    .slider-section {
+      padding: 10px 0;
+    }
+    .slider-emoji-row {
+      text-align: center;
+      font-size: 40px;
+      margin-bottom: 6px;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .slider-value-display {
+      text-align: center;
+      font-size: 48px; font-weight: 900;
+      color: #FFFFFF;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .slider-value-label {
+      text-align: center;
+      font-size: 11px; font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .slider-track-wrap {
+      position: relative;
+      padding: 12px 0;
+      margin: 0 4px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3), 0 0 0 3px rgba(37,99,235,0.25);
+      cursor: grab;
+      position: relative; z-index: 3;
+      transition: box-shadow 0.2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.4), 0 0 0 5px rgba(37,99,235,0.4);
+      transform: scale(1.1);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 32px; height: 32px;
+      border-radius: 50%; border: none;
+      background: #FFFFFF;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      cursor: grab;
+    }
+
+    .slider-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; font-weight: 600;
+      color: rgba(255,255,255,0.3);
+      margin-top: 4px;
+      padding: 0 2px;
+    }
+    .slider-ticks {
+      display: flex; justify-content: space-between;
+      padding: 0 14px;
+      margin-top: 6px;
+    }
+    .tick {
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700;
+      color: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .tick.reached {
+      color: rgba(255,255,255,0.6);
+    }
+    .tick.current {
+      color: #FFFFFF;
+      background: rgba(37,99,235,0.3);
+    }
+
+    /* ---- CTA Section ---- */
+    .cta-section {
+      padding: 8px 20px 20px;
+    }
+    .btn-next {
+      width: 100%;
+      padding: 14px;
+      border: none; border-radius: 14px;
+      font-family: inherit;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+      box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+    }
+    .btn-next:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+    }
+    .btn-next:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+    .btn-skip {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      border: none; background: none;
+      font-family: inherit;
+      font-size: 12px; font-weight: 500;
+      color: rgba(255,255,255,0.25);
+      cursor: pointer;
+    }
+    .btn-skip:hover { color: rgba(255,255,255,0.4); }
+
+    /* ---- Results Screen ---- */
+    .results-screen {
+      display: none;
+      padding: 24px 20px 20px;
+      text-align: center;
+    }
+    .results-screen.show {
+      display: block;
+      animation: fadeUp 0.5s ease forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-emoji-big {
+      font-size: 56px;
+      margin-bottom: 8px;
+      animation: bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+    }
+    @keyframes bounceIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+    .result-title {
+      font-size: 20px; font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+    .result-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 20px;
+    }
+
+    /* Visual summary bars */
+    .result-bars {
+      display: flex; flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .rbar {
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-align: left;
+    }
+    .rbar-top {
+      display: flex; justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .rbar-label {
+      font-size: 12px; font-weight: 700;
+      color: rgba(255,255,255,0.6);
+    }
+    .rbar-value {
+      font-size: 16px; font-weight: 900;
+      color: #FFFFFF;
+    }
+    .rbar-track {
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .rbar-fill {
+      height: 100%;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* Credit banner */
+    .credit-earned {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(37,99,235,0.12) 100%);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .credit-amount {
+      font-size: 22px; font-weight: 900;
+      color: #10B981;
+    }
+    .credit-text {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .btn-done {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid rgba(37,99,235,0.3);
+      border-radius: 14px;
+      background: rgba(37,99,235,0.08);
+      font-family: inherit;
+      font-size: 14px; font-weight: 700;
+      color: #60A5FA;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-done:active { transform: scale(0.97); }
+
+    /* ---- Test Panel ---- */
+    .test-panel {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 12px;
+      margin: 12px 16px;
+      padding: 10px;
+    }
+    .test-label {
+      font-size: 9px; font-weight: 700;
+      color: #F59E0B;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .test-btns {
+      display: flex; flex-wrap: wrap; gap: 4px;
+    }
+    .test-btn {
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(245,158,11,0.2);
+      background: rgba(245,158,11,0.06);
+      font-family: inherit;
+      font-size: 10px; font-weight: 600;
+      color: #F59E0B;
+      cursor: pointer;
+    }
+    .test-btn:hover { background: rgba(245,158,11,0.15); }
+
+    .footer-note {
+      text-align: center;
+      font-size: 9px;
+      color: rgba(255,255,255,0.15);
+      padding: 8px 20px 16px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="modal" id="modal">
+    <button class="dismiss-btn" id="dismissBtn" onclick="dismiss()">✕</button>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <div class="brand-pill">
+          <div class="brand-dot"></div>
+          미소 · MISO
+        </div>
+        <div class="header-title">오늘 서비스 어떠셨나요?</div>
+        <div class="header-sub">How was your service today?</div>
+        <div class="service-chip" id="serviceChip">
+          🧹 가사도우미 · 2시간 · 김미영 매니저
+        </div>
+      </div>
+    </div>
+
+    <!-- Reward Banner -->
+    <div class="reward-banner" id="rewardBanner">
+      🎁 설문 완료 시 ₩2,000 크레딧 적립!
+    </div>
+
+    <!-- Progress Dots -->
+    <div class="progress-dots" id="progressDots"></div>
+
+    <!-- Question Slides -->
+    <div class="slides-container" id="slidesContainer"></div>
+
+    <!-- CTA -->
+    <div class="cta-section" id="ctaSection">
+      <button class="btn-next" id="btnNext" onclick="nextSlide()">다음 · Next</button>
+      <button class="btn-skip" onclick="skipQuestion()">건너뛰기 · Skip</button>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="results-screen" id="resultsScreen">
+      <div class="result-emoji-big" id="resultEmoji">✨</div>
+      <div class="result-title" id="resultTitle">감사합니다!</div>
+      <div class="result-sub" id="resultSub">소중한 의견이 서비스 개선에 반영됩니다</div>
+      <div class="result-bars" id="resultBars"></div>
+      <div class="credit-earned">
+        <div class="credit-amount">â'©2,000</div>
+        <div class="credit-text">크레딧이 적립되었습니다 · Credit applied</div>
+      </div>
+      <button class="btn-done" onclick="dismiss()">확인 · Done</button>
+    </div>
+
+    <!-- Test Panel -->
+    <div class="test-panel" id="testPanel" style="display:none">
+      <div class="test-label">⚙ Test Controls</div>
+      <div class="test-btns">
+        <button class="test-btn" onclick="testPreset('low')">😞 Low (20)</button>
+        <button class="test-btn" onclick="testPreset('mid')">😐 Mid (50)</button>
+        <button class="test-btn" onclick="testPreset('high')">😊 High (85)</button>
+        <button class="test-btn" onclick="testPreset('max')">✨ Max (100)</button>
+        <button class="test-btn" onclick="testPreset('results')">📊 Results</button>
+        <button class="test-btn" onclick="testPreset('reset')">🔄 Reset</button>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      미소 · miso.kr · 대한민국 1등 홈서비스<br>
+      설문 응답은 서비스 품질 개선에만 활용됩니다
+    </div>
+  </div>
+
+  <script>
+    // =============================================
+    // STATE
+    // =============================================
+    let currentSlide = 0;
+    let answers = {};
+    let interacted = {};
+    let surveyStarted = false;
+    const Q = CONFIG.questions;
+
+    // =============================================
+    // INIT
+    // =============================================
+    function init() {
+      if (!CONFIG.includeDismissButton) {
+        document.getElementById('dismissBtn').style.display = 'none';
+      }
+
+      buildProgressDots();
+      buildSlides();
+      showSlide(0);
+
+      if (CONFIG.testMode) {
+        document.getElementById('testPanel').style.display = 'block';
+      }
+
+      // Init service chip
+      const svc = CONFIG.service;
+      document.getElementById('serviceChip').textContent =
+        `🧹 ${svc.type} · ${svc.duration} · ${svc.cleanerName}`;
+
+      pushEvent('Survey_Viewed', { questionCount: Q.length });
+    }
+
+    // =============================================
+    // BUILD UI
+    // =============================================
+    function buildProgressDots() {
+      const c = document.getElementById('progressDots');
+      Q.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'pdot' + (i === 0 ? ' active' : '');
+        d.id = `pdot-${i}`;
+        c.appendChild(d);
+      });
+    }
+
+    function buildSlides() {
+      const c = document.getElementById('slidesContainer');
+      Q.forEach((q, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'slide' + (i === 0 ? ' active' : '');
+        slide.id = `slide-${i}`;
+
+        if (q.type === 'arc') {
+          slide.innerHTML = buildArcDial(q, i);
+        } else {
+          slide.innerHTML = buildSlider(q, i);
+        }
+        c.appendChild(slide);
+      });
+
+      // Init arc dial if first question is arc
+      if (Q[0].type === 'arc') {
+        requestAnimationFrame(() => initArcDial(0));
+      }
+    }
+
+    function buildArcDial(q, idx) {
+      return `
+        <div class="q-label">${q.label}</div>
+        <div class="q-sub">${q.subtext}</div>
+        <div class="arc-container">
+          <div class="arc-svg-wrap" id="arcWrap-${idx}">
+            <svg viewBox="0 0 220 130" width="220" height="130">
+              <defs>
+                <linearGradient id="arcGrad-${idx}" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#EF4444"/>
+                  <stop offset="35%" stop-color="#F59E0B"/>
+                  <stop offset="65%" stop-color="#10B981"/>
+                  <stop offset="100%" stop-color="#2563EB"/>
+                </linearGradient>
+              </defs>
+              <!-- Track -->
+              <path d="M 20 120 A 90 90 0 0 1 200 120"
+                fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12"
+                stroke-linecap="round"/>
+              <!-- Fill -->
+              <path id="arcFill-${idx}"
+                d="M 20 120 A 90 90 0 0 1 200 120"
+                fill="none" stroke="url(#arcGrad-${idx})" stroke-width="12"
+                stroke-linecap="round"
+                stroke-dasharray="283" stroke-dashoffset="141.5"
+                style="filter: drop-shadow(0 0 6px rgba(37,99,235,0.3))"/>
+            </svg>
+            <div class="arc-thumb" id="arcThumb-${idx}"></div>
+            <div class="arc-emoji" id="arcEmoji-${idx}">😐</div>
+            <div class="arc-touch" id="arcTouch-${idx}"></div>
+          </div>
+          <div class="arc-value" id="arcValue-${idx}">50</div>
+          <div class="arc-value-label" id="arcLabel-${idx}">보통 · Average</div>
+        </div>`;
+    }
+
+    function buildSlider(q, idx) {
+      const emojis = ["😞","😕","😐","🙂","😊","✨"];
+      return `
+        <div class="q-label">${q.label}</div>
+        <div class="q-sub">${q.subtext}</div>
+        <div class="slider-section">
+          <div class="slider-emoji-row" id="sliderEmoji-${idx}">😐</div>
+          <div class="slider-value-display" id="sliderValue-${idx}">${q.default}</div>
+          <div class="slider-value-label" id="sliderLabel-${idx}">보통 · Average</div>
+          <div class="slider-track-wrap">
+            <input type="range" id="sliderInput-${idx}"
+              min="${q.min}" max="${q.max}" value="${q.default}" step="${q.step || 1}"
+              oninput="onSliderMove(${idx}, this.value)">
+          </div>
+          <div class="slider-labels">
+            <span>${q.leftLabel}</span>
+            <span>${q.rightLabel}</span>
+          </div>
+          <div class="slider-ticks" id="sliderTicks-${idx}"></div>
+        </div>`;
+    }
+
+    // =============================================
+    // ARC DIAL LOGIC
+    // =============================================
+    function initArcDial(idx) {
+      const q = Q[idx];
+      const wrap = document.getElementById(`arcWrap-${idx}`);
+      const touch = document.getElementById(`arcTouch-${idx}`);
+      if (!touch) return;
+
+      // Set initial
+      answers[q.id] = q.default;
+      updateArcVisual(idx, q.default);
+
+      // Arc geometry
+      const cx = 110, cy = 120, r = 90;
+
+      function valueFromEvent(e) {
+        const rect = wrap.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = clientX - rect.left - (rect.width / 2);
+        const y = clientY - rect.top - 120 * (rect.height / 130);
+        let angle = Math.atan2(-y, x);
+        if (angle < 0) angle += Math.PI * 2;
+        // Map: PI (left) = 0%, 0 (right) = 100%
+        let pct = (Math.PI - angle) / Math.PI * -1;
+        pct = ((angle - Math.PI) / Math.PI) * -100;
+        // Simpler: angle from PI to 0 maps to 0-100
+        if (angle > Math.PI) angle = Math.PI;
+        if (angle < 0) angle = 0;
+        pct = ((Math.PI - angle) / Math.PI) * 100;
+        return Math.round(Math.max(0, Math.min(100, pct)));
+      }
+
+      let dragging = false;
+      const thumb = document.getElementById(`arcThumb-${idx}`);
+
+      function startDrag(e) {
+        e.preventDefault();
+        dragging = true;
+        thumb.classList.add('dragging');
+        onDrag(e);
+        if (!surveyStarted) {
+          surveyStarted = true;
+          pushEvent('Survey_Started');
+        }
+      }
+      function onDrag(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        const val = valueFromEvent(e);
+        answers[q.id] = val;
+        interacted[q.id] = true;
+        updateArcVisual(idx, val);
+        try { navigator.vibrate && navigator.vibrate(5); } catch(e) {}
+      }
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        thumb.classList.remove('dragging');
+        if (interacted[q.id]) {
+          pushEvent('Survey_Slide_Moved', { question_id: q.id, value: answers[q.id] });
+        }
+      }
+
+      touch.addEventListener('mousedown', startDrag);
+      touch.addEventListener('touchstart', startDrag, { passive: false });
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('touchmove', onDrag, { passive: false });
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchend', endDrag);
+    }
+
+    function updateArcVisual(idx, val) {
+      const q = Q[idx];
+      const totalLen = 283; // approximate arc length
+      const offset = totalLen - (val / 100) * totalLen;
+      const fill = document.getElementById(`arcFill-${idx}`);
+      if (fill) fill.setAttribute('stroke-dashoffset', offset);
+
+      // Thumb position on arc
+      const angle = Math.PI - (val / 100) * Math.PI;
+      const cx = 110, cy = 120, r = 90;
+      const tx = cx + r * Math.cos(angle);
+      const ty = cy - r * Math.sin(angle);
+      const thumb = document.getElementById(`arcThumb-${idx}`);
+      const wrap = document.getElementById(`arcWrap-${idx}`);
+      if (thumb && wrap) {
+        thumb.style.left = (tx / 220 * 100) + '%';
+        thumb.style.top = (ty / 130 * 100) + '%';
+      }
+
+      // Value display
+      const valEl = document.getElementById(`arcValue-${idx}`);
+      if (valEl) valEl.textContent = val;
+
+      // Colour the value
+      if (valEl) valEl.style.color = getColour(val, 100);
+
+      // Emoji
+      const emojiEl = document.getElementById(`arcEmoji-${idx}`);
+      if (emojiEl && q.emojis) {
+        let emoji = q.emojis[0];
+        for (let i = q.emojiThresholds.length - 1; i >= 0; i--) {
+          if (val >= q.emojiThresholds[i]) { emoji = q.emojis[i]; break; }
+        }
+        emojiEl.textContent = emoji;
+      }
+
+      // Label
+      const labelEl = document.getElementById(`arcLabel-${idx}`);
+      if (labelEl) labelEl.textContent = getSentimentLabel(val, 100);
+    }
+
+    // =============================================
+    // SLIDER LOGIC
+    // =============================================
+    function onSliderMove(idx, val) {
+      val = parseInt(val);
+      const q = Q[idx];
+      answers[q.id] = val;
+      interacted[q.id] = true;
+
+      if (!surveyStarted) {
+        surveyStarted = true;
+        pushEvent('Survey_Started');
+      }
+
+      // Update slider track colour
+      const slider = document.getElementById(`sliderInput-${idx}`);
+      const pct = ((val - q.min) / (q.max - q.min)) * 100;
+      const col = getColour(val, q.max);
+      slider.style.background = `linear-gradient(90deg, ${col} 0%, ${col} ${pct}%, rgba(255,255,255,0.06) ${pct}%, rgba(255,255,255,0.06) 100%)`;
+
+      // Emoji
+      const emojis = ["😞","😕","😐","🙂","😊","✨"];
+      const emojiIdx = Math.min(5, Math.floor((val / q.max) * 5.99));
+      const emojiEl = document.getElementById(`sliderEmoji-${idx}`);
+      if (emojiEl) emojiEl.textContent = emojis[emojiIdx];
+
+      // Value
+      const valEl = document.getElementById(`sliderValue-${idx}`);
+      if (valEl) {
+        valEl.textContent = val;
+        valEl.style.color = col;
+      }
+
+      // Label
+      const labelEl = document.getElementById(`sliderLabel-${idx}`);
+      if (labelEl) labelEl.textContent = getSentimentLabel(val, q.max);
+
+      // Ticks
+      updateTicks(idx, val, q);
+
+      // Haptic
+      try { navigator.vibrate && navigator.vibrate(5); } catch(e) {}
+    }
+
+    function updateTicks(idx, val, q) {
+      const c = document.getElementById(`sliderTicks-${idx}`);
+      if (!c) return;
+      if (c.children.length === 0) {
+        // Build ticks
+        for (let i = q.min; i <= q.max; i++) {
+          const t = document.createElement('div');
+          t.className = 'tick';
+          t.textContent = i;
+          c.appendChild(t);
+        }
+      }
+      Array.from(c.children).forEach((t, i) => {
+        const n = q.min + i;
+        t.className = 'tick';
+        if (n < val) t.classList.add('reached');
+        if (n === val) t.classList.add('current');
+      });
+    }
+
+    function initSlider(idx) {
+      const q = Q[idx];
+      answers[q.id] = q.default;
+      onSliderMove(idx, q.default);
+    }
+
+    // =============================================
+    // COLOUR & LABELS
+    // =============================================
+    function getColour(val, max) {
+      const pct = val / max;
+      if (pct < 0.2) return '#EF4444';
+      if (pct < 0.4) return '#F97316';
+      if (pct < 0.6) return '#F59E0B';
+      if (pct < 0.75) return '#84CC16';
+      if (pct < 0.9) return '#10B981';
+      return '#2563EB';
+    }
+
+    function getSentimentLabel(val, max) {
+      const pct = val / max;
+      if (pct < 0.15) return '매우 불만족 · Very Unsatisfied';
+      if (pct < 0.3) return '불만족 · Unsatisfied';
+      if (pct < 0.5) return '보통 · Average';
+      if (pct < 0.7) return '만족 · Satisfied';
+      if (pct < 0.85) return '매우 만족 · Very Satisfied';
+      return '최고예요! · Excellent!';
+    }
+
+    // =============================================
+    // NAVIGATION
+    // =============================================
+    function showSlide(idx) {
+      document.querySelectorAll('.slide').forEach((s, i) => {
+        s.classList.remove('active', 'exit-left');
+        if (i < idx) s.classList.add('exit-left');
+      });
+      const slide = document.getElementById(`slide-${idx}`);
+      if (slide) slide.classList.add('active');
+
+      // Progress dots
+      document.querySelectorAll('.pdot').forEach((d, i) => {
+        d.className = 'pdot';
+        if (i < idx) d.classList.add('done');
+        if (i === idx) d.classList.add('active');
+      });
+
+      // Init the new slide's input
+      const q = Q[idx];
+      if (q.type === 'arc') {
+        requestAnimationFrame(() => initArcDial(idx));
+      } else {
+        requestAnimationFrame(() => initSlider(idx));
+      }
+
+      // Button text
+      const btn = document.getElementById('btnNext');
+      if (idx === Q.length - 1) {
+        btn.textContent = CONFIG.cta.submit;
+      } else {
+        btn.textContent = '다음 · Next';
+      }
+
+      currentSlide = idx;
+    }
+
+    function nextSlide() {
+      const q = Q[currentSlide];
+      // Fire event
+      if (interacted[q.id]) {
+        pushEvent('Survey_Slide_Moved', {
+          question_id: q.id,
+          value: answers[q.id],
+          question_index: currentSlide + 1,
+        });
+      }
+
+      if (currentSlide < Q.length - 1) {
+        showSlide(currentSlide + 1);
+      } else {
+        submitSurvey();
+      }
+    }
+
+    function skipQuestion() {
+      const q = Q[currentSlide];
+      answers[q.id] = null;
+      if (currentSlide < Q.length - 1) {
+        showSlide(currentSlide + 1);
+      } else {
+        submitSurvey();
+      }
+    }
+
+    // =============================================
+    // SUBMIT & RESULTS
+    // =============================================
+    function submitSurvey() {
+      // Hide survey UI
+      document.getElementById('slidesContainer').style.display = 'none';
+      document.getElementById('ctaSection').style.display = 'none';
+      document.getElementById('progressDots').style.display = 'none';
+      document.getElementById('rewardBanner').style.display = 'none';
+
+      // Show results
+      const rs = document.getElementById('resultsScreen');
+      rs.classList.add('show');
+
+      // Determine overall sentiment
+      const vals = Object.values(answers).filter(v => v !== null);
+      let avg = 0;
+      if (vals.length > 0) {
+        // Normalize: arc is 0-100, sliders are 0-10
+        const normalized = Q.map(q => {
+          if (answers[q.id] === null) return null;
+          return answers[q.id] / (q.type === 'arc' ? 100 : q.max);
+        }).filter(v => v !== null);
+        avg = normalized.reduce((a, b) => a + b, 0) / normalized.length;
+      }
+
+      // Result emoji & title
+      const re = document.getElementById('resultEmoji');
+      const rt = document.getElementById('resultTitle');
+      if (avg >= 0.8) {
+        re.textContent = '🎉';
+        rt.textContent = '감사합니다!';
+      } else if (avg >= 0.5) {
+        re.textContent = '🙏';
+        rt.textContent = '소중한 의견 감사합니다';
+      } else {
+        re.textContent = '💙';
+        rt.textContent = '개선하겠습니다';
+      }
+
+      // Build result bars
+      const barsC = document.getElementById('resultBars');
+      barsC.innerHTML = '';
+      Q.forEach((q, i) => {
+        if (answers[q.id] === null) return;
+        const val = answers[q.id];
+        const max = q.type === 'arc' ? 100 : q.max;
+        const pct = (val / max) * 100;
+        const col = getColour(val, max);
+        const display = q.type === 'arc' ? `${val}%` : `${val}/${max}`;
+
+        const bar = document.createElement('div');
+        bar.className = 'rbar';
+        bar.innerHTML = `
+          <div class="rbar-top">
+            <span class="rbar-label">${q.label}</span>
+            <span class="rbar-value" style="color:${col}">${display}</span>
+          </div>
+          <div class="rbar-track">
+            <div class="rbar-fill" id="rbarFill-${i}" style="background:${col}"></div>
+          </div>`;
+        barsC.appendChild(bar);
+
+        // Animate fill
+        setTimeout(() => {
+          const fill = document.getElementById(`rbarFill-${i}`);
+          if (fill) fill.style.width = pct + '%';
+        }, 300 + i * 200);
+      });
+
+      // Fire completed event
+      pushEvent('Survey_Completed', {
+        ...answers,
+        avg_score_pct: Math.round(avg * 100),
+        questions_answered: vals.length,
+        questions_total: Q.length,
+      });
+    }
+
+    // =============================================
+    // CLEVERTAP
+    // =============================================
+    function pushEvent(name, props) {
+      const payload = props || {};
+      payload.Timestamp = new Date().toISOString();
+      payload.Brand = 'Miso';
+      payload.Template = 'Sliding_Dial_Survey';
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent)
+          CleverTap.pushEvent(name, JSON.stringify(payload));
+        if (typeof clevertap !== 'undefined' && clevertap.event)
+          clevertap.event.push(name, payload);
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ type: 'event', name: name, props: payload }));
+      } catch (e) { console.log('[CT]', name, payload); }
+      if (CONFIG.testMode) console.log('[CT Event]', name, payload);
+    }
+
+    function dismiss() {
+      pushEvent('Survey_Dismissed', {
+        current_question: currentSlide,
+        answers_so_far: answers,
+      });
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.closeInApp)
+          CleverTap.closeInApp();
+      } catch (e) {}
+    }
+
+    // =============================================
+    // TEST CONTROLS
+    // =============================================
+    function testPreset(preset) {
+      if (preset === 'reset') {
+        answers = {};
+        interacted = {};
+        currentSlide = 0;
+        surveyStarted = false;
+        document.getElementById('slidesContainer').style.display = '';
+        document.getElementById('ctaSection').style.display = '';
+        document.getElementById('progressDots').style.display = '';
+        document.getElementById('rewardBanner').style.display = '';
+        document.getElementById('resultsScreen').classList.remove('show');
+        document.getElementById('resultsScreen').style.display = '';
+        showSlide(0);
+        return;
+      }
+      if (preset === 'results') {
+        Q.forEach(q => {
+          const max = q.type === 'arc' ? 100 : q.max;
+          answers[q.id] = Math.round(max * 0.82);
+          interacted[q.id] = true;
+        });
+        submitSurvey();
+        return;
+      }
+      const map = { low: 0.2, mid: 0.5, high: 0.85, max: 1 };
+      const pct = map[preset] || 0.5;
+      Q.forEach((q, i) => {
+        const max = q.type === 'arc' ? 100 : q.max;
+        const val = Math.round(max * pct);
+        answers[q.id] = val;
+        interacted[q.id] = true;
+        if (q.type === 'arc') {
+          updateArcVisual(i, val);
+        } else {
+          const slider = document.getElementById(`sliderInput-${i}`);
+          if (slider) { slider.value = val; onSliderMove(i, val); }
+        }
+      });
+      showSlide(0);
+    }
+
+    // =============================================
+    // BOOT
+    // =============================================
+    init();
+  </script>
+</body>
+</html>

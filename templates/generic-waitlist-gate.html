@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Waitlist Gate</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#08090D;--card:#12141C;--card2:#1A1D28;
+    --border:rgba(255,255,255,0.06);
+    --indigo:#6366F1;--indigo-dark:#4F46E5;--indigo-glow:rgba(99,102,241,0.15);
+    --rose:#F43F5E;--rose-glow:rgba(244,63,94,0.12);
+    --gold:#FBBF24;--gold-glow:rgba(251,191,36,0.12);
+    --text:#EAEAEA;--muted:rgba(255,255,255,0.4);
+  }
+  body{
+    font-family:'DM Sans',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:20px;
+    overflow:hidden;
+  }
+
+  .dismiss{
+    position:absolute;top:12px;right:12px;width:28px;height:28px;
+    background:rgba(255,255,255,0.08);border:none;border-radius:50%;
+    color:var(--muted);font-size:14px;cursor:pointer;z-index:10;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .gate-card{
+    width:100%;background:var(--card);border:1px solid var(--border);
+    border-radius:20px;overflow:hidden;
+    animation:gateIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes gateIn{0%{opacity:0;transform:scale(0.9) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+
+  /* Screens */
+  .screen{display:none;width:100%}
+  .screen.active{display:block}
+
+  /* ── SCREEN 1: Waitlist ── */
+  .gate-header{
+    padding:28px 24px 20px;text-align:center;
+    background:linear-gradient(180deg,var(--indigo-glow),transparent);
+  }
+  .exclusive-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 14px;border-radius:20px;
+    background:var(--gold-glow);border:1px solid rgba(251,191,36,0.15);
+    font-size:10px;font-weight:600;color:var(--gold);
+    letter-spacing:0.5px;margin-bottom:16px;
+  }
+  .gate-emoji{font-size:48px;display:block;margin-bottom:14px}
+  .gate-title{font-size:22px;font-weight:800;line-height:1.25;color:#fff;margin-bottom:6px}
+  .gate-title em{font-style:normal;color:var(--indigo)}
+  .gate-sub{font-size:13px;color:var(--muted);line-height:1.5}
+
+  /* Scarcity counter */
+  .scarcity{
+    margin:0 20px 14px;padding:16px;
+    background:var(--rose-glow);border:1px solid rgba(244,63,94,0.12);
+    border-radius:14px;text-align:center;
+  }
+  .scarcity-num{
+    font-family:'DM Mono',monospace;font-size:32px;font-weight:500;
+    color:var(--rose);margin-bottom:2px;
+    font-variant-numeric:tabular-nums;
+  }
+  .scarcity-label{font-size:12px;color:var(--rose);font-weight:500}
+  .scarcity-bar-bg{
+    height:6px;background:rgba(255,255,255,0.06);
+    border-radius:3px;margin-top:10px;overflow:hidden;
+  }
+  .scarcity-bar-fill{
+    height:100%;border-radius:3px;
+    background:linear-gradient(90deg,var(--rose),var(--indigo));
+    transition:width 0.6s ease;
+  }
+
+  /* Live counter */
+  .live-counter{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px;font-size:12px;color:var(--muted);
+  }
+  .live-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--rose);
+    animation:livePulse 1.5s ease infinite;
+  }
+  @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+
+  /* Perks */
+  .perks{padding:0 20px 16px}
+  .perks-title{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .perk-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 0;border-bottom:1px solid var(--border);
+  }
+  .perk-item:last-child{border-bottom:none}
+  .perk-icon{font-size:18px;flex-shrink:0}
+  .perk-text{font-size:13px;color:var(--text)}
+
+  /* CTA */
+  .cta-area{padding:4px 20px 24px;display:flex;flex-direction:column;gap:8px}
+  .btn-primary{
+    width:100%;padding:16px;border:none;border-radius:14px;
+    background:var(--indigo);color:#fff;font-family:'DM Sans',sans-serif;
+    font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  }
+  .btn-primary:active{transform:scale(0.97);background:var(--indigo-dark)}
+  .btn-skip{
+    width:100%;padding:10px;border:none;background:transparent;
+    color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;
+  }
+
+  /* ── SCREEN 2: Confirmed ── */
+  .confirm{text-align:center;padding:32px 24px}
+  .confirm-emoji{font-size:64px;margin-bottom:16px;animation:popEmoji 0.5s cubic-bezier(0.34,1.56,0.64,1) both}
+  @keyframes popEmoji{0%{transform:scale(0)}100%{transform:scale(1)}}
+  .confirm-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px}
+  .confirm-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+
+  .position-card{
+    display:inline-flex;flex-direction:column;align-items:center;
+    padding:16px 28px;background:var(--card2);
+    border:1px solid var(--indigo-glow);border-radius:14px;
+    margin-bottom:20px;
+  }
+  .pos-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--indigo);margin-bottom:4px}
+  .pos-num{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;color:#fff}
+  .pos-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+  .confirm-cta{
+    width:100%;padding:16px;border:none;border-radius:14px;
+    background:var(--indigo);color:#fff;font-family:'DM Sans',sans-serif;
+    font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;
+  }
+  .confirm-done{
+    width:100%;padding:10px;border:none;background:transparent;
+    color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  const CONFIG = {
+    includeDismissButton: true,
+    brand: { name: "AppName" },
+
+    gate: {
+      badge: "Early Access · Invite Only",
+      emoji: "🚀",
+      title: "Be first to try <em>Premium Pro</em>",
+      subtitle: "Spots are limited — join the waitlist to get early access before the public launch",
+    },
+
+    scarcity: {
+      spotsTotal: 500,
+      spotsTaken: 453,
+      label: "spots remaining",
+    },
+
+    liveCounter: {
+      text: "47 people joined in the last hour",
+    },
+
+    perks: [
+      { emoji: "⚡", text: "First access — 7 days before public launch" },
+      { emoji: "💰", text: "Founding member pricing (40% off forever)" },
+      { emoji: "🎁", text: "Exclusive welcome kit + bonus credits" },
+      { emoji: "👑", text: "Founding Member badge on your profile" },
+    ],
+
+    cta: {
+      joinText: "Secure My Spot →",
+      skipText: "Maybe later",
+      shareText: "Share & Skip the Line",
+      shareUrl: "app://waitlist/share",
+      doneText: "Got it!",
+    },
+
+    // After joining
+    confirmation: {
+      emoji: "🎉",
+      title: "You're on the list!",
+      desc: "We'll notify you the moment your access is ready. In the meantime, share with friends to move up the queue.",
+      position: 454, // their position
+      totalWaiting: 454,
+    },
+
+    tracking: { eventPrefix: "WaitlistGate" },
+  };
+</script>
+
+<button class="dismiss" id="dismissBtn" onclick="dismiss()" style="display:none">✕</button>
+
+<div class="gate-card">
+
+  <!-- SCREEN 1: Waitlist -->
+  <div class="screen active" id="screenGate">
+    <div class="gate-header">
+      <div class="exclusive-badge" id="badge"></div>
+      <span class="gate-emoji" id="gateEmoji"></span>
+      <div class="gate-title" id="gateTitle"></div>
+      <div class="gate-sub" id="gateSub"></div>
+    </div>
+
+    <div class="scarcity">
+      <div class="scarcity-num" id="spotsNum"></div>
+      <div class="scarcity-label" id="spotsLabel"></div>
+      <div class="scarcity-bar-bg"><div class="scarcity-bar-fill" id="scarcityFill"></div></div>
+    </div>
+
+    <div class="live-counter">
+      <div class="live-dot"></div>
+      <span id="liveText"></span>
+    </div>
+
+    <div class="perks">
+      <div class="perks-title">What you get</div>
+      <div id="perksList"></div>
+    </div>
+
+    <div class="cta-area">
+      <button class="btn-primary" id="btnJoin" onclick="joinWaitlist()"></button>
+      <button class="btn-skip" id="btnSkip" onclick="dismiss()"></button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Confirmed -->
+  <div class="screen" id="screenConfirm">
+    <div class="confirm">
+      <div class="confirm-emoji" id="confEmoji"></div>
+      <div class="confirm-title" id="confTitle"></div>
+      <div class="confirm-desc" id="confDesc"></div>
+
+      <div class="position-card">
+        <div class="pos-label">Your position</div>
+        <div class="pos-num" id="posNum"></div>
+        <div class="pos-sub" id="posSub"></div>
+      </div>
+
+      <button class="confirm-cta" id="btnShare" onclick="shareWaitlist()"></button>
+      <button class="confirm-done" onclick="dismiss()"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { brand, gate, scarcity, liveCounter, perks, cta, confirmation, tracking, includeDismissButton } = CONFIG;
+
+  if (includeDismissButton) document.getElementById('dismissBtn').style.display = 'flex';
+
+  // Gate screen
+  document.getElementById('badge').textContent = '✨ ' + gate.badge;
+  document.getElementById('gateEmoji').textContent = gate.emoji;
+  document.getElementById('gateTitle').innerHTML = gate.title;
+  document.getElementById('gateSub').textContent = gate.subtitle;
+
+  const remaining = scarcity.spotsTotal - scarcity.spotsTaken;
+  document.getElementById('spotsNum').textContent = remaining;
+  document.getElementById('spotsLabel').textContent = scarcity.label;
+  const fillPct = (scarcity.spotsTaken / scarcity.spotsTotal) * 100;
+  document.getElementById('scarcityFill').style.width = fillPct + '%';
+
+  document.getElementById('liveText').textContent = liveCounter.text;
+
+  // Perks
+  const perksList = document.getElementById('perksList');
+  perks.forEach(function(p) {
+    const div = document.createElement('div');
+    div.className = 'perk-item';
+    div.innerHTML = '<span class="perk-icon">' + p.emoji + '</span><span class="perk-text">' + p.text + '</span>';
+    perksList.appendChild(div);
+  });
+
+  document.getElementById('btnJoin').textContent = cta.joinText;
+  document.getElementById('btnSkip').textContent = cta.skipText;
+
+  // Confirmation screen
+  document.getElementById('confEmoji').textContent = confirmation.emoji;
+  document.getElementById('confTitle').textContent = confirmation.title;
+  document.getElementById('confDesc').textContent = confirmation.desc;
+  document.getElementById('posNum').textContent = '#' + confirmation.position;
+  document.getElementById('posSub').textContent = 'of ' + confirmation.totalWaiting + ' waiting';
+  document.getElementById('btnShare').textContent = cta.shareText;
+  document.querySelector('.confirm-done').textContent = cta.doneText;
+
+  // Simulate spots ticking down
+  let displaySpots = remaining;
+  setInterval(function() {
+    if (Math.random() > 0.7 && displaySpots > 1) {
+      displaySpots--;
+      document.getElementById('spotsNum').textContent = displaySpots;
+      const newFill = ((scarcity.spotsTotal - displaySpots) / scarcity.spotsTotal) * 100;
+      document.getElementById('scarcityFill').style.width = newFill + '%';
+    }
+  }, 4000);
+
+  trackEvent(tracking.eventPrefix + '_Viewed', {
+    spots_remaining: remaining,
+    spots_total: scarcity.spotsTotal
+  });
+
+  function joinWaitlist() {
+    document.getElementById('screenGate').classList.remove('active');
+    document.getElementById('screenConfirm').classList.add('active');
+
+    trackEvent(tracking.eventPrefix + '_Joined', {
+      position: confirmation.position,
+      spots_remaining: displaySpots
+    });
+  }
+
+  function shareWaitlist() {
+    trackEvent(tracking.eventPrefix + '_Shared', { position: confirmation.position });
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join the waitlist!',
+        text: "I just got early access to " + brand.name + "'s Premium Pro. Join the waitlist!"
+      });
+    } else if (cta.shareUrl) {
+      window.location.href = cta.shareUrl;
+    }
+  }
+
+  function dismiss() {
+    trackEvent(tracking.eventPrefix + '_Dismissed');
+    try { window.location.href = 'wzrk://exit'; } catch(e) {}
+  }
+
+  function trackEvent(name, props) {
+    console.log('CT Event:', name, props || {});
+    if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+    if (window.clevertap) window.clevertap.event.push(name, props || {});
+    try { window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} })); } catch(e) {}
+  }
+</script>
+</body>
+</html>
