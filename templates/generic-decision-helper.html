@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Decision Helper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0C0E14;--card:#151A24;--card2:#1C2230;
+    --border:rgba(255,255,255,0.06);
+    --teal:#14B8A6;--teal-dark:#0D9488;--teal-glow:rgba(20,184,166,0.15);
+    --amber:#F59E0B;--blue:#3B82F6;
+    --text:#EAEAEA;--muted:rgba(255,255,255,0.4);
+  }
+  body{
+    font-family:'DM Sans',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;
+    min-height:100vh;display:flex;flex-direction:column;
+    overflow-x:hidden;
+  }
+
+  .dismiss{
+    position:fixed;top:12px;right:12px;width:28px;height:28px;
+    background:rgba(255,255,255,0.08);border:none;border-radius:50%;
+    color:var(--muted);font-size:14px;cursor:pointer;z-index:20;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Progress */
+  .progress-bar{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.05);z-index:15;max-width:390px;margin:0 auto}
+  .progress-fill{height:100%;background:var(--teal);border-radius:0 2px 2px 0;transition:width 0.4s ease}
+  .step-indicator{position:fixed;top:10px;left:16px;z-index:15;font-size:11px;font-weight:500;color:var(--muted)}
+
+  /* Question screen */
+  .q-screen{
+    flex:1;display:flex;flex-direction:column;
+    padding:48px 20px 24px;
+    animation:slideIn 0.35s ease both;
+  }
+  @keyframes slideIn{0%{opacity:0;transform:translateX(30px)}100%{opacity:1;transform:translateX(0)}}
+  @keyframes slideOut{0%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(-30px)}}
+
+  .q-emoji{font-size:40px;margin-bottom:14px}
+  .q-title{font-size:20px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:6px}
+  .q-hint{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+
+  /* Option cards */
+  .options{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+  .opt-card{
+    display:flex;align-items:center;gap:14px;
+    padding:16px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;cursor:pointer;transition:all 0.2s;
+  }
+  .opt-card:active,.opt-card.selected{
+    border-color:var(--teal);background:var(--teal-glow);
+    transform:scale(0.98);
+  }
+  .opt-icon{
+    width:42px;height:42px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;flex-shrink:0;background:rgba(255,255,255,0.04);
+  }
+  .opt-card.selected .opt-icon{background:var(--teal-glow)}
+  .opt-body{flex:1}
+  .opt-label{font-size:14px;font-weight:600;color:#fff}
+  .opt-desc{font-size:11px;color:var(--muted);margin-top:2px}
+  .opt-check{
+    width:22px;height:22px;border-radius:50%;
+    border:2px solid var(--border);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;transition:all 0.2s;
+  }
+  .opt-card.selected .opt-check{
+    background:var(--teal);border-color:var(--teal);color:#fff;
+  }
+
+  /* ── RESULT SCREEN ── */
+  .result-screen{
+    flex:1;display:flex;flex-direction:column;
+    padding:48px 20px 24px;
+    animation:slideIn 0.4s ease both;
+  }
+  .result-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 14px;border-radius:20px;
+    background:var(--teal-glow);border:1px solid rgba(20,184,166,0.2);
+    font-size:11px;font-weight:600;color:var(--teal);
+    margin-bottom:16px;align-self:flex-start;
+  }
+  .result-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px}
+  .result-sub{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:20px}
+
+  /* Recommendation card */
+  .rec-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:16px;overflow:hidden;margin-bottom:16px;
+  }
+  .rec-hero{
+    height:120px;display:flex;align-items:center;justify-content:center;
+    font-size:56px;
+    background:linear-gradient(135deg,var(--teal-glow),rgba(59,130,246,0.08));
+  }
+  .rec-body{padding:18px}
+  .rec-name{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+  .rec-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+  .rec-features{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .rec-feat{
+    padding:5px 10px;border-radius:8px;
+    background:rgba(255,255,255,0.04);border:1px solid var(--border);
+    font-size:11px;color:var(--text);
+  }
+  .rec-price-row{display:flex;align-items:baseline;gap:8px}
+  .rec-price{font-size:22px;font-weight:800;color:var(--teal)}
+  .rec-period{font-size:12px;color:var(--muted)}
+
+  /* Match score */
+  .match-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:14px;margin:0 0 16px;
+    background:var(--teal-glow);border:1px solid rgba(20,184,166,0.1);
+    border-radius:12px;
+  }
+  .match-score{font-size:24px;font-weight:800;color:var(--teal)}
+  .match-label{font-size:12px;color:var(--teal);font-weight:600}
+  .match-sub{font-size:11px;color:var(--muted)}
+
+  /* Why this fits */
+  .why-list{margin-bottom:20px}
+  .why-item{
+    display:flex;align-items:flex-start;gap:8px;
+    font-size:12px;color:var(--muted);line-height:1.5;
+    margin-bottom:6px;
+  }
+  .why-check{color:var(--teal);font-weight:700;flex-shrink:0;margin-top:1px}
+
+  /* CTAs */
+  .res-cta{
+    width:100%;padding:16px;border:none;border-radius:14px;
+    background:var(--teal);color:#fff;font-family:'DM Sans',sans-serif;
+    font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+    margin-bottom:8px;
+  }
+  .res-cta:active{transform:scale(0.97)}
+  .res-alt{
+    width:100%;padding:12px;border:none;border-radius:12px;
+    background:var(--card);border:1px solid var(--border);
+    color:var(--text);font-family:'DM Sans',sans-serif;
+    font-size:13px;font-weight:600;cursor:pointer;
+    margin-bottom:8px;
+  }
+  .res-skip{
+    width:100%;padding:8px;border:none;background:transparent;
+    color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  const CONFIG = {
+    includeDismissButton: true,
+    brand: { name: "InsurApp" },
+
+    questions: [
+      {
+        id: "budget",
+        emoji: "💰",
+        title: "What's your monthly budget?",
+        hint: "This helps us find plans within your range",
+        options: [
+          { label: "Under RM100", desc: "Essential coverage", icon: "🌱", value: "low" },
+          { label: "RM100–250", desc: "Balanced protection", icon: "⚖️", value: "mid" },
+          { label: "RM250+", desc: "Comprehensive cover", icon: "🛡️", value: "high" },
+        ]
+      },
+      {
+        id: "priority",
+        emoji: "🎯",
+        title: "What matters most to you?",
+        hint: "Pick the one that resonates — we'll optimise around it",
+        options: [
+          { label: "Hospitalisation", desc: "Medical bills coverage", icon: "🏥", value: "medical" },
+          { label: "Critical illness", desc: "Lump sum if diagnosed", icon: "💊", value: "critical" },
+          { label: "Income protection", desc: "Replace salary if unable to work", icon: "📊", value: "income" },
+        ]
+      },
+      {
+        id: "stage",
+        emoji: "👤",
+        title: "Where are you in life?",
+        hint: "Different stages need different coverage",
+        options: [
+          { label: "Just starting out", desc: "Single, early career", icon: "🚀", value: "young" },
+          { label: "Building a family", desc: "Married or planning to", icon: "👨‍👩‍👧", value: "family" },
+          { label: "Established", desc: "Stable, thinking ahead", icon: "🏡", value: "established" },
+        ]
+      }
+    ],
+
+    // Recommendation logic: maps answer combinations to products
+    // Fallback: first product if no exact match
+    recommendations: [
+      {
+        id: "starter",
+        matchRules: { budget: "low" },
+        emoji: "🌱",
+        name: "Essential Shield",
+        desc: "Affordable protection that covers the basics — hospitalisation and accidents. A strong foundation you can upgrade later.",
+        features: ["Hospitalisation", "Accidents", "Outpatient", "RM100k cover"],
+        price: "RM79",
+        period: "/month",
+        matchScore: 92,
+        whyFits: [
+          "Fits within your budget comfortably",
+          "Covers hospitalisation as your top priority",
+          "Easy to upgrade as your needs grow"
+        ],
+        ctaText: "Get Essential Shield",
+        ctaUrl: "app://plans/essential-shield",
+      },
+      {
+        id: "balanced",
+        matchRules: { budget: "mid" },
+        emoji: "⚖️",
+        name: "Balanced Protect",
+        desc: "The most popular choice — solid medical coverage plus critical illness protection. Covers you and your family's core needs.",
+        features: ["Medical", "Critical illness", "Life cover", "RM500k cover"],
+        price: "RM189",
+        period: "/month",
+        matchScore: 95,
+        whyFits: [
+          "Balances comprehensive cover with fair pricing",
+          "Includes critical illness — your stated priority",
+          "Family add-on available at group discount"
+        ],
+        ctaText: "Get Balanced Protect",
+        ctaUrl: "app://plans/balanced-protect",
+      },
+      {
+        id: "premium",
+        matchRules: { budget: "high" },
+        emoji: "🛡️",
+        name: "Total Shield Pro",
+        desc: "Our most comprehensive plan — full medical, critical illness, income replacement, and worldwide coverage. Peace of mind, fully covered.",
+        features: ["Full medical", "36 critical illnesses", "Income replace", "Worldwide", "RM2M cover"],
+        price: "RM349",
+        period: "/month",
+        matchScore: 98,
+        whyFits: [
+          "Maximum coverage across all protection areas",
+          "Income replacement protects your family's lifestyle",
+          "Worldwide cover for travel and expat needs"
+        ],
+        ctaText: "Get Total Shield Pro",
+        ctaUrl: "app://plans/total-shield-pro",
+      }
+    ],
+
+    tracking: { eventPrefix: "DecisionHelper" },
+  };
+</script>
+
+<div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+<div class="step-indicator" id="stepInd"></div>
+<button class="dismiss" id="dismissBtn" onclick="dismiss()" style="display:none">✕</button>
+<div id="container"></div>
+
+<script>
+  const { questions, recommendations, tracking, includeDismissButton } = CONFIG;
+
+  if (includeDismissButton) document.getElementById('dismissBtn').style.display = 'flex';
+
+  let currentQ = 0;
+  let answers = {};
+
+  function renderQuestion(idx) {
+    const q = questions[idx];
+    currentQ = idx;
+    const total = questions.length;
+    const progress = ((idx) / total) * 100;
+
+    document.getElementById('progFill').style.width = progress + '%';
+    document.getElementById('stepInd').textContent = 'Question ' + (idx + 1) + ' of ' + total;
+
+    const container = document.getElementById('container');
+    container.style.animation = 'slideOut 0.2s ease forwards';
+
+    setTimeout(function() {
+      let html = '<div class="q-screen"><div class="q-emoji">' + q.emoji + '</div>' +
+        '<div class="q-title">' + q.title + '</div>' +
+        '<div class="q-hint">' + q.hint + '</div>' +
+        '<div class="options">';
+
+      q.options.forEach(function(opt) {
+        html += '<div class="opt-card" onclick="selectOption(\'' + q.id + '\',\'' + opt.value + '\',this)">' +
+          '<div class="opt-icon">' + opt.icon + '</div>' +
+          '<div class="opt-body"><div class="opt-label">' + opt.label + '</div><div class="opt-desc">' + opt.desc + '</div></div>' +
+          '<div class="opt-check">✓</div></div>';
+      });
+
+      html += '</div></div>';
+      container.innerHTML = html;
+      container.style.animation = 'slideIn 0.35s ease both';
+    }, 200);
+
+    trackEvent(tracking.eventPrefix + '_Question_Viewed', { question_id: q.id, step: idx + 1 });
+  }
+
+  function selectOption(questionId, value, el) {
+    // Visual feedback
+    el.classList.add('selected');
+    answers[questionId] = value;
+
+    trackEvent(tracking.eventPrefix + '_Answer_Selected', {
+      question_id: questionId,
+      answer: value,
+      step: currentQ + 1
+    });
+
+    // Short delay then next
+    setTimeout(function() {
+      if (currentQ < questions.length - 1) {
+        renderQuestion(currentQ + 1);
+      } else {
+        showResult();
+      }
+    }, 400);
+  }
+
+  function showResult() {
+    document.getElementById('progFill').style.width = '100%';
+    document.getElementById('stepInd').textContent = 'Your match';
+
+    // Find best match
+    let rec = recommendations[0]; // fallback
+    let bestScore = 0;
+    recommendations.forEach(function(r) {
+      let matches = 0;
+      let total = Object.keys(r.matchRules).length;
+      for (var key in r.matchRules) {
+        if (answers[key] === r.matchRules[key]) matches++;
+      }
+      if (matches > bestScore) { bestScore = matches; rec = r; }
+    });
+
+    const container = document.getElementById('container');
+    container.style.animation = 'slideOut 0.2s ease forwards';
+
+    setTimeout(function() {
+      let featHtml = rec.features.map(function(f) {
+        return '<span class="rec-feat">✓ ' + f + '</span>';
+      }).join('');
+
+      let whyHtml = rec.whyFits.map(function(w) {
+        return '<div class="why-item"><span class="why-check">✓</span>' + w + '</div>';
+      }).join('');
+
+      container.innerHTML = '<div class="result-screen">' +
+        '<div class="result-badge">🎯 Your personalised match</div>' +
+        '<div class="result-title">We found your ideal plan</div>' +
+        '<div class="result-sub">Based on your answers, here\'s what fits best</div>' +
+
+        '<div class="rec-card">' +
+          '<div class="rec-hero">' + rec.emoji + '</div>' +
+          '<div class="rec-body">' +
+            '<div class="rec-name">' + rec.name + '</div>' +
+            '<div class="rec-desc">' + rec.desc + '</div>' +
+            '<div class="rec-features">' + featHtml + '</div>' +
+            '<div class="rec-price-row"><span class="rec-price">' + rec.price + '</span><span class="rec-period">' + rec.period + '</span></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="match-bar">' +
+          '<div class="match-score">' + rec.matchScore + '%</div>' +
+          '<div><div class="match-label">Match score</div><div class="match-sub">Based on your preferences</div></div>' +
+        '</div>' +
+
+        '<div class="why-list">' + whyHtml + '</div>' +
+
+        '<button class="res-cta" onclick="selectPlan()">' + rec.ctaText + '</button>' +
+        '<button class="res-alt" onclick="seeAll()">See all plans instead</button>' +
+        '<button class="res-skip" onclick="dismiss()">Not ready yet</button>' +
+      '</div>';
+      container.style.animation = 'slideIn 0.4s ease both';
+    }, 200);
+
+    trackEvent(tracking.eventPrefix + '_Result_Shown', {
+      recommendation: rec.name,
+      match_score: rec.matchScore,
+      answers: JSON.stringify(answers)
+    });
+  }
+
+  function selectPlan() {
+    const rec = recommendations.find(function(r) {
+      for (var k in r.matchRules) { if (answers[k] === r.matchRules[k]) return true; }
+      return false;
+    }) || recommendations[0];
+    trackEvent(tracking.eventPrefix + '_Plan_Selected', { plan: rec.name });
+    if (rec.ctaUrl) window.location.href = rec.ctaUrl;
+  }
+
+  function seeAll() {
+    trackEvent(tracking.eventPrefix + '_SeeAll_Clicked', { from_recommendation: true });
+    window.location.href = 'app://plans';
+  }
+
+  function dismiss() {
+    trackEvent(tracking.eventPrefix + '_Dismissed', { at_step: currentQ + 1, answers: JSON.stringify(answers) });
+    try { window.location.href = 'wzrk://exit'; } catch(e) {}
+  }
+
+  function trackEvent(name, props) {
+    console.log('CT Event:', name, props || {});
+    if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+    if (window.clevertap) window.clevertap.event.push(name, props || {});
+    try { window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} })); } catch(e) {}
+  }
+
+  renderQuestion(0);
+</script>
+</body>
+</html>

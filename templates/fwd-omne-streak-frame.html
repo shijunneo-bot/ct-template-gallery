@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ==================== CONFIGURABLE SETTINGS ==================== -->
+  <script>
+    const CONFIG = {
+      // ✖ Whether to show the X button to close/dismiss
+      includeDismissButton: true,
+
+      // 🏢 Brand settings — swap for any FWD market or brand
+      brand: {
+        name: "Omne",
+        tagline: "Celebrate living",
+        accentColor: "#EA5504",             // FWD Orange
+        accentColorLight: "#FFF3EC",
+        accentColorDark: "#C24400",
+        navyDark: "#1A2B4A",
+        navyMid: "#243B60",
+        white: "#FFFFFF",
+        greyLight: "#F3F4F6",
+        greyMid: "#9CA3AF",
+        successGreen: "#10B981",
+        warningAmber: "#F59E0B",
+        dangerRed: "#EF4444",
+      },
+
+      // 🌈 Background per streak state
+      backgrounds: {
+        active:   "linear-gradient(170deg, #1A2B4A 0%, #243B60 40%, #2D4A73 100%)",
+        atRisk:   "linear-gradient(170deg, #2D1B00 0%, #4A2E00 40%, #5C3A0A 100%)",
+        broken:   "linear-gradient(170deg, #1A1A2E 0%, #2A2A3E 40%, #16213E 100%)",
+      },
+
+      // 🎉 Confetti on milestone days
+      enableConfettiOnMilestone: true,
+
+      // 🔥 Streak data — in production, pull from CleverTap profile properties
+      // These are fallback/demo values
+      streakData: {
+        currentStreak: 23,                   // Consecutive days of activity
+        lastActiveDate: "2026-02-17",        // ISO date of last wellness activity
+        streakFreezeAvailable: true,         // One-time save available?
+        longestStreak: 31,                   // Personal best
+        totalActiveDays: 87,                 // Lifetime active days
+      },
+
+      // 🎯 What counts as a "streak action" — customise per market
+      streakAction: {
+        label: "daily wellness activity",
+        ctaText: "Start Today's Activity",
+        ctaUrl: "https://www.omne.com/wellness",   // Deep link to wellness tab
+        frozenCtaText: "You're Safe — Explore Omne",
+        frozenCtaUrl: "https://www.omne.com/",
+      },
+
+      // 🏅 Milestone thresholds and messages
+      milestones: [
+        { days: 3,   emoji: "🌱", label: "Seedling",   msg: "3 days strong! A habit is taking root." },
+        { days: 7,   emoji: "🔥", label: "On Fire",     msg: "One whole week! You're building momentum." },
+        { days: 14,  emoji: "⭐", label: "Rising Star",  msg: "2 weeks! You're in the top 20% of Omne users." },
+        { days: 30,  emoji: "💎", label: "Diamond",      msg: "30 days! This isn't a streak — it's a lifestyle." },
+        { days: 60,  emoji: "🏆", label: "Champion",     msg: "60 days! Less than 5% of users reach this." },
+        { days: 100, emoji: "👑", label: "Legend",        msg: "100 days! You're officially an Omne Legend." },
+        { days: 365, emoji: "🌟", label: "Immortal",     msg: "ONE YEAR. Unstoppable." },
+      ],
+
+      // 📅 Calendar strip — how many days to show
+      calendarDaysToShow: 7,
+
+      // 📊 CleverTap event names
+      events: {
+        streakViewed:       "Streak_Frame_Viewed",
+        streakFreezeUsed:   "Streak_Freeze_Used",
+        streakCtaClicked:   "Streak_CTA_Clicked",
+        streakDismissed:    "Streak_Frame_Dismissed",
+        streakShared:       "Streak_Shared",
+      },
+    };
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FWD Omne — Streak</title>
+
+  <style>
+    /* =============================================
+       RESET & BASE
+       ============================================= */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    /* =============================================
+       MODAL CONTAINER
+       ============================================= */
+    .modal {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px 20px;
+      transition: background 0.8s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle animated background particles */
+    .modal::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(2px 2px at 20% 30%, rgba(234,85,4,0.15) 0%, transparent 100%),
+        radial-gradient(2px 2px at 70% 20%, rgba(234,85,4,0.1) 0%, transparent 100%),
+        radial-gradient(2px 2px at 40% 70%, rgba(234,85,4,0.08) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 80% 60%, rgba(255,255,255,0.06) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 10% 80%, rgba(255,255,255,0.04) 0%, transparent 100%);
+      animation: particleDrift 20s ease-in-out infinite alternate;
+      pointer-events: none; z-index: 0;
+    }
+
+    @keyframes particleDrift {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-15px) scale(1.05); }
+    }
+
+    /* =============================================
+       DISMISS BUTTON
+       ============================================= */
+    .dismiss-btn {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: none;
+      color: rgba(255,255,255,0.6); font-size: 16px;
+      cursor: pointer; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dismiss-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* =============================================
+       CONTENT CARD
+       ============================================= */
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 360px;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      animation: cardEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes cardEnter {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* =============================================
+       BRAND BADGE
+       ============================================= */
+    .brand-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 100px; padding: 6px 14px;
+      margin-bottom: 20px;
+    }
+    .brand-badge span {
+      font-size: 11px; font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .brand-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #EA5504;
+      box-shadow: 0 0 8px rgba(234,85,4,0.5);
+    }
+
+    /* =============================================
+       FIRE / STREAK ICON
+       ============================================= */
+    .streak-icon-wrap {
+      position: relative;
+      width: 88px; height: 88px;
+      margin-bottom: 8px;
+    }
+
+    .streak-icon {
+      font-size: 56px; line-height: 88px;
+      text-align: center; width: 100%;
+      filter: drop-shadow(0 4px 20px rgba(234,85,4,0.4));
+    }
+
+    /* Active fire animation */
+    .state-active .streak-icon {
+      animation: fireBreath 2s ease-in-out infinite;
+    }
+    @keyframes fireBreath {
+      0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 4px 20px rgba(234,85,4,0.4)); }
+      25% { transform: scale(1.08) rotate(-2deg); filter: drop-shadow(0 6px 30px rgba(234,85,4,0.6)); }
+      50% { transform: scale(1.05) rotate(1deg); filter: drop-shadow(0 8px 35px rgba(234,85,4,0.5)); }
+      75% { transform: scale(1.1) rotate(-1deg); filter: drop-shadow(0 6px 25px rgba(234,85,4,0.55)); }
+    }
+
+    /* At-risk hourglass animation */
+    .state-at-risk .streak-icon {
+      animation: hourglassTilt 1.5s ease-in-out infinite;
+    }
+    @keyframes hourglassTilt {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(10deg); }
+      75% { transform: rotate(-10deg); }
+    }
+
+    /* Broken ice/shatter feel */
+    .state-broken .streak-icon {
+      animation: gentlePulse 3s ease-in-out infinite;
+      opacity: 0.7;
+    }
+    @keyframes gentlePulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(0.95); opacity: 0.5; }
+    }
+
+    /* Glow ring behind icon */
+    .streak-glow {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px; height: 100px; border-radius: 50%;
+      transition: all 0.6s ease;
+    }
+    .state-active .streak-glow {
+      background: radial-gradient(circle, rgba(234,85,4,0.2) 0%, transparent 70%);
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+    .state-at-risk .streak-glow {
+      background: radial-gradient(circle, rgba(245,158,11,0.2) 0%, transparent 70%);
+      animation: glowPulse 1.2s ease-in-out infinite;
+    }
+    .state-broken .streak-glow {
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.6; }
+    }
+
+    /* =============================================
+       STREAK NUMBER
+       ============================================= */
+    .streak-number {
+      font-size: 52px; font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1;
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .streak-number .unit {
+      font-size: 18px; font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      margin-left: 4px;
+    }
+
+    .streak-label {
+      font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* =============================================
+       STATUS MESSAGE
+       ============================================= */
+    .status-msg {
+      font-size: 16px; font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+    .status-sub {
+      font-size: 13px; font-weight: 400;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      max-width: 300px;
+    }
+
+    /* =============================================
+       CALENDAR STRIP
+       ============================================= */
+    .calendar-strip {
+      display: flex; gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .cal-day {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      width: 40px;
+    }
+    .cal-day .day-label {
+      font-size: 10px; font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+    }
+    .cal-day .day-circle {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    /* Day states */
+    .cal-day.completed .day-circle {
+      background: #EA5504;
+      color: #FFFFFF;
+      box-shadow: 0 2px 10px rgba(234,85,4,0.35);
+    }
+    .cal-day.completed .day-circle::after {
+      content: '✓';
+      position: absolute;
+      font-size: 14px; font-weight: 700;
+      color: #FFFFFF;
+    }
+    .cal-day.completed .day-circle span { visibility: hidden; }
+
+    .cal-day.today .day-circle {
+      background: rgba(234,85,4,0.15);
+      border: 2px solid #EA5504;
+      color: #EA5504;
+      animation: todayPulse 2s ease-in-out infinite;
+    }
+    .cal-day.today.completed .day-circle {
+      background: #EA5504;
+      border: 2px solid #EA5504;
+      color: #FFFFFF;
+      animation: none;
+    }
+
+    @keyframes todayPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(234,85,4,0.3); }
+      50% { box-shadow: 0 0 0 6px rgba(234,85,4,0); }
+    }
+
+    .cal-day.missed .day-circle {
+      background: rgba(239,68,68,0.12);
+      border: 1.5px dashed rgba(239,68,68,0.3);
+      color: rgba(239,68,68,0.5);
+    }
+
+    .cal-day.future .day-circle {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.25);
+    }
+
+    .cal-day.today .day-label {
+      color: #EA5504;
+      font-weight: 600;
+    }
+
+    /* =============================================
+       MILESTONE BADGE (shown on milestone days)
+       ============================================= */
+    .milestone-badge {
+      display: none;
+      align-items: center; gap: 8px;
+      background: rgba(234,85,4,0.12);
+      border: 1px solid rgba(234,85,4,0.25);
+      border-radius: 12px; padding: 10px 16px;
+      margin-bottom: 20px;
+      animation: badgePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .milestone-badge.show { display: flex; }
+    .milestone-badge .badge-emoji { font-size: 22px; }
+    .milestone-badge .badge-text {
+      font-size: 12px; font-weight: 500;
+      color: rgba(255,255,255,0.8);
+      text-align: left; line-height: 1.4;
+    }
+    .milestone-badge .badge-label {
+      font-weight: 700; color: #EA5504;
+    }
+
+    @keyframes badgePop {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* =============================================
+       STATS ROW
+       ============================================= */
+    .stats-row {
+      display: flex; gap: 1px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+    .stat-item {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      padding: 12px 8px;
+      background: rgba(255,255,255,0.03);
+    }
+    .stat-item:first-child { border-radius: 12px 0 0 12px; }
+    .stat-item:last-child { border-radius: 0 12px 12px 0; }
+
+    .stat-value {
+      font-size: 18px; font-weight: 700;
+      color: #FFFFFF;
+    }
+    .stat-label {
+      font-size: 10px; font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* =============================================
+       STREAK FREEZE BUTTON
+       ============================================= */
+    .freeze-btn {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(59,130,246,0.4);
+      background: rgba(59,130,246,0.1);
+      color: #93C5FD;
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+      display: none;
+    }
+    .freeze-btn.show { display: block; }
+    .freeze-btn:hover {
+      background: rgba(59,130,246,0.2);
+      border-color: rgba(59,130,246,0.6);
+    }
+    .freeze-btn:active {
+      transform: scale(0.97);
+    }
+    .freeze-btn.used {
+      background: rgba(16,185,129,0.1);
+      border-color: rgba(16,185,129,0.4);
+      color: #6EE7B7;
+      pointer-events: none;
+    }
+
+    /* =============================================
+       PRIMARY CTA
+       ============================================= */
+    .cta-btn {
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: 14px;
+      border: none;
+      background: #EA5504;
+      color: #FFFFFF;
+      font-family: inherit;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 20px rgba(234,85,4,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-btn:hover {
+      background: #C24400;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 25px rgba(234,85,4,0.45);
+    }
+    .cta-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Shimmer effect on CTA */
+    .cta-btn::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.15) 50%,
+        transparent 100%
+      );
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) rotate(25deg); }
+      100% { transform: translateX(100%) rotate(25deg); }
+    }
+
+    /* =============================================
+       FOOTER / SHARE
+       ============================================= */
+    .share-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-top: 16px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .share-row span {
+      font-size: 12px; font-weight: 500;
+      color: rgba(255,255,255,0.35);
+      transition: color 0.2s ease;
+    }
+    .share-row:hover span { color: rgba(255,255,255,0.6); }
+
+    /* =============================================
+       CONFETTI CANVAS
+       ============================================= */
+    #confettiCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 999;
+    }
+
+    /* =============================================
+       HIDDEN
+       ============================================= */
+    .hidden { display: none !important; }
+  </style>
+</head>
+
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="modal" id="modal">
+    <!-- Dismiss -->
+    <button class="dismiss-btn" id="dismissBtn" onclick="dismiss()">✕</button>
+
+    <div class="card" id="card">
+      <!-- Brand Badge -->
+      <div class="brand-badge">
+        <div class="brand-dot"></div>
+        <span id="brandLabel">Omne · Celebrate living</span>
+      </div>
+
+      <!-- Streak Icon -->
+      <div class="streak-icon-wrap">
+        <div class="streak-glow"></div>
+        <div class="streak-icon" id="streakIcon">🔥</div>
+      </div>
+
+      <!-- Streak Number -->
+      <div class="streak-number">
+        <span id="streakCount">0</span><span class="unit">days</span>
+      </div>
+      <div class="streak-label" id="streakLabel">WELLNESS STREAK</div>
+
+      <!-- Status Message -->
+      <div class="status-msg" id="statusMsg">Your streak is alive!</div>
+      <div class="status-sub" id="statusSub">
+        Complete today's activity to keep it going.
+      </div>
+
+      <!-- Calendar Strip -->
+      <div class="calendar-strip" id="calStrip"></div>
+
+      <!-- Milestone Badge (conditionally shown) -->
+      <div class="milestone-badge" id="milestoneBadge">
+        <span class="badge-emoji" id="badgeEmoji">🔥</span>
+        <div class="badge-text">
+          <span class="badge-label" id="badgeLabel">On Fire</span><br />
+          <span id="badgeMsg">7 days! You're building momentum.</span>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-value" id="statCurrent">0</span>
+          <span class="stat-label">Current</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="statBest">0</span>
+          <span class="stat-label">Best</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="statTotal">0</span>
+          <span class="stat-label">Active Days</span>
+        </div>
+      </div>
+
+      <!-- Streak Freeze (shown only in at-risk / broken state) -->
+      <button class="freeze-btn" id="freezeBtn" onclick="useStreakFreeze()">
+        ❄️ Use Streak Freeze (1 remaining)
+      </button>
+
+      <!-- Primary CTA -->
+      <button class="cta-btn" id="ctaBtn" onclick="ctaClick()">
+        Start Today's Activity
+      </button>
+
+      <!-- Share -->
+      <div class="share-row" onclick="shareStreak()">
+        <span>📸 Share your streak</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confetti library (lightweight) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <script>
+    // =============================================
+    // INITIALISATION
+    // =============================================
+    const modal  = document.getElementById('modal');
+    const card   = document.getElementById('card');
+
+    // Parse streak data (in production, replace with CleverTap profile reads)
+    const data = CONFIG.streakData;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const lastActive = new Date(data.lastActiveDate + 'T00:00:00');
+    const diffDays = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
+
+    // Determine streak state
+    let streakState; // 'active' | 'at-risk' | 'broken'
+    let displayStreak = data.currentStreak;
+
+    if (diffDays === 0) {
+      // Completed today
+      streakState = 'active';
+    } else if (diffDays === 1) {
+      // Last active yesterday — today is still open
+      streakState = 'at-risk';
+    } else {
+      // Gap > 1 day — streak is broken
+      streakState = 'broken';
+      displayStreak = 0;
+    }
+
+    // =============================================
+    // RENDER
+    // =============================================
+    function render() {
+      // Background
+      modal.style.background = CONFIG.backgrounds[streakState];
+
+      // State class on card
+      card.className = 'card state-' + streakState;
+
+      // Dismiss button
+      if (!CONFIG.includeDismissButton) {
+        document.getElementById('dismissBtn').classList.add('hidden');
+      }
+
+      // Icon
+      const iconEl = document.getElementById('streakIcon');
+      if (streakState === 'active')  iconEl.textContent = '🔥';
+      if (streakState === 'at-risk') iconEl.textContent = '⏳';
+      if (streakState === 'broken')  iconEl.textContent = '💔';
+
+      // Streak count (animate)
+      animateCounter('streakCount', displayStreak);
+
+      // Stats
+      animateCounter('statCurrent', displayStreak);
+      animateCounter('statBest', data.longestStreak);
+      animateCounter('statTotal', data.totalActiveDays);
+
+      // Label
+      const labelEl = document.getElementById('streakLabel');
+      labelEl.textContent = streakState === 'broken' ? 'STREAK BROKEN' : 'WELLNESS STREAK';
+
+      // Status messages
+      const msgEl = document.getElementById('statusMsg');
+      const subEl = document.getElementById('statusSub');
+
+      if (streakState === 'active') {
+        msgEl.textContent = displayStreak >= 7
+          ? `${displayStreak} days and counting! 🎉`
+          : 'You did it today!';
+        subEl.textContent = displayStreak >= 30
+          ? `You're in the top 5% of Omne users. Incredible commitment.`
+          : `Come back tomorrow to keep your streak alive.`;
+      } else if (streakState === 'at-risk') {
+        msgEl.textContent = `Don't lose your ${displayStreak}-day streak!`;
+        subEl.textContent = `Complete your ${CONFIG.streakAction.label} today to keep it alive. You've come too far to stop now.`;
+      } else {
+        msgEl.textContent = 'Your streak ended';
+        subEl.textContent = data.currentStreak > 0
+          ? `You had a ${data.currentStreak}-day streak. That's still impressive — let's start a new one.`
+          : `Every expert was once a beginner. Start your wellness streak today.`;
+      }
+
+      // CTA button
+      const ctaEl = document.getElementById('ctaBtn');
+      if (streakState === 'active') {
+        ctaEl.textContent = '✓  Streak Saved — Explore Omne';
+      } else if (streakState === 'at-risk') {
+        ctaEl.textContent = CONFIG.streakAction.ctaText;
+      } else {
+        ctaEl.textContent = '🔄  Start a New Streak';
+      }
+
+      // Streak freeze
+      const freezeEl = document.getElementById('freezeBtn');
+      if ((streakState === 'at-risk' || streakState === 'broken') && data.streakFreezeAvailable) {
+        freezeEl.classList.add('show');
+      }
+
+      // Calendar strip
+      buildCalendar();
+
+      // Milestone badge
+      checkMilestone();
+
+      // Fire event
+      pushEvent(CONFIG.events.streakViewed, {
+        Streak_State: streakState,
+        Current_Streak: displayStreak,
+        Longest_Streak: data.longestStreak,
+      });
+
+      // Confetti for active milestones
+      if (streakState === 'active' && CONFIG.enableConfettiOnMilestone) {
+        const ms = CONFIG.milestones.find(m => m.days === displayStreak);
+        if (ms) {
+          setTimeout(() => fireConfetti(), 600);
+        }
+      }
+    }
+
+    // =============================================
+    // CALENDAR STRIP
+    // =============================================
+    function buildCalendar() {
+      const strip = document.getElementById('calStrip');
+      strip.innerHTML = '';
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const n = CONFIG.calendarDaysToShow;
+
+      // Show 3 days before today, today, 3 days after
+      const startOffset = -Math.floor(n / 2);
+
+      for (let i = 0; i < n; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + startOffset + i);
+        d.setHours(0, 0, 0, 0);
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'cal-day';
+
+        const isToday = d.getTime() === today.getTime();
+        const isFuture = d > today;
+        const isPast = d < today;
+
+        // Determine if this day was active
+        // Simplified: assume consecutive days before lastActive were active for currentStreak days
+        const streakStart = new Date(lastActive);
+        streakStart.setDate(streakStart.getDate() - (data.currentStreak - 1));
+        const wasActive = isPast && d >= streakStart && d <= lastActive;
+        const todayActive = isToday && streakState === 'active';
+
+        if (todayActive || (isToday && wasActive)) {
+          dayDiv.className += ' today completed';
+        } else if (isToday) {
+          dayDiv.className += ' today';
+        } else if (wasActive) {
+          dayDiv.className += ' completed';
+        } else if (isFuture) {
+          dayDiv.className += ' future';
+        } else {
+          dayDiv.className += ' missed';
+        }
+
+        dayDiv.innerHTML = `
+          <span class="day-label">${isToday ? 'Today' : dayNames[d.getDay()]}</span>
+          <div class="day-circle"><span>${d.getDate()}</span></div>
+        `;
+
+        strip.appendChild(dayDiv);
+
+        // Stagger animation
+        dayDiv.style.opacity = '0';
+        dayDiv.style.transform = 'translateY(10px)';
+        dayDiv.style.transition = `all 0.3s ease ${0.08 * i}s`;
+        setTimeout(() => {
+          dayDiv.style.opacity = '1';
+          dayDiv.style.transform = 'translateY(0)';
+        }, 50);
+      }
+    }
+
+    // =============================================
+    // MILESTONE CHECK
+    // =============================================
+    function checkMilestone() {
+      if (streakState !== 'active') return;
+
+      const ms = CONFIG.milestones.find(m => m.days === displayStreak);
+      if (!ms) return;
+
+      const badge = document.getElementById('milestoneBadge');
+      document.getElementById('badgeEmoji').textContent = ms.emoji;
+      document.getElementById('badgeLabel').textContent = ms.label;
+      document.getElementById('badgeMsg').textContent = ms.msg;
+      badge.classList.add('show');
+    }
+
+    // =============================================
+    // STREAK FREEZE
+    // =============================================
+    window.useStreakFreeze = function () {
+      const btn = document.getElementById('freezeBtn');
+      btn.innerHTML = '✅ Streak Freeze Activated — You\'re safe!';
+      btn.classList.add('used');
+
+      // Update state visually
+      streakState = 'active';
+      data.streakFreezeAvailable = false;
+
+      // Update CTA
+      const ctaEl = document.getElementById('ctaBtn');
+      ctaEl.textContent = CONFIG.streakAction.frozenCtaText;
+
+      // Update icon
+      document.getElementById('streakIcon').textContent = '🛡️';
+      card.className = 'card state-active';
+      modal.style.background = CONFIG.backgrounds.active;
+
+      // Update messages
+      document.getElementById('statusMsg').textContent = 'Streak saved! 🛡️';
+      document.getElementById('statusSub').textContent =
+        `Your ${displayStreak}-day streak is protected. You've got one more day to get back on track.`;
+
+      // Fire event
+      pushEvent(CONFIG.events.streakFreezeUsed, {
+        Streak_Length: displayStreak,
+        Freeze_Remaining: 0,
+      });
+
+      // Profile update
+      pushProfile({ Streak_Freeze_Available: false, Streak_Freeze_Used_Date: new Date().toISOString().split('T')[0] });
+
+      // Celebration
+      fireConfetti();
+    };
+
+    // =============================================
+    // CTA CLICK
+    // =============================================
+    window.ctaClick = function () {
+      pushEvent(CONFIG.events.streakCtaClicked, {
+        Streak_State: streakState,
+        Current_Streak: displayStreak,
+      });
+
+      const url = streakState === 'active'
+        ? CONFIG.streakAction.frozenCtaUrl
+        : CONFIG.streakAction.ctaUrl;
+
+      // Navigate to deep link
+      if (url) window.location.href = url;
+    };
+
+    // =============================================
+    // SHARE
+    // =============================================
+    window.shareStreak = function () {
+      pushEvent(CONFIG.events.streakShared, {
+        Streak_Length: displayStreak,
+      });
+
+      // Attempt native share
+      if (navigator.share) {
+        navigator.share({
+          title: `${displayStreak}-day wellness streak on Omne!`,
+          text: `I've been on a ${displayStreak}-day wellness streak with Omne by FWD. Celebrate living! 🔥`,
+          url: 'https://www.omne.com/',
+        }).catch(() => {});
+      }
+    };
+
+    // =============================================
+    // DISMISS
+    // =============================================
+    window.dismiss = function () {
+      pushEvent(CONFIG.events.streakDismissed, {
+        Streak_State: streakState,
+        Current_Streak: displayStreak,
+      });
+
+      // CleverTap in-app dismiss
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.dismissInAppNotification) {
+          CleverTap.dismissInAppNotification();
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback: wzrk exit
+      window.location.href = 'wzrk://exit';
+    };
+
+    // =============================================
+    // CLEVERTAP EVENTS (dual-SDK safe)
+    // =============================================
+    function pushEvent(name, props) {
+      const payload = props || {};
+      payload.Timestamp = new Date().toISOString();
+
+      try {
+        // Android SDK
+        if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent) {
+          CleverTap.pushEvent(name, JSON.stringify(payload));
+        }
+        // Web SDK
+        if (typeof clevertap !== 'undefined' && clevertap.event) {
+          clevertap.event.push(name, payload);
+        }
+        // iOS SDK
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap) {
+          window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({
+            type: 'event', name: name, props: payload,
+          }));
+        }
+      } catch (e) {
+        console.log('[CT Event]', name, payload);
+      }
+    }
+
+    function pushProfile(props) {
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.profile) {
+          CleverTap.profile.push({ Site: props });
+        }
+        if (typeof clevertap !== 'undefined' && clevertap.profile) {
+          clevertap.profile.push({ Site: props });
+        }
+      } catch (e) {
+        console.log('[CT Profile]', props);
+      }
+    }
+
+    // =============================================
+    // ANIMATED COUNTER
+    // =============================================
+    function animateCounter(elId, target) {
+      const el = document.getElementById(elId);
+      if (!el || target === 0) { el.textContent = target; return; }
+
+      const duration = 800;
+      const startTime = performance.now();
+      const start = 0;
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        el.textContent = current;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // =============================================
+    // CONFETTI
+    // =============================================
+    function fireConfetti() {
+      if (typeof confetti === 'undefined') return;
+
+      const canvas = document.getElementById('confettiCanvas');
+      const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+
+      // FWD orange burst
+      myConfetti({
+        particleCount: 60,
+        spread: 80,
+        origin: { y: 0.5 },
+        colors: ['#EA5504', '#FF8A50', '#FFB088', '#1A2B4A', '#FFFFFF'],
+        ticks: 150,
+      });
+
+      setTimeout(() => {
+        myConfetti({
+          particleCount: 40,
+          spread: 100,
+          origin: { y: 0.45 },
+          colors: ['#EA5504', '#FFD700', '#FFFFFF'],
+          ticks: 120,
+        });
+      }, 250);
+    }
+
+    // =============================================
+    // INIT
+    // =============================================
+    render();
+  </script>
+</body>
+</html>
