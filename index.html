@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>In-App Template Gallery · SJ × CleverTap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM — CleverTap Brand DNA
+   Deep navy canvas, coral accent, purple-teal gradients
+   Parallax depth with floating gradient orbs
+   ═══════════════════════════════════════════════════ */
+:root {
+  /* CT-inspired navy palette */
+  --bg: #0A0B1A; --bg2: #0D0E23; --bg3: #10112A;
+  --s1: #12133A; --s2: #171845; --s3: #1C1D50;
+  --s4: #252660; --s5: #2E3070;
+  --border: rgba(255,255,255,.06); --border2: rgba(255,255,255,.09);
+  --border3: rgba(255,255,255,.14);
+  --glass: rgba(16,17,42,.55); --glass2: rgba(16,17,42,.75);
+  /* Typography */
+  --t1: #F0F0F8; --t2: #A8A8C0; --t3: #7070A0; --t4: #505078;
+  /* CT brand colors */
+  --ct-red: #E44D5F; --ct-red2: #F04E55;
+  --ct-purple: #7C5CFC; --ct-purple2: #9B7CFF;
+  --ct-teal: #2DD4BF; --ct-teal2: #5EEAD4;
+  --ct-blue: #3B82F6;
+  /* Gradients */
+  --grad-hero: linear-gradient(135deg, #E44D5F 0%, #7C5CFC 50%, #2DD4BF 100%);
+  --grad-card: linear-gradient(135deg, rgba(124,92,252,.08), rgba(45,212,191,.04));
+  /* Fonts */
+  --display: 'Syne', 'Georgia', serif;
+  --body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --r1: 10px; --r2: 14px; --r3: 20px; --r4: 28px;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --ease-out: cubic-bezier(.0,0,.2,1);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--bg);color:var(--t1);font-family:var(--body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{min-height:100vh;overflow-x:hidden}
+::selection{background:var(--ct-red);color:#fff}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px}
+input,select,button,textarea{font-family:inherit}
+a{color:inherit;text-decoration:none}
+
+/* ═══ NOISE OVERLAY ═══ */
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.018;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ═══════════════════════════════════════════════════
+   PARALLAX BACKGROUND — CleverAI Futuristic Elements
+   Orbital rings, circuit nodes, grid, data streams
+   ═══════════════════════════════════════════════════ */
+.parallax-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+
+/* LAYER 0: Dot grid — barely moves, creates depth floor */
+.dot-grid{position:absolute;inset:-10%;
+  background-image:radial-gradient(circle,rgba(124,92,252,.12) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.6}
+
+/* LAYER 1: Gradient orbs — slow ambient glow */
+.orb{position:absolute;border-radius:50%;filter:blur(100px);will-change:transform}
+.orb-1{width:700px;height:700px;background:radial-gradient(circle,rgba(124,92,252,.55),transparent 70%);top:-15%;left:-10%;opacity:.55}
+.orb-2{width:550px;height:550px;background:radial-gradient(circle,rgba(228,77,95,.3),transparent 70%);top:25%;right:-12%;opacity:.5}
+.orb-3{width:800px;height:800px;background:radial-gradient(circle,rgba(45,212,191,.25),transparent 70%);top:60%;left:5%;opacity:.45}
+.orb-4{width:500px;height:500px;background:radial-gradient(circle,rgba(124,92,252,.35),transparent 70%);top:85%;right:10%;opacity:.45}
+
+/* LAYER 2: Orbital rings — the CleverAI signature */
+.orbital{position:absolute;border-radius:50%;border:1px solid;will-change:transform}
+.orbital-1{width:500px;height:500px;border-color:rgba(124,92,252,.32);top:80px;left:-100px;animation:orbitSpin 60s linear infinite}
+.orbital-2{width:700px;height:700px;border-color:rgba(228,77,95,.12);top:-80px;right:-200px;animation:orbitSpin 90s linear infinite reverse}
+.orbital-3{width:400px;height:400px;border-color:rgba(45,212,191,.28);top:900px;left:15%;animation:orbitSpin 45s linear infinite}
+.orbital-4{width:600px;height:600px;border-color:rgba(124,92,252,.1);top:1600px;right:-100px;animation:orbitSpin 75s linear infinite reverse}
+/* Orbital nodes — glowing dots on the rings */
+.orbital::after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;top:-4px;left:50%;box-shadow:0 0 16px currentColor,0 0 6px currentColor}
+.orbital-1::after{background:rgba(124,92,252,.7);color:rgba(124,92,252,.5)}
+.orbital-2::after{background:rgba(228,77,95,.6);color:rgba(228,77,95,.4)}
+.orbital-3::after{background:rgba(45,212,191,.6);color:rgba(45,212,191,.4)}
+.orbital-4::after{background:rgba(124,92,252,.5);color:rgba(124,92,252,.4)}
+@keyframes orbitSpin{to{transform:rotate(360deg)}}
+
+/* LAYER 3: Circuit paths — SVG connection lines */
+.circuit-svg{position:absolute;overflow:visible;will-change:transform}
+
+/* LAYER 4: Hexagons + diamonds — fast parallax foreground */
+.hex{position:absolute;will-change:transform}
+.hex-shape{stroke-dasharray:200;stroke-dashoffset:200;animation:hexDraw 3s ease forwards}
+@keyframes hexDraw{to{stroke-dashoffset:0}}
+
+/* LAYER 5: Cross sparkles — fastest layer */
+.sparkle{position:absolute;will-change:transform}
+.sparkle::before,.sparkle::after{content:'';position:absolute;background:currentColor;border-radius:1px}
+.sparkle::before{width:12px;height:1.5px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.sparkle::after{width:1.5px;height:12px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.sparkle-sm::before{width:8px}.sparkle-sm::after{height:8px}
+
+/* LAYER 6: Data stream lines — horizontal flowing */
+.datastream{position:absolute;height:1px;overflow:hidden;will-change:transform}
+.datastream::after{content:'';position:absolute;top:0;left:-100%;width:60px;height:100%;animation:streamFlow var(--dur,4s) linear infinite;animation-delay:var(--del,0s)}
+.datastream.ds-purple::after{background:linear-gradient(90deg,transparent,rgba(124,92,252,.55),transparent)}
+.datastream.ds-red::after{background:linear-gradient(90deg,transparent,rgba(228,77,95,.5),transparent)}
+.datastream.ds-teal::after{background:linear-gradient(90deg,transparent,rgba(45,212,191,.5),transparent)}
+@keyframes streamFlow{0%{left:-60px}100%{left:calc(100% + 60px)}}
+
+/* LAYER 7: Radial burst — slow rotating rays */
+.radial-burst{position:absolute;will-change:transform}
+.radial-burst svg{animation:burstSpin 120s linear infinite}
+@keyframes burstSpin{to{transform:rotate(360deg)}}
+
+/* LAYER 8: Flowing wave ribbons — CleverAI signature curves */
+.wave-ribbon{position:absolute;will-change:transform;pointer-events:none}
+
+/* LAYER 9: CT sparkle asterisk marks */
+.ct-sparkle{position:absolute;will-change:transform;pointer-events:none}
+
+/* CT brand logo in hero */
+.ct-brand{display:flex;align-items:center;gap:10px;margin-bottom:20px;opacity:0;animation:fadeIn .6s .1s var(--ease-out) forwards}
+.ct-brand-logo{height:24px;width:auto}
+.ct-brand-sep{width:1px;height:18px;background:var(--border3)}
+.ct-brand-text{font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.5px}
+/* Header CT arc mark */
+.hdr-ct-icon{width:20px;height:20px;opacity:.5;margin-left:auto;flex-shrink:0}
+
+/* Content sits above parallax */
+.content{position:relative;z-index:10}
+
+/* ═══════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════ */
+.hdr{position:sticky;top:0;z-index:200;background:rgba(10,11,26,.65);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-bottom:1px solid var(--border)}
+.hdr-inner{max-width:1440px;margin:0 auto;padding:0 clamp(20px,3vw,40px);height:56px;display:flex;align-items:center;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer}
+.logo-mark{width:28px;height:28px;border-radius:8px;background:var(--ct-red);display:grid;place-items:center;transition:transform .2s var(--ease)}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.05)}
+.logo-mark svg{width:14px;height:14px;fill:#fff}
+.logo-txt{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.3px}
+.logo-txt span{font-family:var(--body);color:var(--t4);font-weight:400;font-size:12px;margin-left:6px}
+.search-wrap{flex:1;max-width:340px;position:relative;margin-left:auto}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t4);pointer-events:none;width:14px;height:14px}
+.search{width:100%;padding:8px 14px 8px 34px;background:rgba(23,24,69,.5);border:1px solid var(--border);border-radius:var(--r1);color:var(--t1);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;backdrop-filter:blur(8px)}
+.search:focus{border-color:var(--ct-purple);box-shadow:0 0 0 3px rgba(124,92,252,.12)}
+.search::placeholder{color:var(--t4)}
+.hdr-count{font-size:11.5px;color:var(--t4);font-weight:500;font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:.5px}
+
+/* ═══════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════ */
+.hero{max-width:1440px;margin:0 auto;padding:clamp(56px,9vw,120px) clamp(20px,3vw,40px) 0;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;min-height:min(82vh,720px)}
+.hero-label{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--ct-red);margin-bottom:24px;opacity:0;animation:fadeIn .6s .2s var(--ease-out) forwards}
+.hero-label::before{content:'';width:24px;height:1px;background:var(--ct-red)}
+.hero h1{font-family:var(--display);font-size:clamp(38px,5.5vw,72px);font-weight:800;letter-spacing:-2px;line-height:1.0;opacity:0;animation:fadeIn .6s .35s var(--ease-out) forwards}
+.hero h1 em{font-style:normal;display:block;background:var(--grad-hero);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(14px,1.2vw,16.5px);color:var(--t2);margin-top:20px;line-height:1.7;max-width:460px;font-weight:300;opacity:0;animation:fadeIn .6s .5s var(--ease-out) forwards}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;margin-top:32px;padding:13px 30px;background:var(--ct-red);color:#fff;font-size:13.5px;font-weight:600;border-radius:99px;cursor:pointer;border:none;transition:all .2s var(--ease);opacity:0;animation:fadeIn .6s .65s var(--ease-out) forwards;box-shadow:0 4px 24px rgba(228,77,95,.25)}
+.hero-cta:hover{transform:translateY(-1px);box-shadow:0 8px 36px rgba(228,77,95,.35);background:#f25565}
+.hero-cta svg{width:16px;height:16px;transition:transform .2s}.hero-cta:hover svg{transform:translateX(3px)}
+
+/* Stacked phones */
+.hero-right{position:relative;height:440px;display:flex;align-items:center;justify-content:center;opacity:0;animation:fadeIn .8s .4s var(--ease-out) forwards}
+.hero-phone{position:absolute;width:180px;height:340px;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06);transition:transform .4s var(--ease),box-shadow .4s;cursor:pointer}
+.hero-phone:hover{z-index:10!important;box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.1)}
+.hero-phone:nth-child(1){z-index:3;animation:hFloat1 5s ease-in-out infinite}
+.hero-phone:nth-child(2){z-index:4;animation:hFloat2 6s ease-in-out infinite}
+.hero-phone:nth-child(3){z-index:2;animation:hFloat3 5.5s ease-in-out infinite}
+.hero-phone:hover{animation-play-state:paused!important}
+@keyframes hFloat1{0%,100%{transform:rotate(-8deg) translateX(-100px) translateY(10px)}50%{transform:rotate(-8deg) translateX(-100px) translateY(0)}}
+@keyframes hFloat2{0%,100%{transform:rotate(0) translateX(0) translateY(-15px)}50%{transform:rotate(0) translateX(0) translateY(-25px)}}
+@keyframes hFloat3{0%,100%{transform:rotate(7deg) translateX(100px) translateY(5px)}50%{transform:rotate(7deg) translateX(100px) translateY(-5px)}}
+.hp-inner{width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;position:relative}
+.hp-label{font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4);position:relative;z-index:2}
+.hp-brand{font-size:10px;color:rgba(255,255,255,.7);margin-top:2px;position:relative;z-index:2}
+.hp-quiz{background:linear-gradient(170deg,#0142AF,#033A94,#022B6E)}.hp-fortune{background:linear-gradient(135deg,#DC2626,#991B1B)}.hp-calc{background:linear-gradient(135deg,#E87722,#D4631A)}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════════════
+   STATS
+   ═══════════════════════════════════════════════════ */
+.stats{max-width:1440px;margin:0 auto;padding:64px clamp(20px,3vw,40px) 0}
+.stats-inner{display:flex;border:1px solid var(--border);border-radius:var(--r3);background:var(--glass);backdrop-filter:blur(16px);overflow:hidden}
+.stat-item{flex:1;padding:28px 0;text-align:center;position:relative}
+.stat-item+.stat-item::before{content:'';position:absolute;left:0;top:20%;height:60%;width:1px;background:var(--border2)}
+.stat-num{font-family:var(--display);font-size:clamp(28px,3vw,44px);font-weight:800;letter-spacing:-1px;background:var(--grad-hero);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:12px;color:var(--t3);margin-top:4px;letter-spacing:.5px;text-transform:uppercase;font-weight:500}
+
+/* ═══════════════════════════════════════════════════
+   FEATURED SPOTLIGHT
+   ═══════════════════════════════════════════════════ */
+.spotlight{max-width:1440px;margin:0 auto;padding:88px clamp(20px,3vw,40px) 0}
+.spot-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--ct-purple2);margin-bottom:12px}
+.spot-title{font-family:var(--display);font-size:clamp(22px,2.5vw,32px);font-weight:700;letter-spacing:-.5px;margin-bottom:8px}
+.spot-desc{font-size:14px;color:var(--t2);margin-bottom:40px;font-weight:300}
+.spot-stage{display:grid;grid-template-columns:1fr 420px;gap:48px;align-items:start}
+.spot-phone-wrap{display:flex;justify-content:center;position:sticky;top:80px}
+.spot-phone{width:300px;height:580px;border-radius:36px;border:3px solid var(--s4);background:#000;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.03),0 0 100px rgba(124,92,252,.06)}
+.spot-phone::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:80px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:5}
+.spot-phone iframe{width:390px;height:753px;border:none;background:#fff;transform:scale(calc(300/390));transform-origin:top left;position:absolute;top:0;left:0;overflow-y:auto}
+.spot-list{display:flex;flex-direction:column;gap:8px}
+
+.spot-card{padding:20px 24px;border-radius:var(--r2);border:1px solid var(--border);background:var(--glass);backdrop-filter:blur(12px);cursor:pointer;transition:all .25s var(--ease);position:relative;overflow:hidden}
+.spot-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 3px 3px 0;background:var(--ct-purple);opacity:0;transition:opacity .2s}
+.spot-card:hover,.spot-card.active{background:rgba(23,24,69,.6);border-color:var(--border2)}
+.spot-card.active::before{opacity:1}
+.spot-card-top{display:flex;align-items:center;gap:12px}
+.spot-card-icon{font-size:20px}
+.spot-card-name{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.2px}
+.spot-card-brand{font-size:12px;color:var(--t3);margin-left:auto}
+.spot-card-desc{font-size:12.5px;color:var(--t2);margin-top:8px;line-height:1.5;font-weight:300}
+.spot-card-tag{display:inline-block;font-size:10px;font-weight:500;padding:3px 8px;border-radius:6px;margin-top:10px}
+
+/* ═══════════════════════════════════════════════════
+   TICKER
+   ═══════════════════════════════════════════════════ */
+.ticker-section{padding:80px 0;overflow:hidden;position:relative}
+.ticker-section::before,.ticker-section::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none}
+.ticker-section::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.ticker-section::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
+.ticker-track{display:flex;gap:12px;width:max-content;animation:marquee 80s linear infinite}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+.ticker-item{flex-shrink:0;width:200px;height:108px;border-radius:var(--r2);padding:16px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s}
+.ticker-item:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.ti-icon{font-size:22px;opacity:.8}.ti-name{font-size:11.5px;font-weight:600;color:rgba(0,0,0,.85);line-height:1.3}.ti-brand{font-size:10px;color:rgba(0,0,0,.5);margin-top:1px}
+
+.tc-quiz{background:linear-gradient(135deg,#FDE68A,#FCD34D)}.tc-gamification{background:linear-gradient(135deg,#A7F3D0,#6EE7B7)}.tc-loyalty{background:linear-gradient(135deg,#DDD6FE,#C4B5FD)}.tc-commerce{background:linear-gradient(135deg,#FECDD3,#FDA4AF)}.tc-interactive{background:linear-gradient(135deg,#BAE6FD,#7DD3FC)}.tc-content{background:linear-gradient(135deg,#FED7AA,#FDBA74)}.tc-animation{background:linear-gradient(135deg,#E5E7EB,#D1D5DB)}.tc-foundational{background:linear-gradient(135deg,#C7D2FE,#A5B4FC)}.tc-conversion{background:linear-gradient(135deg,#FDBA74,#FB923C)}.tc-patterns{background:linear-gradient(135deg,#99F6E4,#5EEAD4)}
+
+/* ═══════════════════════════════════════════════════
+   GALLERY
+   ═══════════════════════════════════════════════════ */
+.gallery{max-width:1440px;margin:0 auto;padding:0 clamp(20px,3vw,40px) 100px}
+.gallery-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
+.gallery-title{font-family:var(--display);font-size:clamp(22px,2.5vw,32px);font-weight:700;letter-spacing:-.5px}
+.gallery-count{font-size:12px;color:var(--t4);font-weight:500}
+
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+.pill{padding:7px 16px;border-radius:99px;font-size:12px;font-weight:500;color:var(--t3);background:transparent;border:1px solid var(--border);cursor:pointer;transition:all .2s var(--ease);user-select:none;white-space:nowrap}
+.pill:hover{color:var(--t2);border-color:var(--border2);background:rgba(23,24,69,.4)}
+.pill.on{background:var(--ct-red);color:#fff;border-color:var(--ct-red);font-weight:600}
+.pill .ct{opacity:.5;margin-left:4px;font-weight:400}
+
+/* ═══ GLASS CARDS ═══ */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{position:relative;border-radius:var(--r3);padding:22px;cursor:pointer;overflow:hidden;opacity:0;animation:cardIn .4s var(--ease-out) forwards;
+  background:var(--glass);border:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transition:all .3s var(--ease)}
+/* Gradient shimmer on hover */
+.card::before{content:'';position:absolute;inset:0;border-radius:var(--r3);opacity:0;transition:opacity .3s;pointer-events:none;
+  background:linear-gradient(135deg,rgba(124,92,252,.06),rgba(45,212,191,.04),transparent 60%)}
+/* Accent glow */
+.card::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;opacity:0;transition:opacity .4s;pointer-events:none;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(124,92,252,.06),transparent 50%)}
+.card:hover{border-color:var(--border3);transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,.25),0 0 0 1px rgba(124,92,252,.08)}
+.card:hover::before{opacity:1}
+.card:hover::after{opacity:1}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Card accent bar */
+.card-accent{position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 4px 4px 0;opacity:0;transition:opacity .2s}
+.card:hover .card-accent{opacity:1}
+
+.card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;position:relative;z-index:2}
+.card-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;border:1px solid var(--border)}
+.card-meta{flex:1;min-width:0}
+.card-name{font-family:var(--display);font-size:14.5px;font-weight:700;line-height:1.3;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-brand{font-size:12px;color:var(--t3);margin-top:2px}
+.card-desc{font-size:12.5px;color:var(--t2);line-height:1.6;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:300;position:relative;z-index:2}
+.card-foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;position:relative;z-index:2}
+.badge{font-size:10px;font-weight:500;padding:3px 9px;border-radius:6px;white-space:nowrap}
+.badge-size{color:var(--t4);background:rgba(23,24,69,.6);border:1px solid var(--border)}
+.empty-state{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--t3);font-size:14px}
+
+/* ═══════════════════════════════════════════════════
+   DETAIL OVERLAY
+   ═══════════════════════════════════════════════════ */
+.overlay{position:fixed;inset:0;z-index:500;background:var(--bg2);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .4s var(--ease);will-change:transform}
+.overlay.open{transform:translateX(0)}
+.d-hdr{padding:0 clamp(16px,2vw,28px);height:56px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(13,14,35,.8);backdrop-filter:blur(16px)}
+.d-back{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;color:var(--t2);background:none;border:none;cursor:pointer;padding:7px 12px;border-radius:var(--r1);transition:all .15s}
+.d-back:hover{background:var(--s1);color:var(--t1)}
+.d-back svg{width:15px;height:15px}
+.d-info{flex:1;min-width:0}
+.d-title{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-sub{font-size:11px;color:var(--t3)}
+.d-actions{display:flex;gap:6px;flex-shrink:0}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:12px;font-weight:500;border-radius:var(--r1);border:1px solid var(--border);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--border2);color:var(--t1);background:var(--s1)}
+.btn svg{width:13px;height:13px;flex-shrink:0}
+.btn-accent{background:var(--ct-red);color:#fff;border-color:var(--ct-red)}
+.btn-accent:hover{background:#f25565;border-color:#f25565;color:#fff}
+
+.d-body{flex:1;display:flex;overflow:hidden}
+.pv{flex:0 0 440px;display:flex;flex-direction:column;background:var(--bg3);border-right:1px solid var(--border)}
+.pv-phone{width:300px;height:580px;border-radius:36px;border:3px solid var(--s4);background:#000;position:relative;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.03)}
+.pv-phone::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:80px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:5}
+/* Iframe scaling: render at 390px, scale to fit frame */
+.pv-phone{overflow:hidden}
+.pv-phone iframe{width:390px;height:753px;border:none;background:#fff;transform:scale(calc(300/390));transform-origin:top left;position:absolute;top:0;left:0}
+.pv-btns{margin-top:16px;display:flex;gap:6px}
+
+/* Mobile view toggle (hidden on desktop) */
+.m-toggle{display:none;border-bottom:1px solid var(--border);flex-shrink:0}
+.m-toggle-btn{flex:1;padding:12px;font-size:12px;font-weight:600;color:var(--t3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s}
+.m-toggle-btn.on{color:var(--t1);border-color:var(--ct-red)}
+
+.ed{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ed-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 20px;flex-shrink:0}
+.ed-tab{padding:14px 16px;font-size:12.5px;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.ed-tab:hover{color:var(--t2)}.ed-tab.on{color:var(--t1);border-color:var(--ct-purple)}
+.ed-body{flex:1;overflow:hidden;position:relative}
+.ed-panel{position:absolute;inset:0;overflow-y:auto;padding:20px;display:none}.ed-panel.on{display:block}
+.cfg-empty{color:var(--t3);font-size:13px;line-height:1.7;padding:16px}.cfg-empty b{color:var(--t2)}
+.cfg-group{margin-bottom:20px}.cfg-group-title{font-family:var(--display);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cfg-field{margin-bottom:10px}.cfg-label{font-size:11px;font-weight:500;color:var(--t3);margin-bottom:4px;letter-spacing:.3px}
+.cfg-input{width:100%;padding:8px 12px;background:rgba(23,24,69,.4);border:1px solid var(--border);border-radius:8px;color:var(--t1);font-size:12.5px;outline:none;transition:border-color .15s}
+.cfg-input:focus{border-color:var(--ct-purple)}textarea.cfg-input{resize:vertical;font-family:var(--body);line-height:1.5}
+.cfg-color-wrap{display:flex;gap:8px;align-items:center}
+.cfg-color-swatch{width:34px;height:34px;border-radius:8px;border:1px solid var(--border2);cursor:pointer;flex-shrink:0;overflow:hidden}
+.cfg-color-swatch input[type="color"]{opacity:0;width:100%;height:100%;cursor:pointer}
+.code-bar{display:flex;gap:6px;margin-bottom:14px}
+.code-area{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--t2);white-space:pre-wrap;word-break:break-all;background:var(--glass2);border:1px solid var(--border);border-radius:var(--r1);padding:16px;max-height:calc(100vh - 180px);overflow:auto;tab-size:2}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ct-red);color:#fff;padding:10px 24px;border-radius:99px;font-size:13px;font-weight:500;z-index:9999;transition:transform .35s var(--ease-spring);box-shadow:0 8px 30px rgba(228,77,95,.3);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.footer{border-top:1px solid var(--border);padding:40px clamp(20px,3vw,40px);max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-left{font-size:12px;color:var(--t4)}.footer-left b{color:var(--t3);font-weight:500}
+.footer-right{font-size:11px;color:var(--t4)}
+
+
+
+/* ═══ APPLY CHANGES BUTTON ═══ */
+.cfg-apply-bar{position:sticky;top:0;z-index:5;padding:10px 0 12px;background:var(--bg2);border-bottom:1px solid var(--border);margin:-16px -20px 16px;padding:12px 20px;display:flex;align-items:center;gap:10px}
+.btn-apply{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--ct-red);color:#fff;font-size:12px;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(228,77,95,.25)}
+.btn-apply:hover{background:#f25565;box-shadow:0 4px 20px rgba(228,77,95,.35);transform:translateY(-1px)}
+.btn-apply svg{width:14px;height:14px}
+.cfg-apply-hint{font-size:11px;color:var(--t3)}
+.cfg-dirty .btn-apply{animation:applyPulse 1.5s ease infinite}
+@keyframes applyPulse{0%,100%{box-shadow:0 2px 12px rgba(228,77,95,.25)}50%{box-shadow:0 4px 24px rgba(228,77,95,.5)}}
+
+/* ═══ CHANNEL / DEVICE TOGGLES ═══ */
+.pv-controls{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.ch-label{font-size:9px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--t4)}
+.tog-group{display:flex;background:var(--s3);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.tog-btn{padding:5px 10px;font-size:11px;font-weight:500;background:none;border:none;color:var(--t3);cursor:pointer;transition:all .15s}
+.tog-btn.on{background:rgba(228,77,95,.12);color:var(--ct-red)}
+.tog-btn:hover:not(.on){color:var(--t2)}
+.tog-sep{width:1px;height:18px;background:var(--border);align-self:center;margin:0 2px}
+
+/* ═══ WEB POPUP FRAME ═══ */
+.pv-stage{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+.pv-webpopup{width:100%;max-width:760px;height:480px;border-radius:12px;border:3px solid var(--s4);background:#1a1a2e;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.wp-nav{height:32px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;padding:0 10px;gap:6px}
+.wp-dots{display:flex;gap:3px}.wp-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.08)}
+.wp-url{flex:1;height:18px;border-radius:3px;background:rgba(255,255,255,.04);margin:0 6px;padding:0 6px;font-size:8px;color:var(--t4);display:flex;align-items:center}
+.wp-body{position:absolute;top:32px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center}
+.wp-ghost{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;padding:20px;opacity:.12}
+.wp-ghost-line{height:8px;border-radius:3px;background:rgba(255,255,255,.2)}
+.wp-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:2}
+.wp-popup{width:90%;max-width:520px;height:88%;border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.4);position:relative}
+.wp-popup iframe{width:100%;height:100%;border:none;background:#fff;display:block}
+
+/* ═══ EVENTS PANEL ═══ */
+.evt-hdr{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.evt-sub{font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:12px}
+.evt-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:6px}
+.evt-name{font-size:11px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:5px}
+.evt-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.evt-dot-view{background:var(--ct-blue)}.evt-dot-click{background:var(--ct-teal)}.evt-dot-track{background:#F59E0B}
+.evt-trigger{font-size:10px;color:var(--t3);margin-top:2px}
+.evt-props{font-size:10px;color:var(--t4);background:var(--bg3);border-radius:5px;padding:4px 6px;margin-top:4px;font-family:monospace}
+.evt-box{margin-top:10px;padding:10px;background:var(--s3);border:1px solid var(--border);border-radius:10px}
+.evt-box-title{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px}
+.evt-box-text{font-size:10px;color:var(--t3);line-height:1.6}
+.evt-box-text code{font-size:9px;background:var(--bg3);padding:1px 4px;border-radius:3px}
+
+/* ═══ USER GUIDE PANEL ═══ */
+.gd-block{margin-bottom:16px}
+.gd-title{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.gd-icon{font-size:13px}
+.gd-text{font-size:12px;color:var(--t2);line-height:1.6}
+.gd-list{list-style:none;padding:0;margin:4px 0}.gd-list li{font-size:11px;color:var(--t2);line-height:1.5;padding:3px 0 3px 14px;position:relative}
+.gd-list li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--s5)}
+.gd-tag{display:inline-flex;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;margin:1px}
+.gd-tag-ind{background:rgba(167,139,250,.1);color:var(--ct-purple2)}
+.gd-tag-lc{background:rgba(245,158,11,.1);color:#F59E0B}
+.gd-metrics{display:flex;gap:6px;margin:6px 0}
+.gd-metric{flex:1;padding:8px;background:var(--s3);border:1px solid var(--border);border-radius:8px;text-align:center}
+.gd-metric-val{font-size:14px;font-weight:700;background:var(--grad-hero);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.gd-metric-lbl{font-size:9px;color:var(--t4);margin-top:1px}
+.gd-warn{padding:8px 10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.1);border-radius:8px;font-size:10px;color:#F59E0B;line-height:1.5;display:flex;gap:6px;align-items:flex-start}
+
+/* Tab dots */
+.tab-dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:3px}
+.dot-red{background:var(--ct-red)}.dot-teal{background:var(--ct-teal)}.dot-blue{background:var(--ct-blue)}.dot-purple{background:var(--ct-purple2)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:1024px){.pv-webpopup{height:400px}.hero{grid-template-columns:1fr;min-height:auto;padding-bottom:20px}.hero-right{height:280px}.hero-phone{width:140px;height:260px;border-radius:20px}.spot-stage{grid-template-columns:1fr}.spot-phone-wrap{position:relative;top:auto;order:2;padding:20px 0}.spot-phone{width:260px;height:500px}.spot-phone iframe{width:390px;height:750px;transform:scale(calc(260/390));transform-origin:top left}.spot-list{order:1}}
+@media(max-width:900px){.pv-controls{display:none}.d-body{flex-direction:column}.pv{flex:0 0 auto;border-right:none;border-bottom:1px solid var(--border);padding:20px}.pv-phone{width:240px;height:460px;border-radius:28px}.pv-phone iframe{width:390px;height:750px;transform:scale(calc(240/390));transform-origin:top left}.d-actions{display:none}.m-toggle{display:flex}}
+@media(max-width:640px){.hdr-inner{gap:8px}.logo-txt span{display:none}.hero{padding-top:40px}.hero-right{height:220px}.hero-phone{width:110px;height:200px;border-radius:16px}@keyframes hFloat1{0%,100%{transform:rotate(-8deg) translateX(-70px) translateY(10px)}50%{transform:rotate(-8deg) translateX(-70px) translateY(0)}}@keyframes hFloat2{0%,100%{transform:rotate(0) translateX(0) translateY(-10px)}50%{transform:rotate(0) translateX(0) translateY(-20px)}}@keyframes hFloat3{0%,100%{transform:rotate(7deg) translateX(70px) translateY(5px)}50%{transform:rotate(7deg) translateX(70px) translateY(-5px)}}.stats-inner{flex-direction:column}.stat-item+.stat-item::before{display:none}.stat-item{padding:16px 0;border-bottom:1px solid var(--border)}.spot-phone{width:220px;height:420px;border-radius:24px}.spot-phone iframe{width:390px;height:750px;transform:scale(calc(220/390));transform-origin:top left}.grid{grid-template-columns:1fr}.ticker-item{width:160px;height:90px;padding:12px}
+/* Mobile detail: full-width preview, no phone chrome */
+.pv{padding:0;background:var(--bg)}
+.pv-phone{width:100%;height:70vh;max-height:580px;border-radius:0;border:none;box-shadow:none}
+.pv-phone::before{display:none}
+.pv-phone iframe{width:100%;height:100%;transform:none;position:absolute;top:0;left:0}
+.pv-btns{display:none}
+/* Toggle between preview and editor on mobile */
+.d-body.show-editor .pv{display:none}
+.d-body.show-preview .ed{display:none}
+.ed-panel{padding:14px}.footer{flex-direction:column;text-align:center}}
+.spinner{width:22px;height:22px;border:2px solid var(--s5);border-top-color:var(--ct-purple);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}.loading-center{display:flex;align-items:center;justify-content:center;height:100%}
+</style>
+</head>
+<body>
+
+<!-- ═══ PARALLAX BACKGROUND — CleverAI Futuristic ═══ -->
+<div class="parallax-bg" id="paraBg">
+  <!-- L0: Dot grid floor -->
+  <div class="dot-grid" data-speed="0.005"></div>
+
+  <!-- L1: Ambient gradient orbs -->
+  <div class="orb orb-1" data-speed="0.015"></div>
+  <div class="orb orb-2" data-speed="0.02"></div>
+  <div class="orb orb-3" data-speed="0.012"></div>
+  <div class="orb orb-4" data-speed="0.018"></div>
+
+  <!-- L2: Orbital rings with glowing nodes -->
+  <div class="orbital orbital-1" data-speed="0.035"></div>
+  <div class="orbital orbital-2" data-speed="0.025"></div>
+  <div class="orbital orbital-3" data-speed="0.04"></div>
+  <div class="orbital orbital-4" data-speed="0.03"></div>
+
+  <!-- L3: Circuit SVG paths with glowing endpoints -->
+  <svg class="circuit-svg" data-speed="0.05" style="top:200px;left:2%;width:220px;height:180px" viewBox="0 0 220 180">
+    <path d="M10 90 L60 90 L80 30 L160 30 L180 70 L210 70" fill="none" stroke="rgba(124,92,252,.22)" stroke-width="1"/>
+    <circle cx="10" cy="90" r="3" fill="rgba(124,92,252,.5)"><animate attributeName="opacity" values=".2;.6;.2" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="210" cy="70" r="3" fill="rgba(124,92,252,.5)"><animate attributeName="opacity" values=".6;.2;.6" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="80" cy="30" r="2" fill="rgba(124,92,252,.4)"/>
+  </svg>
+  <svg class="circuit-svg" data-speed="0.06" style="top:700px;right:3%;width:200px;height:160px" viewBox="0 0 200 160">
+    <path d="M190 20 L140 20 L120 80 L60 80 L40 130 L10 130" fill="none" stroke="rgba(228,77,95,.18)" stroke-width="1"/>
+    <circle cx="190" cy="20" r="3" fill="rgba(228,77,95,.45)"><animate attributeName="opacity" values=".2;.5;.2" dur="2.5s" repeatCount="indefinite"/></circle>
+    <circle cx="10" cy="130" r="3" fill="rgba(228,77,95,.45)"><animate attributeName="opacity" values=".5;.2;.5" dur="2.5s" repeatCount="indefinite"/></circle>
+  </svg>
+  <svg class="circuit-svg" data-speed="0.055" style="top:1400px;left:5%;width:260px;height:120px" viewBox="0 0 260 120">
+    <path d="M5 60 L50 60 L70 20 L150 20 L170 80 L220 80 L255 40" fill="none" stroke="rgba(45,212,191,.18)" stroke-width="1"/>
+    <circle cx="5" cy="60" r="3" fill="rgba(45,212,191,.45)"><animate attributeName="opacity" values=".3;.7;.3" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="255" cy="40" r="3" fill="rgba(45,212,191,.45)"><animate attributeName="opacity" values=".7;.3;.7" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="150" cy="20" r="2" fill="rgba(45,212,191,.35)"/>
+  </svg>
+  <svg class="circuit-svg" data-speed="0.045" style="top:2100px;right:6%;width:180px;height:140px" viewBox="0 0 180 140">
+    <path d="M170 10 L130 10 L110 70 L50 70 L30 120 L10 120" fill="none" stroke="rgba(124,92,252,.16)" stroke-width="1"/>
+    <circle cx="170" cy="10" r="3" fill="rgba(124,92,252,.3)"><animate attributeName="opacity" values=".2;.6;.2" dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="10" cy="120" r="2.5" fill="rgba(124,92,252,.4)"><animate attributeName="opacity" values=".6;.2;.6" dur="4s" repeatCount="indefinite"/></circle>
+  </svg>
+
+  <!-- L4: Hexagons -->
+  <svg class="hex" data-speed="0.07" style="top:400px;right:8%;width:60px;height:60px" viewBox="0 0 60 60">
+    <polygon class="hex-shape" points="30,2 55,17 55,43 30,58 5,43 5,17" fill="none" stroke="rgba(124,92,252,.25)" stroke-width="1"/>
+  </svg>
+  <svg class="hex" data-speed="0.08" style="top:1100px;left:6%;width:45px;height:45px" viewBox="0 0 45 45">
+    <polygon class="hex-shape" points="22.5,2 42,13 42,33 22.5,43 3,33 3,13" fill="none" stroke="rgba(228,77,95,.2)" stroke-width="1" style="animation-delay:.5s"/>
+  </svg>
+  <svg class="hex" data-speed="0.075" style="top:1900px;right:12%;width:50px;height:50px" viewBox="0 0 50 50">
+    <polygon class="hex-shape" points="25,2 47,14 47,36 25,48 3,36 3,14" fill="none" stroke="rgba(45,212,191,.2)" stroke-width="1" style="animation-delay:1s"/>
+  </svg>
+  <svg class="hex" data-speed="0.065" style="top:600px;left:20%;width:35px;height:35px" viewBox="0 0 35 35">
+    <rect x="5" y="5" width="25" height="25" rx="4" fill="none" stroke="rgba(124,92,252,.1)" stroke-width="1" transform="rotate(45 17.5 17.5)"/>
+  </svg>
+
+  <!-- L5: Cross sparkles -->
+  <div class="sparkle" data-speed="0.09" style="top:350px;left:12%;color:rgba(124,92,252,.4)"></div>
+  <div class="sparkle" data-speed="0.1" style="top:750px;right:10%;color:rgba(228,77,95,.35)"></div>
+  <div class="sparkle sparkle-sm" data-speed="0.11" style="top:1050px;left:25%;color:rgba(45,212,191,.35)"></div>
+  <div class="sparkle" data-speed="0.08" style="top:1500px;right:18%;color:rgba(124,92,252,.35)"></div>
+  <div class="sparkle sparkle-sm" data-speed="0.12" style="top:1800px;left:8%;color:rgba(228,77,95,.3)"></div>
+  <div class="sparkle sparkle-sm" data-speed="0.095" style="top:500px;right:22%;color:rgba(45,212,191,.28)"></div>
+  <div class="sparkle" data-speed="0.1" style="top:2200px;left:18%;color:rgba(124,92,252,.32)"></div>
+  <div class="sparkle sparkle-sm" data-speed="0.11" style="top:2500px;right:8%;color:rgba(228,77,95,.28)"></div>
+
+  <!-- L6: Data stream lines -->
+  <div class="datastream ds-purple" data-speed="0.06" style="top:280px;left:0;width:35%;--dur:5s;--del:0s"></div>
+  <div class="datastream ds-teal" data-speed="0.07" style="top:680px;right:0;width:30%;--dur:4s;--del:1.5s"></div>
+  <div class="datastream ds-red" data-speed="0.065" style="top:1200px;left:0;width:40%;--dur:6s;--del:.8s"></div>
+  <div class="datastream ds-purple" data-speed="0.055" style="top:1700px;right:0;width:25%;--dur:4.5s;--del:2s"></div>
+  <div class="datastream ds-teal" data-speed="0.07" style="top:2300px;left:0;width:32%;--dur:5.5s;--del:.3s"></div>
+
+  <!-- L7: Radial burst (subtle, one big) -->
+  <div class="radial-burst" data-speed="0.01" style="top:100px;left:55%">
+    <svg width="400" height="400" viewBox="0 0 400 400" opacity=".07">
+      <g transform="translate(200,200)">
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(0)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(30)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(60)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(90)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(120)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(150)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(180)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(210)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(240)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(270)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(300)"/>
+        <line x1="0" y1="-190" x2="0" y2="-160" stroke="rgba(124,92,252,1)" stroke-width=".5" transform="rotate(330)"/>
+        <circle cx="0" cy="0" r="155" fill="none" stroke="rgba(124,92,252,.5)" stroke-width=".5" stroke-dasharray="4 8"/>
+      </g>
+    </svg>
+  </div>
+  <div class="radial-burst" data-speed="0.008" style="top:1400px;left:20%">
+    <svg width="300" height="300" viewBox="0 0 300 300" opacity=".06">
+      <g transform="translate(150,150)">
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(0)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(45)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(90)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(135)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(180)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(225)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(270)"/>
+        <line x1="0" y1="-140" x2="0" y2="-115" stroke="rgba(228,77,95,1)" stroke-width=".5" transform="rotate(315)"/>
+        <circle cx="0" cy="0" r="110" fill="none" stroke="rgba(228,77,95,.4)" stroke-width=".5" stroke-dasharray="3 9"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- L8: Flowing wave ribbons — CleverAI signature element -->
+  <svg class="wave-ribbon" data-speed="0.022" style="top:60px;left:-5%;width:110%;height:300px" viewBox="0 0 1600 300" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="wg1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(124,92,252,.12)"/>
+        <stop offset="50%" stop-color="rgba(228,77,95,.08)"/>
+        <stop offset="100%" stop-color="rgba(45,212,191,.1)"/>
+      </linearGradient>
+      <linearGradient id="wg2" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(45,212,191,.08)"/>
+        <stop offset="50%" stop-color="rgba(124,92,252,.1)"/>
+        <stop offset="100%" stop-color="rgba(228,77,95,.06)"/>
+      </linearGradient>
+    </defs>
+    <path d="M-50 180 C200 80,400 220,700 140 S1100 60,1400 160 S1650 200,1700 140" fill="none" stroke="url(#wg1)" stroke-width="1.5" opacity=".85"/>
+    <path d="M-50 200 C250 100,450 240,750 150 S1150 70,1450 170 S1680 220,1700 160" fill="none" stroke="url(#wg1)" stroke-width=".8" opacity=".55" stroke-dasharray="4 6"/>
+    <path d="M-50 220 C180 120,380 260,680 160 S1080 80,1380 180 S1650 240,1700 180" fill="none" stroke="url(#wg2)" stroke-width="1" opacity=".65"/>
+    <!-- Particle dots along the wave path -->
+    <circle r="2" fill="rgba(124,92,252,.4)"><animateMotion dur="12s" repeatCount="indefinite" path="M-50 180 C200 80,400 220,700 140 S1100 60,1400 160 S1650 200,1700 140"/></circle>
+    <circle r="1.5" fill="rgba(228,77,95,.35)"><animateMotion dur="15s" repeatCount="indefinite" begin="3s" path="M-50 180 C200 80,400 220,700 140 S1100 60,1400 160 S1650 200,1700 140"/></circle>
+    <circle r="2" fill="rgba(45,212,191,.35)"><animateMotion dur="11s" repeatCount="indefinite" begin="6s" path="M-50 220 C180 120,380 260,680 160 S1080 80,1380 180 S1650 240,1700 180"/></circle>
+  </svg>
+
+  <svg class="wave-ribbon" data-speed="0.028" style="top:700px;left:-5%;width:110%;height:350px" viewBox="0 0 1600 350" preserveAspectRatio="none">
+    <path d="M1700 100 C1400 220,1100 60,800 180 S300 280,50 140 S-50 100,-100 160" fill="none" stroke="url(#wg2)" stroke-width="1.5" opacity=".75"/>
+    <path d="M1700 120 C1350 250,1050 80,750 200 S250 300,0 160 S-80 120,-100 180" fill="none" stroke="url(#wg1)" stroke-width=".8" opacity=".5" stroke-dasharray="3 7"/>
+    <path d="M1700 80 C1450 200,1150 40,850 160 S350 260,100 120 S-30 80,-100 140" fill="none" stroke="url(#wg2)" stroke-width="1" opacity=".6"/>
+    <circle r="2" fill="rgba(124,92,252,.5)"><animateMotion dur="14s" repeatCount="indefinite" path="M1700 100 C1400 220,1100 60,800 180 S300 280,50 140 S-50 100,-100 160"/></circle>
+    <circle r="1.5" fill="rgba(45,212,191,.45)"><animateMotion dur="10s" repeatCount="indefinite" begin="4s" path="M1700 80 C1450 200,1150 40,850 160 S350 260,100 120 S-30 80,-100 140"/></circle>
+  </svg>
+
+  <svg class="wave-ribbon" data-speed="0.018" style="top:1500px;left:-5%;width:110%;height:300px" viewBox="0 0 1600 300" preserveAspectRatio="none">
+    <path d="M-50 140 C250 40,500 200,800 100 S1200 20,1500 130 S1650 180,1700 120" fill="none" stroke="url(#wg1)" stroke-width="1.2" opacity=".7"/>
+    <path d="M-50 160 C200 60,450 220,750 120 S1150 40,1450 150 S1680 200,1700 140" fill="none" stroke="url(#wg2)" stroke-width=".7" opacity=".45" stroke-dasharray="5 8"/>
+    <circle r="2" fill="rgba(228,77,95,.45)"><animateMotion dur="13s" repeatCount="indefinite" path="M-50 140 C250 40,500 200,800 100 S1200 20,1500 130 S1650 180,1700 120"/></circle>
+    <circle r="1.5" fill="rgba(124,92,252,.3)"><animateMotion dur="16s" repeatCount="indefinite" begin="5s" path="M-50 140 C250 40,500 200,800 100 S1200 20,1500 130 S1650 180,1700 120"/></circle>
+  </svg>
+
+  <svg class="wave-ribbon" data-speed="0.024" style="top:2200px;left:-5%;width:110%;height:280px" viewBox="0 0 1600 280" preserveAspectRatio="none">
+    <path d="M1700 150 C1350 50,1000 220,700 110 S200 30,-50 160" fill="none" stroke="url(#wg1)" stroke-width="1.3" opacity=".65"/>
+    <path d="M1700 170 C1300 70,950 240,650 130 S150 50,-50 180" fill="none" stroke="url(#wg2)" stroke-width=".6" opacity=".4" stroke-dasharray="4 9"/>
+    <circle r="1.5" fill="rgba(45,212,191,.35)"><animateMotion dur="12s" repeatCount="indefinite" path="M1700 150 C1350 50,1000 220,700 110 S200 30,-50 160"/></circle>
+  </svg>
+
+  <!-- L9: CT Sparkle asterisk marks (the ※ brand element) -->
+  <svg class="ct-sparkle" data-speed="0.07" style="top:160px;right:6%;width:40px;height:40px" viewBox="0 0 40 40">
+    <g transform="translate(20,20)" opacity=".2"><line x1="0" y1="-16" x2="0" y2="16" stroke="rgba(124,92,252,1)" stroke-width="1.5"/><line x1="-16" y1="0" x2="16" y2="0" stroke="rgba(124,92,252,1)" stroke-width="1.5"/><line x1="-11" y1="-11" x2="11" y2="11" stroke="rgba(124,92,252,1)" stroke-width="1"/><line x1="11" y1="-11" x2="-11" y2="11" stroke="rgba(124,92,252,1)" stroke-width="1"/></g>
+    <animate attributeName="opacity" values=".25;.55;.25" dur="4s" repeatCount="indefinite"/>
+  </svg>
+  <svg class="ct-sparkle" data-speed="0.085" style="top:900px;left:4%;width:30px;height:30px" viewBox="0 0 30 30">
+    <g transform="translate(15,15)" opacity=".15"><line x1="0" y1="-12" x2="0" y2="12" stroke="rgba(228,77,95,1)" stroke-width="1.2"/><line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(228,77,95,1)" stroke-width="1.2"/><line x1="-8" y1="-8" x2="8" y2="8" stroke="rgba(228,77,95,1)" stroke-width=".8"/><line x1="8" y1="-8" x2="-8" y2="8" stroke="rgba(228,77,95,1)" stroke-width=".8"/></g>
+    <animate attributeName="opacity" values=".2;.5;.2" dur="5s" repeatCount="indefinite" begin="1s"/>
+  </svg>
+  <svg class="ct-sparkle" data-speed="0.09" style="top:1650px;right:10%;width:35px;height:35px" viewBox="0 0 35 35">
+    <g transform="translate(17.5,17.5)" opacity=".18"><line x1="0" y1="-14" x2="0" y2="14" stroke="rgba(45,212,191,1)" stroke-width="1.3"/><line x1="-14" y1="0" x2="14" y2="0" stroke="rgba(45,212,191,1)" stroke-width="1.3"/><line x1="-10" y1="-10" x2="10" y2="10" stroke="rgba(45,212,191,1)" stroke-width=".9"/><line x1="10" y1="-10" x2="-10" y2="10" stroke="rgba(45,212,191,1)" stroke-width=".9"/></g>
+    <animate attributeName="opacity" values=".22;.5;.22" dur="3.5s" repeatCount="indefinite" begin="2s"/>
+  </svg>
+  <svg class="ct-sparkle" data-speed="0.075" style="top:2400px;left:15%;width:28px;height:28px" viewBox="0 0 28 28">
+    <g transform="translate(14,14)" opacity=".15"><line x1="0" y1="-11" x2="0" y2="11" stroke="rgba(124,92,252,1)" stroke-width="1.2"/><line x1="-11" y1="0" x2="11" y2="0" stroke="rgba(124,92,252,1)" stroke-width="1.2"/><line x1="-7" y1="-7" x2="7" y2="7" stroke="rgba(124,92,252,1)" stroke-width=".7"/><line x1="7" y1="-7" x2="-7" y2="7" stroke="rgba(124,92,252,1)" stroke-width=".7"/></g>
+    <animate attributeName="opacity" values=".2;.45;.2" dur="4.5s" repeatCount="indefinite" begin="3s"/>
+  </svg>
+</div>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content">
+
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div class="logo-txt">Template Gallery<span>by SJ Neo</span></div>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search" id="search" type="text" placeholder="Search templates, brands, categories…">
+    </div>
+    <div class="hdr-count" id="counter"></div>
+    <svg class="hdr-ct-icon" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.37 2 2 7.37 2 14s5.37 12 12 12c3.73 0 7.1-1.7 9.3-4.38" stroke="#E44D5F" stroke-width="2.8" stroke-linecap="round"/><circle cx="23.3" cy="21.62" r="1.8" fill="#E44D5F"/></svg>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-left">
+    <div class="ct-brand">
+      <!-- CleverTap inline logo (arc mark + wordmark) -->
+      <svg class="ct-brand-logo" viewBox="0 0 160 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2C7.37 2 2 7.37 2 14s5.37 12 12 12c3.73 0 7.1-1.7 9.3-4.38" stroke="#E44D5F" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+        <circle cx="23.3" cy="21.62" r="2" fill="#E44D5F"/>
+        <text x="32" y="20" fill="white" font-family="Outfit,sans-serif" font-size="15" font-weight="600" letter-spacing="-0.3">CleverTap</text>
+      </svg>
+      <div class="ct-brand-sep"></div>
+      <span class="ct-brand-text">Custom HTML In-App</span>
+    </div>
+    <div class="hero-label">Template Gallery</div>
+    <h1>Production-ready<em>in-app templates</em></h1>
+    <p class="hero-sub">86 templates across 30+ brands. Browse, preview in a phone mockup, customize the CONFIG, and copy the code — all from one place.</p>
+    <button class="hero-cta" onclick="document.getElementById('gallerySection').scrollIntoView({behavior:'smooth'})">Browse all templates<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="hero-right">
+    <div class="hero-phone" data-k="cdg-zig-driver-quiz"><div class="hp-inner hp-quiz"><div class="hp-label">Personality Quiz</div><div class="hp-brand">Ride-Hailing</div></div></div>
+    <div class="hero-phone" data-k="cny-angbao-fortune"><div class="hp-inner hp-fortune"><div class="hp-label">Ang Bao Fortune</div><div class="hp-brand">Seasonal</div></div></div>
+    <div class="hero-phone" data-k="insurance-switching-calculator"><div class="hp-inner hp-calc"><div class="hp-label">Switching Calculator</div><div class="hp-brand">Insurance</div></div></div>
+  </div>
+</section>
+
+<section class="stats"><div class="stats-inner">
+  <div class="stat-item"><div class="stat-num">86</div><div class="stat-label">Templates</div></div>
+  <div class="stat-item"><div class="stat-num">30+</div><div class="stat-label">Brands</div></div>
+  <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">Categories</div></div>
+  <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Copy-paste ready</div></div>
+</div></section>
+
+<section class="spotlight">
+  <div class="spot-label">Editor's Picks</div>
+  <div class="spot-title">Templates worth exploring first</div>
+  <div class="spot-desc">Handpicked to show the range — from complex quiz engines to instant gamification.</div>
+  <div class="spot-stage">
+    <div class="spot-phone-wrap"><div class="spot-phone"><iframe id="spotFrame" ></iframe></div></div>
+    <div class="spot-list" id="spotList"></div>
+  </div>
+</section>
+
+<section class="ticker-section"><div class="ticker-track" id="ticker"></div></section>
+
+<section class="gallery" id="gallerySection">
+  <div class="gallery-hdr"><div class="gallery-title">All templates</div><div class="gallery-count" id="gridCount"></div></div>
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<footer class="footer">
+  <div class="footer-left"><svg style="height:14px;width:14px;vertical-align:middle;margin-right:6px;margin-top:-2px" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.37 2 2 7.37 2 14s5.37 12 12 12c3.73 0 7.1-1.7 9.3-4.38" stroke="#E44D5F" stroke-width="2.8" stroke-linecap="round"/><circle cx="23.3" cy="21.62" r="1.8" fill="#E44D5F"/></svg>Designed for <b>CleverTap</b> Custom HTML In-App</div>
+  <div class="footer-right">86 templates · 30+ brands · by SJ Neo</div>
+</footer>
+
+</div><!-- /content -->
+
+<!-- ═══ DETAIL OVERLAY ═══ -->
+<div class="overlay" id="overlay">
+  <div class="d-hdr">
+    <button class="d-back" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Back</button>
+    <div class="d-info"><div class="d-title" id="dTitle"></div><div class="d-sub" id="dSub"></div></div>
+    <div class="d-actions">
+      <button class="btn" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Download</button>
+      <button class="btn btn-accent" id="cpBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy HTML</button>
+    </div>
+  </div>
+  <div class="m-toggle" id="mToggle">
+    <button class="m-toggle-btn on" data-v="preview">Preview</button>
+    <button class="m-toggle-btn" data-v="editor">Customize</button>
+  </div>
+  <div class="d-body" id="dBody">
+    <div class="pv">
+      <!-- Channel + Device controls -->
+      <div class="pv-controls">
+        <span class="ch-label">Channel</span>
+        <div class="tog-group" id="chToggle">
+          <button class="tog-btn on" data-ch="app">Mobile App</button>
+          <button class="tog-btn" data-ch="web">Web Popup</button>
+        </div>
+        <span class="tog-sep"></span>
+        <span class="ch-label">Device</span>
+        <div class="tog-group" id="dvToggle">
+          <button class="tog-btn on" data-dv="mobile" title="Mobile">📱</button>
+          <button class="tog-btn" data-dv="tablet" title="Tablet">💻</button>
+          <button class="tog-btn" data-dv="desktop" title="Desktop">🖥️</button>
+        </div>
+      </div>
+      <div class="pv-stage">
+        <!-- App frame (default) -->
+        <div class="pv-phone" id="frameApp">
+          <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);width:80px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:5" id="appNotch"></div>
+          <iframe id="pFrame" ></iframe>
+        </div>
+        <!-- Web popup frame (hidden) -->
+        <div class="pv-webpopup" id="frameWeb" style="display:none">
+          <div class="wp-nav"><div class="wp-dots"><div class="wp-dot"></div><div class="wp-dot"></div><div class="wp-dot"></div></div><div class="wp-url">https://yoursite.com/app</div></div>
+          <div class="wp-body">
+            <div class="wp-ghost"><div class="wp-ghost-line" style="width:70%"></div><div class="wp-ghost-line" style="width:50%"></div><div class="wp-ghost-line" style="width:80%"></div><div class="wp-ghost-line" style="width:40%"></div><div class="wp-ghost-line" style="width:60%"></div></div>
+            <div class="wp-backdrop"><div class="wp-popup"><iframe id="wFrame" ></iframe></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="pv-btns">
+        <button class="btn" id="refBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Refresh</button>
+        <button class="btn" id="dlBtn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Download</button>
+        <button class="btn btn-accent" id="cpBtn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+      </div>
+    </div>
+    <div class="ed">
+      <div class="ed-tabs">
+        <div class="ed-tab on" data-t="cfg"><span class="tab-dot dot-red"></span>Customize</div>
+        <div class="ed-tab" data-t="events"><span class="tab-dot dot-teal"></span>Events</div>
+        <div class="ed-tab" data-t="code"><span class="tab-dot dot-blue"></span>Source</div>
+        <div class="ed-tab" data-t="guide"><span class="tab-dot dot-purple"></span>Guide</div>
+      </div>
+      <div class="ed-body">
+        <div class="ed-panel on" id="cfgPanel" data-t="cfg"></div>
+        <div class="ed-panel" id="evtPanel" data-t="events"></div>
+        <div class="ed-panel" id="codePanel" data-t="code">
+          <div class="code-bar"><button class="btn btn-accent" id="cpBtn3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button><button class="btn" id="dlBtn3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Download</button><span id="codeSize" style="margin-left:auto;font-size:11px;color:var(--t4)"></span></div>
+          <pre class="code-area" id="codeArea"></pre>
+        </div>
+        <div class="ed-panel" id="guidePanel" data-t="guide"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// PARALLAX ENGINE — Multi-layer depth with lerp smoothing
+// ═══════════════════════════════════════════════════
+(function(){
+  var els = [];
+  document.querySelectorAll('[data-speed]').forEach(function(el){
+    els.push({el:el, speed:parseFloat(el.dataset.speed), y:0, target:0});
+  });
+  var ticking = false;
+  function update(){
+    var sy = window.scrollY;
+    for(var i=0;i<els.length;i++){
+      els[i].target = sy * -els[i].speed * 28; // 28x multiplier for dramatic depth
+      els[i].y += (els[i].target - els[i].y) * 0.08; // lerp smoothing
+      els[i].el.style.transform = 'translateY(' + els[i].y.toFixed(1) + 'px)';
+    }
+    requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+})();
+
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+var T=[{k:"cdg-zig-driver-quiz",f:"cdg-zig-driver-quiz.html",type:"Personality Quiz",brand:"Ride-Hailing App",cat:"Quiz & Survey",desc:"Singapore driver personality quiz with branching logic",sz:42},{k:"raa-driver-quiz-v2",f:"raa-driver-quiz-v2.html",type:"Personality Quiz",brand:"Auto Club",cat:"Quiz & Survey",desc:"What kind of driver are you? — branching quiz",sz:38},{k:"cny-snack-quiz",f:"cny-snack-quiz.html",type:"Personality Quiz",brand:"Seasonal Campaign",cat:"Quiz & Survey",desc:"What CNY snack matches your personality?",sz:40},{k:"eatigo-quiz-final",f:"eatigo-quiz-final.html",type:"Story Adventure Quiz",brand:"Restaurant Booking",cat:"Quiz & Survey",desc:"Enneagram diner spirit — choose-your-adventure quiz",sz:125},{k:"policystreet-trivia-quiz",f:"policystreet-trivia-quiz.html",type:"Trivia Quiz",brand:"InsurTech Platform",cat:"Quiz & Survey",desc:"Insurance knowledge trivia challenge",sz:33},{k:"catchplay-poll",f:"catchplay-poll.html",type:"Quick Poll",brand:"Streaming Service",cat:"Quiz & Survey",desc:"Single-tap movie preference poll",sz:22},{k:"eatigo-emoji-pulse",f:"eatigo-emoji-pulse.html",type:"Emoji Reaction",brand:"Restaurant Booking",cat:"Quiz & Survey",desc:"Post-dining emoji sentiment pulse",sz:17},{k:"miso-sentiment-survey",f:"miso-sentiment-survey.html",type:"Sentiment Survey",brand:"Lifestyle App",cat:"Quiz & Survey",desc:"Korean-style satisfaction survey",sz:38},{k:"hola-exit-survey",f:"hola-exit-survey.html",type:"Exit Intent Survey",brand:"Health & Wellness",cat:"Quiz & Survey",desc:"Bottom-sheet radio exit survey",sz:7},{k:"yes-drag-rank",f:"yes-drag-rank.html",type:"Drag-to-Rank",brand:"Telco Provider",cat:"Quiz & Survey",desc:"Drag & reorder priority ranking",sz:25},{k:"f4-nps-collector",f:"f4-nps-collector.html",type:"NPS Collector",brand:"Generic",cat:"Quiz & Survey",desc:"Net Promoter Score rating widget",sz:14},{k:"f6-app-rating-prompt",f:"f6-app-rating-prompt.html",type:"App Rating Prompt",brand:"Generic",cat:"Quiz & Survey",desc:"Star-rating app store prompt",sz:14},{k:"cny-angbao-fortune",f:"cny-angbao-fortune.html",type:"Ang Bao Fortune",brand:"Seasonal Campaign",cat:"Gamification",desc:"Interactive red packet fortune reveal",sz:67},{k:"evercare-fortune",f:"evercare-fortune.html",type:"Daily Fortune",brand:"Wellness Brand",cat:"Gamification",desc:"Wellness fortune cookie with daily wisdom",sz:46},{k:"jod-scratch-card",f:"jod-scratch-card.html",type:"Scratch Card",brand:"Rewards Platform",cat:"Gamification",desc:"Canvas scratch-to-reveal coupon",sz:17},{k:"easybook-mystery-box",f:"easybook-mystery-box.html",type:"Mystery Box",brand:"Travel Booking",cat:"Gamification",desc:"Rarity-tier travel reward reveal",sz:29},{k:"m1-memory-match",f:"m1-memory-match.html",type:"Memory Match",brand:"Telco Operator",cat:"Gamification",desc:"4\u00d74 card flip memory game",sz:23},{k:"ole777-prediction",f:"ole777-prediction.html",type:"Prediction Game",brand:"Sports & Gaming",cat:"Gamification",desc:"Sports match outcome predictions",sz:29},{k:"pizzahut-advent-calendar",f:"pizzahut-advent-calendar.html",type:"Advent Calendar",brand:"QSR Chain",cat:"Gamification",desc:"7 Days of Deals reveal calendar",sz:27},{k:"socialgood-spin-wheel",f:"socialgood-spin-wheel.html",type:"Spin-to-Win Wheel",brand:"Crypto Rewards",cat:"Gamification",desc:"Crypto cashback prize wheel",sz:26},{k:"catchplay-badges",f:"catchplay-badges.html",type:"Badge Trophy Wall",brand:"Streaming Service",cat:"Loyalty & Progress",desc:"Achievement gallery with rarity tiers",sz:10},{k:"fwd-omne-streak-frame",f:"fwd-omne-streak-frame.html",type:"Streak Tracker",brand:"Insurance App",cat:"Loyalty & Progress",desc:"Daily streak flame counter",sz:33},{k:"kttipay-milestone",f:"kttipay-milestone.html",type:"Milestone Progress",brand:"Digital Wallet",cat:"Loyalty & Progress",desc:"Spend-to-unlock tier rewards",sz:24},{k:"omoway-milestone-ring",f:"omoway-milestone-ring.html",type:"Milestone Ring",brand:"E-commerce Store",cat:"Loyalty & Progress",desc:"Circular free-shipping progress",sz:31},{k:"neuron-leaderboard",f:"neuron-leaderboard.html",type:"Leaderboard",brand:"Mobility Platform",cat:"Loyalty & Progress",desc:"Competitive rider rankings board",sz:25},{k:"neuron-onboarding",f:"neuron-onboarding.html",type:"Onboarding Checklist",brand:"Mobility Platform",cat:"Loyalty & Progress",desc:"Feature discovery setup flow",sz:11},{k:"rease-daily-quest",f:"rease-daily-quest.html",type:"Daily Quest",brand:"Property App",cat:"Loyalty & Progress",desc:"Checklist of daily actions for points",sz:27},{k:"tunetalk-stamp-card",f:"tunetalk-stamp-card.html",type:"Stamp Card",brand:"Telco MVNO",cat:"Loyalty & Progress",desc:"Digital loyalty stamp collection",sz:29},{k:"f12-reward-tier-progress",f:"f12-reward-tier-progress.html",type:"Reward Tier Progress",brand:"Generic",cat:"Loyalty & Progress",desc:"Visual tier progression tracker",sz:13},{k:"bondblox-calculator",f:"bondblox-calculator.html",type:"Savings Calculator",brand:"Fintech Platform",cat:"Interactive Tool",desc:"Bond yield vs savings comparison tool",sz:26},{k:"bondblox-pledge",f:"bondblox-pledge.html",type:"Goal Pledge",brand:"Fintech Platform",cat:"Interactive Tool",desc:"Investment commitment device",sz:8},{k:"insurance-switching-calculator",f:"insurance-switching-calculator.html",type:"Switching Calculator",brand:"Insurance Platform",cat:"Interactive Tool",desc:"Insurance cost-switching analysis",sz:46},{k:"ohmyhome-before-after",f:"ohmyhome-before-after.html",type:"Before/After Reveal",brand:"Property Platform",cat:"Interactive Tool",desc:"Renovation slider comparison",sz:38},{k:"tantan-plan-compare",f:"tantan-plan-compare.html",type:"Plan Comparison",brand:"Social App",cat:"Interactive Tool",desc:"Side-by-side plan feature matrix",sz:21},{k:"catchplay-wrapped",f:"catchplay-wrapped.html",type:"Year-in-Review Wrapped",brand:"Streaming Service",cat:"Content & Social",desc:"Personal viewing stats showcase",sz:23},{k:"easybook-social-proof",f:"easybook-social-proof.html",type:"Social Proof Ticker",brand:"Travel Booking",cat:"Content & Social",desc:"Live booking activity toast",sz:5},{k:"socar-stories",f:"socar-stories.html",type:"Stories Carousel",brand:"Car Sharing",cat:"Content & Social",desc:"Instagram-style photo stories",sz:268},{k:"socialgood-team-challenge",f:"socialgood-team-challenge.html",type:"Team Challenge",brand:"Crypto Rewards",cat:"Content & Social",desc:"Collective crypto earning goal",sz:8},{k:"trevo-pip-recs",f:"trevo-pip-recs.html",type:"PIP Recommendations",brand:"Car Marketplace",cat:"Content & Social",desc:"Branching video content recommendations",sz:25},{k:"f5-testimonial-carousel",f:"f5-testimonial-carousel.html",type:"Testimonial Carousel",brand:"Generic",cat:"Content & Social",desc:"Auto-rotating customer testimonials",sz:12},{k:"finn-flash",f:"finn-flash.html",type:"Flash Notification",brand:"Neobank",cat:"Commerce",desc:"Auto-dismiss salary alert banner",sz:5},{k:"whirlpool-flash-drop",f:"whirlpool-flash-drop.html",type:"Flash Sale Countdown",brand:"Home Appliances",cat:"Commerce",desc:"Limited-time urgency countdown timer",sz:37},{k:"zeil-swipe-cards",f:"zeil-swipe-cards.html",type:"Swipe Cards",brand:"Fashion E-commerce",cat:"Commerce",desc:"Tinder-style product discovery swipe",sz:28},{k:"f1-marquee-promo-banner",f:"f1-marquee-promo-banner.html",type:"Marquee Promo Banner",brand:"Generic",cat:"Commerce",desc:"Scrolling promotional banner strip",sz:10},{k:"f2-pricing-card-trio",f:"f2-pricing-card-trio.html",type:"Pricing Card Trio",brand:"Generic",cat:"Commerce",desc:"Three-tier pricing comparison cards",sz:14},{k:"f14-winback-card",f:"f14-winback-card.html",type:"Win-back Card",brand:"Generic",cat:"Commerce",desc:"Re-engagement offer with urgency",sz:12},{k:"f15-3d-tilt-card",f:"f15-3d-tilt-card.html",type:"3D Tilt Card",brand:"Generic",cat:"Commerce",desc:"Gyroscope-responsive product card",sz:13},{k:"f3-faq-accordion",f:"f3-faq-accordion.html",type:"FAQ Accordion",brand:"Generic",cat:"Foundational",desc:"Expandable question-answer panels",sz:16},{k:"f8-trust-badge-strip",f:"f8-trust-badge-strip.html",type:"Trust Badge Strip",brand:"Generic",cat:"Foundational",desc:"Security and trust indicator badges",sz:9},{k:"f9-bento-grid-showcase",f:"f9-bento-grid-showcase.html",type:"Bento Grid Showcase",brand:"Generic",cat:"Foundational",desc:"Magazine-style bento feature grid",sz:9},{k:"f10-notification-toast",f:"f10-notification-toast.html",type:"Notification Toast",brand:"Generic",cat:"Foundational",desc:"Stackable notification toast system",sz:12},{k:"f11-feature-spotlight",f:"f11-feature-spotlight.html",type:"Feature Spotlight",brand:"Generic",cat:"Foundational",desc:"Single-feature highlight with CTA",sz:9},{k:"a1-clippath-tier-morph",f:"a1-clippath-tier-morph.html",type:"Clip-path Tier Morph",brand:"Generic",cat:"Animation Toolkit",desc:"CSS clip-path morphing between tiers",sz:15},{k:"a2-gsap-stats-showcase",f:"a2-gsap-stats-showcase.html",type:"GSAP Stats Counter",brand:"Generic",cat:"Animation Toolkit",desc:"Animated number counters with GSAP",sz:11},{k:"a3-parallax-product-hero",f:"a3-parallax-product-hero.html",type:"Parallax Product Hero",brand:"Generic",cat:"Animation Toolkit",desc:"Multi-layer parallax scroll effect",sz:17},{k:"a4-scroll-driven-story",f:"a4-scroll-driven-story.html",type:"Scroll-driven Story",brand:"Generic",cat:"Animation Toolkit",desc:"Scroll-triggered narrative animation",sz:14},{k:"a5-swipe-plan-browser",f:"a5-swipe-plan-browser.html",type:"Swipe Plan Browser",brand:"Generic",cat:"Animation Toolkit",desc:"Horizontal swipe card plan selector",sz:14},{k:"a6-kinetic-type-reveal",f:"a6-kinetic-type-reveal.html",type:"Kinetic Type Reveal",brand:"Generic",cat:"Animation Toolkit",desc:"Animated typography entrance effect",sz:11},{k:"a7-glassmorphism-timer",f:"a7-glassmorphism-timer.html",type:"Glassmorphism Timer",brand:"Generic",cat:"Animation Toolkit",desc:"Frosted glass countdown timer",sz:14},{k:"a8-tap-unlock-gate",f:"a8-tap-unlock-gate.html",type:"Tap-to-Unlock Gate",brand:"Generic",cat:"Animation Toolkit",desc:"Interactive tap gate mechanic",sz:16},{k:"a9-dual-view-toggle",f:"a9-dual-view-toggle.html",type:"Dual View Toggle",brand:"Generic",cat:"Animation Toolkit",desc:"Before/after view toggle switch",sz:13},{k:"a10-lottie-onboarding",f:"a10-lottie-onboarding.html",type:"Lottie Onboarding",brand:"Generic",cat:"Animation Toolkit",desc:"Animated onboarding with Lottie",sz:10},{k:"a11-svg-progress-ring",f:"a11-svg-progress-ring.html",type:"SVG Progress Ring",brand:"Generic",cat:"Animation Toolkit",desc:"Circular SVG progress indicator",sz:14},{k:"a12-card-flip-offer",f:"a12-card-flip-offer.html",type:"Card Flip Offer",brand:"Generic",cat:"Animation Toolkit",desc:"3D card flip reveal animation",sz:15},{k:"a13-particle-celebration",f:"a13-particle-celebration.html",type:"Particle Celebration",brand:"Generic",cat:"Animation Toolkit",desc:"Canvas particle burst effect",sz:15},{k:"a14-horizontal-snap-carousel",f:"a14-horizontal-snap-carousel.html",type:"Snap Carousel",brand:"Generic",cat:"Animation Toolkit",desc:"CSS snap-scroll horizontal carousel",sz:12},{k:"a15-gradient-text-hero",f:"a15-gradient-text-hero.html",type:"Gradient Text Hero",brand:"Generic",cat:"Animation Toolkit",desc:"Animated gradient text effect",sz:11},{k:"pizzahut-coupon-reveal",f:"pizzahut-coupon-reveal.html",type:"Coupon Reveal + Copy",brand:"QSR Chain",cat:"Conversion",desc:"Clipboard coupon with celebration reveal",sz:14},{k:"trevo-referral-tracker",f:"trevo-referral-tracker.html",type:"Referral Tracker",brand:"Car Marketplace",cat:"Conversion",desc:"Visual referral progress with tier rewards",sz:17},{k:"generic-branching-story",f:"generic-branching-story.html",type:"Branching Story",brand:"Generic",cat:"Conversion",desc:"Choose-your-adventure story engine with diverging paths",sz:20},{k:"generic-cart-recovery",f:"generic-cart-recovery.html",type:"Cart Recovery",brand:"Generic",cat:"Conversion",desc:"Abandoned cart bottom-sheet with urgency + sweetener",sz:12},{k:"generic-first-action",f:"generic-first-action.html",type:"First Action Incentive",brand:"Generic",cat:"Conversion",desc:"Progress-gated welcome offer for first purchase",sz:17},{k:"catchplay-payment-recovery",f:"catchplay-payment-recovery.html",type:"Payment Recovery",brand:"Streaming Service",cat:"Conversion",desc:"Dunning flow with loss aversion countdown",sz:13},{k:"generic-decision-helper",f:"generic-decision-helper.html",type:"Decision Helper",brand:"Generic",cat:"Conversion",desc:"Guided product finder with personalised recommendation",sz:17},{k:"generic-disappearing-inapp",f:"generic-disappearing-inapp.html",type:"Disappearing InApp",brand:"Generic",cat:"Conversion",desc:"Auto-dismiss flash offer with visual countdown bar",sz:8},{k:"generic-post-purchase",f:"generic-post-purchase.html",type:"Post-Purchase Cross-Sell",brand:"Generic",cat:"Conversion",desc:"Order confirmation with cross-sell recommendations",sz:12},{k:"generic-price-drop-alert",f:"generic-price-drop-alert.html",type:"Price Drop Alert",brand:"Generic",cat:"Conversion",desc:"Wishlist price drop with urgency + social proof",sz:13},{k:"generic-waitlist-gate",f:"generic-waitlist-gate.html",type:"Waitlist Gate",brand:"Generic",cat:"Conversion",desc:"Scarcity-driven early access waitlist with live counter",sz:13},{k:"mockup-progressive-profile",f:"mockup-progressive-profile.html",type:"Progressive Profile",brand:"Generic",cat:"Patterns",desc:"Step-by-step onboarding profile builder for KYC completion",sz:10},{k:"mockup-bundle-builder",f:"mockup-bundle-builder.html",type:"Bundle Builder",brand:"Generic",cat:"Patterns",desc:"Pick & mix bundle with tiered discount logic",sz:10},{k:"mockup-slot-machine",f:"mockup-slot-machine.html",type:"Slot Machine",brand:"Generic",cat:"Patterns",desc:"Three-reel slot machine with prize tiers",sz:11},{k:"mockup-social-proof-feed",f:"mockup-social-proof-feed.html",type:"Social Proof Feed",brand:"Generic",cat:"Patterns",desc:"Live purchase activity feed with trending items",sz:9},{k:"mockup-tier-upgrade",f:"mockup-tier-upgrade.html",type:"Tier Upgrade Prompt",brand:"Generic",cat:"Patterns",desc:"Loyalty tier progress with upgrade nudge",sz:8},{k:"mockup-scramble-reveal-v2",f:"mockup-scramble-reveal-v2.html",type:"Scramble Code Reveal",brand:"Generic",cat:"Patterns",desc:"Animated text scramble promo code reveal",sz:12},{k:"mockup-duality-choice",f:"mockup-duality-choice.html",type:"Duality Choice",brand:"Generic",cat:"Patterns",desc:"A/B split-screen product or plan selector",sz:11},{k:"mockup-flash-countdown",f:"mockup-flash-countdown.html",type:"Flash Countdown",brand:"Generic",cat:"Patterns",desc:"Compact countdown timer notification with offer",sz:9}];
+var CAT={"Quiz & Survey":{rgb:"234,179,8",bg:"rgba(234,179,8,.08)",tc:"tc-quiz",accent:"#EAB308"},"Gamification":{rgb:"52,211,153",bg:"rgba(52,211,153,.08)",tc:"tc-gamification",accent:"#34D399"},"Loyalty & Progress":{rgb:"167,139,250",bg:"rgba(167,139,250,.08)",tc:"tc-loyalty",accent:"#A78BFA"},"Interactive Tool":{rgb:"56,189,248",bg:"rgba(56,189,248,.08)",tc:"tc-interactive",accent:"#38BDF8"},"Content & Social":{rgb:"251,146,146",bg:"rgba(251,146,146,.08)",tc:"tc-content",accent:"#FB9292"},"Commerce":{rgb:"244,114,182",bg:"rgba(244,114,182,.08)",tc:"tc-commerce",accent:"#F472B6"},"Foundational":{rgb:"129,140,248",bg:"rgba(129,140,248,.08)",tc:"tc-foundational",accent:"#818CF8"},"Conversion":{rgb:"249,115,22",bg:"rgba(249,115,22,.08)",tc:"tc-conversion",accent:"#F97316"},"Patterns":{rgb:"45,212,191",bg:"rgba(45,212,191,.08)",tc:"tc-patterns",accent:"#2DD4BF"},"Animation Toolkit":{rgb:"156,163,175",bg:"rgba(156,163,175,.08)",tc:"tc-animation",accent:"#9CA3AF"}};
+var ICONS={"Personality Quiz":"\u{1F9E0}","Story Adventure Quiz":"\u{1F3AD}","Trivia Quiz":"\u{1F4A1}","Quick Poll":"\u{1F4CA}","Emoji Reaction":"\u{1F60B}","Sentiment Survey":"\u{1F4CB}","Exit Intent Survey":"\u{1F44B}","Drag-to-Rank":"\u{2195}\uFE0F","NPS Collector":"\u{2B50}","App Rating Prompt":"\u{1F31F}","Ang Bao Fortune":"\u{1F9E7}","Daily Fortune":"\u{1F52E}","Scratch Card":"\u{1F3AB}","Mystery Box":"\u{1F381}","Memory Match":"\u{1F0CF}","Prediction Game":"\u{26BD}","Advent Calendar":"\u{1F384}","Spin-to-Win Wheel":"\u{1F3B0}","Badge Trophy Wall":"\u{1F3C6}","Streak Tracker":"\u{1F525}","Milestone Progress":"\u{1F3AF}","Milestone Ring":"\u{1F48D}","Leaderboard":"\u{1F947}","Onboarding Checklist":"\u{2705}","Daily Quest":"\u{2694}\uFE0F","Stamp Card":"\u{1F4E8}","Reward Tier Progress":"\u{1F4C8}","Savings Calculator":"\u{1F4B0}","Goal Pledge":"\u{1F91D}","Switching Calculator":"\u{1F9EE}","Before/After Reveal":"\u{1F3E0}","Plan Comparison":"\u{2696}\uFE0F","Year-in-Review Wrapped":"\u{1F3AC}","Social Proof Ticker":"\u{1F514}","Stories Carousel":"\u{1F4F1}","Team Challenge":"\u{1F465}","PIP Recommendations":"\u{1F3AC}","Testimonial Carousel":"\u{1F4AC}","Flash Notification":"\u{26A1}","Flash Sale Countdown":"\u{23F0}","Swipe Cards":"\u{1F4AB}","Marquee Promo Banner":"\u{1F4E2}","Pricing Card Trio":"\u{1F4B3}","Win-back Card":"\u{1F49C}","3D Tilt Card":"\u{1F4A0}","FAQ Accordion":"\u{2753}","Trust Badge Strip":"\u{1F6E1}\uFE0F","Bento Grid Showcase":"\u{1F371}","Notification Toast":"\u{1F514}","Feature Spotlight":"\u{1F4A1}","Clip-path Tier Morph":"\u{2728}","GSAP Stats Counter":"\u{1F4CA}","Parallax Product Hero":"\u{1F30C}","Scroll-driven Story":"\u{1F4DC}","Swipe Plan Browser":"\u{1F4F1}","Kinetic Type Reveal":"\u{1F520}","Glassmorphism Timer":"\u{23F3}","Tap-to-Unlock Gate":"\u{1F513}","Dual View Toggle":"\u{1F504}","Lottie Onboarding":"\u{1F3A8}","SVG Progress Ring":"\u{2B55}","Card Flip Offer":"\u{1F3B4}","Particle Celebration":"\u{1F389}","Snap Carousel":"\u{27A1}\uFE0F","Gradient Text Hero":"\u{1F308}","Coupon Reveal + Copy":"\u{1F3AB}","Referral Tracker":"\u{1F517}","Branching Story":"\u{1F4D6}","Cart Recovery":"\u{1F6D2}","First Action Incentive":"\u{1F3AF}","Payment Recovery":"\u{1F4B3}","Decision Helper":"\u{1F9ED}","Disappearing InApp":"\u{26A1}","Post-Purchase Cross-Sell":"\u{1F6CD}\uFE0F","Price Drop Alert":"\u{1F4C9}","Waitlist Gate":"\u{1F512}","Progressive Profile":"\u{1F464}","Bundle Builder":"\u{1F4E6}","Slot Machine":"\u{1F3B0}","Social Proof Feed":"\u{1F4AC}","Tier Upgrade Prompt":"\u{1F451}","Scramble Code Reveal":"\u{1F500}","Duality Choice":"\u{2194}\uFE0F","Flash Countdown":"\u{23F1}\uFE0F"};
+var FEATURED=[{k:"eatigo-quiz-final",why:"Most complex — 125KB Enneagram quiz engine"},{k:"cny-angbao-fortune",why:"Interactive red packet with fortune reveal animations"},{k:"socialgood-spin-wheel",why:"Classic spin-to-win with crypto cashback rewards"},{k:"insurance-switching-calculator",why:"Professional financial tool with 3-year projections"},{k:"socar-stories",why:"Instagram Stories-style carousel for car sharing"},{k:"zeil-swipe-cards",why:"Tinder-style swipe for product discovery"}];
+
+var activeCat="All",searchTerm="",curKey=null,srcCache={},modCache={};
+
+// ═══ SPOTLIGHT ═══
+function buildSpotlight(){var list=document.getElementById("spotList");list.innerHTML=FEATURED.map(function(ft,i){var t=T.find(function(x){return x.k===ft.k});if(!t)return"";var c=CAT[t.cat]||CAT["Foundational"];return'<div class="spot-card'+(i===0?' active':'')+'" data-k="'+t.k+'"><div class="spot-card-top"><span class="spot-card-icon">'+(ICONS[t.type]||"\u{1F4C4}")+'</span><span class="spot-card-name">'+t.type+'</span><span class="spot-card-brand">'+t.brand+'</span></div><div class="spot-card-desc">'+ft.why+'</div><span class="spot-card-tag badge" style="color:rgb('+c.rgb+');background:'+c.bg+'">'+t.cat+'</span></div>'}).join("");loadSpotlight(FEATURED[0].k);list.querySelectorAll(".spot-card").forEach(function(card){card.addEventListener("click",function(){list.querySelectorAll(".spot-card").forEach(function(x){x.classList.remove("active")});card.classList.add("active");loadSpotlight(card.dataset.k)});card.addEventListener("dblclick",function(){openDetail(card.dataset.k)})})}
+function loadSpotlight(key){var frame=document.getElementById("spotFrame");if(srcCache[key]){frame.srcdoc=srcCache[key]}else{var t=T.find(function(x){return x.k===key});if(!t)return;frame.srcdoc='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#999;font-size:13px">Loading\u2026</div>';fetch("templates/"+t.f).then(function(r){return r.text()}).then(function(src){srcCache[key]=src;frame.srcdoc=src})}}
+
+// ═══ TICKER ═══
+function buildTicker(){var track=document.getElementById("ticker");var items=T.concat(T);track.innerHTML=items.map(function(t){var c=CAT[t.cat]||CAT["Foundational"];return'<div class="ticker-item '+c.tc+'" data-k="'+t.k+'"><div class="ti-icon">'+(ICONS[t.type]||"\u{1F4C4}")+'</div><div><div class="ti-name">'+t.type+'</div><div class="ti-brand">'+t.brand+'</div></div></div>'}).join("");track.querySelectorAll(".ticker-item").forEach(function(c){c.addEventListener("click",function(){openDetail(c.dataset.k)})})}
+
+// ═══ FILTERS + GRID ═══
+function buildFilters(){var cats={};T.forEach(function(t){cats[t.cat]=(cats[t.cat]||0)+1});var wrap=document.getElementById("filters");var html='<div class="pill on" data-cat="All">All<span class="ct">'+T.length+'</span></div>';Object.keys(cats).sort(function(a,b){return cats[b]-cats[a]}).forEach(function(c){html+='<div class="pill" data-cat="'+c+'">'+c+'<span class="ct">'+cats[c]+'</span></div>'});wrap.innerHTML=html;wrap.querySelectorAll(".pill").forEach(function(p){p.addEventListener("click",function(){wrap.querySelectorAll(".pill").forEach(function(x){x.classList.remove("on")});p.classList.add("on");activeCat=p.dataset.cat;renderGrid()})})}
+function getFiltered(){return T.filter(function(t){if(activeCat!=="All"&&t.cat!==activeCat)return false;if(searchTerm){var s=searchTerm.toLowerCase();return(t.type+" "+t.brand+" "+t.cat+" "+t.desc+" "+t.k).toLowerCase().indexOf(s)!==-1}return true})}
+function renderGrid(){var items=getFiltered(),grid=document.getElementById("grid");document.getElementById("counter").textContent=items.length+" / "+T.length;document.getElementById("gridCount").textContent=items.length+" templates";if(!items.length){grid.innerHTML='<div class="empty-state">No templates match your search.</div>';return}grid.innerHTML=items.map(function(t,i){var c=CAT[t.cat]||CAT["Foundational"];return'<div class="card" data-k="'+t.k+'" style="animation-delay:'+Math.min(i*18,350)+'ms"><div class="card-accent" style="background:'+c.accent+'"></div><div class="card-top"><div class="card-icon" style="background:'+c.bg+';border-color:rgba('+c.rgb+',.15)">'+(ICONS[t.type]||"\u{1F4C4}")+'</div><div class="card-meta"><div class="card-name">'+t.type+'</div><div class="card-brand">'+t.brand+'</div></div></div><div class="card-desc">'+t.desc+'</div><div class="card-foot"><span class="badge" style="color:rgb('+c.rgb+');background:'+c.bg+'">'+t.cat+'</span><span class="badge badge-size">'+t.sz+' KB</span></div></div>'}).join("");grid.querySelectorAll(".card").forEach(function(c){c.addEventListener("mousemove",function(e){var r=c.getBoundingClientRect();c.style.setProperty("--mx",(e.clientX-r.left)+"px");c.style.setProperty("--my",(e.clientY-r.top)+"px")});c.addEventListener("click",function(){openDetail(c.dataset.k)})})}
+
+// ═══ DETAIL ═══
+function getSrc(){return modCache[curKey]||srcCache[curKey]||""}
+function openDetail(key){curKey=key;var t=T.find(function(x){return x.k===key});if(!t)return;document.getElementById("dTitle").textContent=t.type+" \u00b7 "+t.brand;document.getElementById("dSub").textContent=t.f+" \u00b7 "+t.sz+" KB";document.getElementById("overlay").classList.add("open");document.body.style.overflow="hidden";var db=document.getElementById("dBody");db.classList.remove("show-editor");db.classList.add("show-preview");document.querySelectorAll(".m-toggle-btn").forEach(function(b){b.classList.toggle("on",b.dataset.v==="preview")});setTab("cfg");if(srcCache[key]){loadPreview(getSrc());buildConfig(key,getSrc());renderCode(getSrc());buildEvents(getSrc());buildGuide(key)}else{document.getElementById("pFrame").src='about:blank';document.getElementById("cfgPanel").innerHTML='<div class="loading-center"><div class="spinner"></div></div>';fetch("templates/"+t.f).then(function(r){return r.text()}).then(function(src){srcCache[key]=src;if(curKey===key){loadPreview(getSrc());buildConfig(key,getSrc());renderCode(getSrc());buildEvents(getSrc());buildGuide(key)}}).catch(function(){document.getElementById("pFrame").src='about:blank'})}}
+function closeDetail(){document.getElementById("overlay").classList.remove("open");document.body.style.overflow="";
+var pf=document.getElementById("pFrame");if(pf._blobUrl){URL.revokeObjectURL(pf._blobUrl);pf._blobUrl=null}pf.src="about:blank";
+var wf=document.getElementById("wFrame");if(wf&&wf._blobUrl){URL.revokeObjectURL(wf._blobUrl);wf._blobUrl=null;wf.src="about:blank"}
+curKey=null;curChannel="app";document.getElementById("frameApp").style.display="";document.getElementById("frameWeb").style.display="none";document.querySelectorAll("#chToggle .tog-btn").forEach(function(b){b.classList.toggle("on",b.dataset.ch==="app")})}
+function loadPreview(s){
+// Inject <base> so relative resources (audio, images) resolve to templates/
+var baseTag='<base href="templates/">';
+var sb=s.replace('<head>','<head>'+baseTag).replace('<HEAD>','<HEAD>'+baseTag);
+if(sb===s)sb=s.replace('<!DOCTYPE','<head>'+baseTag+'</head><!DOCTYPE');
+var blob=new Blob([sb],{type:'text/html;charset=utf-8'});
+var url=URL.createObjectURL(blob);
+var pf=document.getElementById('pFrame');
+if(pf._blobUrl)URL.revokeObjectURL(pf._blobUrl);
+pf._blobUrl=url;pf.src=url;
+// Web popup version: inject CSS override so content scrolls inside iframe
+var webSrc=sb.replace('</head>','<style>html,body,.app,.container,.wrapper,.screen,.quiz-container,.modal,.page,[class*="container"],[class*="wrapper"],[class*="screen"],[class*="app"]{overflow-y:auto!important;overflow-x:hidden!important;height:auto!important;min-height:100%!important;max-height:none!important;position:relative!important}</style></head>');
+var wf=document.getElementById('wFrame');if(wf){if(wf._blobUrl)URL.revokeObjectURL(wf._blobUrl);var wblob=new Blob([webSrc],{type:'text/html;charset=utf-8'});var wurl=URL.createObjectURL(wblob);wf._blobUrl=wurl;if(curChannel==='web')wf.src=wurl}
+}
+function renderCode(s){document.getElementById('codeArea').textContent=s;document.getElementById('codeSize').textContent=(s.length/1024).toFixed(1)+' KB'}
+
+// ═══ CONFIG EDITOR ═══
+function buildConfig(key,src){var panel=document.getElementById("cfgPanel");var match=src.match(/((?:const|var|let)\s+CONFIG\s*=\s*)\{/);if(!match){panel.innerHTML='<div class="cfg-empty">No CONFIG block found.<br>Use <b>Source Code</b> tab to edit.</div>';return}var start=src.indexOf(match[0]),bs=src.indexOf("{",start),depth=0,i=bs,cs="";for(;i<src.length;i++){if(src[i]==="{")depth++;if(src[i]==="}")depth--;if(depth===0){cs=src.substring(bs,i+1);break}}var config;try{config=new Function("return "+cs)()}catch(e){panel.innerHTML='<div class="cfg-empty">CONFIG found but couldn\'t parse.</div>';return}var html="";function rf(obj,prefix){Object.keys(obj).forEach(function(k){var val=obj[k],path=prefix?prefix+"."+k:k,label=k.replace(/([A-Z])/g," $1").replace(/_/g," ").trim();if(val!==null&&typeof val==="object"&&!Array.isArray(val)){html+='<div class="cfg-group"><div class="cfg-group-title">'+label+'</div>';rf(val,path);html+='</div>'}else if(typeof val==="boolean"){html+='<div class="cfg-field"><label class="cfg-label">'+label+'</label><select class="cfg-input" data-path="'+path+'" data-type="bool"><option value="true"'+(val?' selected':'')+'>true</option><option value="false"'+(!val?' selected':'')+'>false</option></select></div>'}else if(typeof val==="number"){html+='<div class="cfg-field"><label class="cfg-label">'+label+'</label><input class="cfg-input" data-path="'+path+'" data-type="num" type="number" value="'+val+'"></div>'}else if(typeof val==="string"&&/^#[0-9a-f]{3,8}$/i.test(val)){html+='<div class="cfg-field"><label class="cfg-label">'+label+'</label><div class="cfg-color-wrap"><div class="cfg-color-swatch" style="background:'+val+'"><input type="color" value="'+val+'" data-color-for="'+path+'"></div><input class="cfg-input" data-path="'+path+'" data-type="str" value="'+escA(val)+'" style="flex:1"></div></div>'}else if(Array.isArray(val)){html+='<div class="cfg-field"><label class="cfg-label">'+label+' (array)</label><input class="cfg-input" data-path="'+path+'" data-type="arr" value="'+escA(JSON.stringify(val))+'"></div>'}else{var long=typeof val==="string"&&val.length>60;html+=long?'<div class="cfg-field"><label class="cfg-label">'+label+'</label><textarea class="cfg-input" data-path="'+path+'" data-type="str" rows="3">'+escH(String(val))+'</textarea></div>':'<div class="cfg-field"><label class="cfg-label">'+label+'</label><input class="cfg-input" data-path="'+path+'" data-type="str" value="'+escA(String(val))+'"></div>'}})}rf(config,"");
+// Add Apply Changes bar at top
+var applyBar='<div class="cfg-apply-bar" id="cfgApplyBar"><button class="btn-apply" id="cfgApplyBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Apply Changes</button><span class="cfg-apply-hint">Edit fields below, then apply to preview</span></div>';
+panel.innerHTML=applyBar+html;
+// Store config ref for apply
+panel._cfgRef=config;panel._cfgKey=key;
+// Mark dirty on any input
+panel.querySelectorAll("[data-path]").forEach(function(el){el.addEventListener("input",function(){panel.classList.add("cfg-dirty")})});
+// Sync color pickers to their text inputs
+panel.querySelectorAll("[data-color-for]").forEach(function(cp){var path=cp.dataset.colorFor;var txt=panel.querySelector('[data-path="'+path+'"][data-type="str"]');cp.addEventListener("input",function(){if(txt){txt.value=cp.value;txt.dispatchEvent(new Event("input",{bubbles:true}))}cp.closest(".cfg-color-swatch").style.background=cp.value});if(txt){txt.addEventListener("input",function(){cp.value=txt.value;cp.closest(".cfg-color-swatch").style.background=txt.value})}});
+// Apply button click
+document.getElementById("cfgApplyBtn").addEventListener("click",function(){applyConfig(key,config,panel);panel.classList.remove("cfg-dirty");toast("Changes applied to preview")})}
+function applyConfig(key,config,panel){panel.querySelectorAll("[data-path]").forEach(function(el){var path=el.dataset.path.split("."),t=el.dataset.type,val;if(t==="bool")val=el.value==="true";else if(t==="num")val=parseFloat(el.value)||0;else if(t==="arr"){try{val=JSON.parse(el.value)}catch(e){return}}else val=el.value;var obj=config;for(var i=0;i<path.length-1;i++)obj=obj[path[i]];obj[path[path.length-1]]=val});var src=srcCache[key],match=src.match(/((?:const|var|let)\s+CONFIG\s*=\s*)\{/);if(!match)return;var start=src.indexOf(match[0]),bs=src.indexOf("{",start),depth=0,end=bs;for(;end<src.length;end++){if(src[end]==="{")depth++;if(src[end]==="}")depth--;if(depth===0)break}var newSrc=src.substring(0,bs)+JSON.stringify(config,null,2)+src.substring(end+1);modCache[key]=newSrc;loadPreview(newSrc);renderCode(newSrc)}
+
+// ═══ UTILS ═══
+function setTab(t){document.querySelectorAll(".ed-tab").forEach(function(x){x.classList.toggle("on",x.dataset.t===t)});document.querySelectorAll(".ed-panel").forEach(function(x){x.classList.toggle("on",x.dataset.t===t)})}
+function escH(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function escA(s){return s.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2200)}
+function copyText(t){navigator.clipboard.writeText(t).then(function(){toast("Copied to clipboard")})}
+function dlFile(n,c){var b=new Blob([c],{type:"text/html"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=n;a.click();URL.revokeObjectURL(a.href);toast("Downloaded "+n)}
+
+
+// ═══ CHANNEL + DEVICE TOGGLE ═══
+var curChannel='app',curDevice='mobile';
+function setChannel(ch){curChannel=ch;document.querySelectorAll('#chToggle .tog-btn').forEach(function(b){b.classList.toggle('on',b.dataset.ch===ch)});document.getElementById('frameApp').style.display=ch==='app'?'':'none';document.getElementById('frameWeb').style.display=ch==='web'?'':'none';if(ch==='web'){setDevice('desktop');var s=getSrc();if(s){var baseTag='<base href="templates/">';var sb=s.replace('<head>','<head>'+baseTag);var webSrc=sb.replace('</head>','<style>html,body,.app,.container,.wrapper,.screen,.quiz-container,.modal,.page,[class*="container"],[class*="wrapper"],[class*="screen"],[class*="app"]{overflow-y:auto!important;overflow-x:hidden!important;height:auto!important;min-height:100%!important;max-height:none!important;position:relative!important}</style></head>');var blob=new Blob([webSrc],{type:'text/html;charset=utf-8'});var url=URL.createObjectURL(blob);var wf=document.getElementById('wFrame');if(wf._blobUrl)URL.revokeObjectURL(wf._blobUrl);wf._blobUrl=url;wf.src=url}}if(ch==='app')setDevice('mobile')}
+function setDevice(dv){curDevice=dv;document.querySelectorAll('#dvToggle .tog-btn').forEach(function(b){b.classList.toggle('on',b.dataset.dv===dv)});var app=document.getElementById('frameApp'),notch=document.getElementById('appNotch'),wp=document.querySelector('.wp-popup');if(curChannel==='app'){if(dv==='tablet'){app.style.width='460px';app.style.height='360px';app.style.borderRadius='18px';notch.style.display='none';var ifr=document.getElementById('pFrame');ifr.style.width='460px';ifr.style.height='696px';ifr.style.transform='scale(1)';ifr.style.transform='scale('+(460/460)+')'}else{app.style.width='300px';app.style.height='580px';app.style.borderRadius='36px';notch.style.display='';var ifr=document.getElementById('pFrame');ifr.style.width='390px';ifr.style.height='753px';ifr.style.transform='scale('+(300/390)+')'}}if(curChannel==='web'&&wp){if(dv==='mobile'){wp.style.width='320px';wp.style.maxWidth='320px';wp.style.height='85%'}else if(dv==='tablet'){wp.style.width='480px';wp.style.maxWidth='480px';wp.style.height='88%'}else{wp.style.width='90%';wp.style.maxWidth='520px';wp.style.height='88%'}}}
+
+// ═══ EVENTS PANEL — auto-parse CT events from source ═══
+function buildEvents(src){var panel=document.getElementById('evtPanel');if(!src){panel.innerHTML='<div class="cfg-empty">Load a template to see events.</div>';return}
+// Parse event names from CleverTap.event() calls or wzrk_d references
+var evts=[],seen={};var re1=/['"](\w+_\w+)['"]\s*[,)]/g,m;while(m=re1.exec(src)){if(!seen[m[1]]&&m[1].length<40){seen[m[1]]=1;evts.push(m[1])}}
+// Also try wzrk:// patterns
+var re2=/wzrk:\/\/(\w+)/g;while(m=re2.exec(src)){if(!seen['wzrk_'+m[1]]){seen['wzrk_'+m[1]]=1}}
+// Try CleverTap.event push patterns
+var re3=/event["']\s*[:,]\s*["']([^"']+)["']/g;while(m=re3.exec(src)){if(!seen[m[1]]&&m[1].length<50){seen[m[1]]=1;evts.push(m[1])}}
+// Build event category from name
+var html='<div class="evt-hdr">CleverTap Events</div><div class="evt-sub">Events auto-detected from template source. Use them in campaigns, segments, and analytics.</div>';
+if(evts.length===0){html+='<div class="evt-box"><div class="evt-box-title">No custom events detected</div><div class="evt-box-text">This template may use <code>wzrk://exit</code> for dismiss or rely on standard CT in-app events.<br><br>Standard events fired automatically by CleverTap:<br>• <code>Notification Viewed</code><br>• <code>Notification Clicked</code><br>• <code>Notification Dismissed</code></div></div>'}
+else{evts.forEach(function(e){var dot='evt-dot-view';if(e.toLowerCase().indexOf('click')!==-1||e.toLowerCase().indexOf('cta')!==-1||e.toLowerCase().indexOf('recover')!==-1||e.toLowerCase().indexOf('complet')!==-1)dot='evt-dot-click';else if(e.toLowerCase().indexOf('skip')!==-1||e.toLowerCase().indexOf('dismiss')!==-1||e.toLowerCase().indexOf('close')!==-1)dot='evt-dot-track';html+='<div class="evt-card"><div class="evt-name"><span class="evt-dot '+dot+'"></span>'+e+'</div></div>'})}
+// Wzrk exit detection
+if(src.indexOf('wzrk://exit')!==-1||src.indexOf('wzrk://close')!==-1){html+='<div class="evt-box" style="margin-top:8px"><div class="evt-box-title">Dismiss Handling</div><div class="evt-box-text">Uses <code>wzrk://exit</code> to properly close the CleverTap in-app container.</div></div>'}
+// Profile enrichment detection
+var profiles=[];var re4=/profile\.push.*?["']([^"']+)["']/g;while(m=re4.exec(src)){if(!seen['p_'+m[1]]){seen['p_'+m[1]]=1;profiles.push(m[1])}}
+if(profiles.length>0){html+='<div class="evt-box" style="margin-top:8px;border-color:rgba(45,212,191,.12);background:rgba(45,212,191,.04)"><div class="evt-box-title" style="color:var(--ct-teal)">Profile Enrichment</div><div class="evt-box-text">This template writes to user profile:<br>';profiles.forEach(function(p){html+='• <code>'+p+'</code><br>'});html+='</div></div>'}
+panel.innerHTML=html}
+
+// ═══ USER GUIDE PANEL — auto-generate from metadata ═══
+var GUIDE_DB={
+"Quiz & Survey":{goal:"Drive engagement and collect zero-party data through interactive experiences",industries:["Insurance","Fintech","F&B","Lifestyle","Telco"],lifecycle:["Onboarding","Engagement","Data Collection"],dos:["Keep to 5-7 questions max","Show progress indicator","Personalise result sharing","Use branching logic for relevance"],donts:["Don't make all questions mandatory","Don't show same quiz twice","Don't skip the result reveal moment"]},
+"Gamification":{goal:"Boost repeat opens and reward-seeking behaviour through game mechanics",industries:["E-commerce","F&B","Fintech","Gaming","Travel"],lifecycle:["Retention","First Purchase","Repeat Purchase"],dos:["Limit plays per day to maintain scarcity","Show odds/tiers transparently","Deep link prize to redemption page","Track game completion rates"],donts:["Don't guarantee wins every time","Don't make prizes unredeemable","Don't overuse — rotate mechanics monthly"]},
+"Loyalty & Progress":{goal:"Increase retention by visualising progress toward meaningful rewards",industries:["Fintech","Telco","E-commerce","Travel","F&B"],lifecycle:["Retention","Churn Prevention","Repeat Purchase"],dos:["Show exact progress percentage","Use milestones at psychological thresholds (25%, 50%, 75%)","Celebrate unlocks with animation","A/B test reward tiers"],donts:["Don't set unreachable targets","Don't reset progress without warning","Don't show progress without clear reward"]},
+"Interactive Tool":{goal:"Help users make informed decisions through calculators, comparisons, and utilities",industries:["Insurance","Fintech","Real Estate","Telco"],lifecycle:["Consideration","KYC Validation","Purchase Completion"],dos:["Pre-fill with user's known data","Show honest results even when unfavourable","Include clear disclaimer for financial tools","Deep link to product from results"],donts:["Don't oversell — show real numbers","Don't hide assumptions","Don't require too many inputs upfront"]},
+"Content & Social":{goal:"Increase time-in-app and social sharing through rich content experiences",industries:["OTT","Streaming","Travel","Lifestyle","Social"],lifecycle:["Engagement","Retention","Referral"],dos:["Make content shareable","Personalise with user's activity data","Auto-play but respect mute preferences","Track engagement depth"],donts:["Don't autoplay audio without consent","Don't make sharing mandatory","Don't show stale or expired content"]},
+"Commerce":{goal:"Drive purchase decisions through urgency, social proof, and product discovery",industries:["E-commerce","F&B","Travel","Fashion"],lifecycle:["Purchase Completion","First Purchase","Repeat Purchase"],dos:["Use real urgency only (actual stock, actual deadlines)","Deep link to product page, not homepage","A/B test with and without discount","Track add-to-cart from template"],donts:["Don't fake scarcity numbers","Don't stack with other offers","Don't show to already-converted users"]},
+"Conversion":{goal:"Recover lost revenue and accelerate users through critical conversion moments",industries:["E-commerce","Fintech","Insurance","OTT","Travel","Food Delivery"],lifecycle:["Purchase Completion","Cart Recovery","KYC Validation","Subscription Recovery","First Purchase"],dos:["Personalise with actual abandoned item/plan","Use time-limited sweeteners to create urgency","Deep link directly to where user left off","Cap frequency: max 1x/session, 3x/week","A/B test with vs without coupon incentive"],donts:["Don't fire if user already converted","Don't use fake urgency or inflated scarcity","Don't show items abandoned >14 days ago","Don't stack with other in-app campaigns","Don't omit dismiss option — forced modals damage trust"]},
+"Patterns":{goal:"Demonstrate advanced interaction patterns for conversion optimisation",industries:["E-commerce","Fintech","Subscription","Lifestyle","SaaS"],lifecycle:["Onboarding","Engagement","Purchase Completion","Retention"],dos:["Adapt the pattern to your specific use case","Customise copy and visuals to match brand","Test across iOS and Android","Measure against a control group"],donts:["Don't deploy without customising the CONFIG","Don't assume one pattern fits all segments","Don't skip A/B testing"]},
+"Foundational":{goal:"Provide essential UI building blocks that enhance any campaign",industries:["All Industries"],lifecycle:["All Lifecycle Stages"],dos:["Combine with other templates for compound experiences","Customise brand colours and copy","Test on multiple screen sizes"],donts:["Don't use generic copy — always personalise","Don't overload with too many elements"]},
+"Animation Toolkit":{goal:"Add polish and delight through animation effects — combine with other templates",industries:["All Industries"],lifecycle:["All Lifecycle Stages"],dos:["Use sparingly for emphasis, not decoration","Test performance on mid-range devices","Combine with functional templates"],donts:["Don't animate everything — focus on key moments","Don't sacrifice load time for visual flair"]}
+};
+
+function buildGuide(key){var panel=document.getElementById('guidePanel');var t=T.find(function(x){return x.k===key});if(!t){panel.innerHTML='<div class="cfg-empty">No template selected.</div>';return}
+var g=GUIDE_DB[t.cat]||GUIDE_DB["Foundational"];
+var html='<div class="gd-block"><div class="gd-title"><span class="gd-icon">📋</span> Synopsis</div><div class="gd-text">'+t.desc+'. A <strong>'+t.type+'</strong> template designed for <strong>'+t.brand+'</strong> in the '+t.cat+' category.</div></div>';
+html+='<div class="gd-block"><div class="gd-title"><span class="gd-icon">🎯</span> Goal</div><div class="gd-text">'+g.goal+'</div></div>';
+html+='<div class="gd-block"><div class="gd-title"><span class="gd-icon">🏢</span> Industries & Use Cases</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin:4px 0">';
+g.industries.forEach(function(i){html+='<span class="gd-tag gd-tag-ind">'+i+'</span>'});
+html+='</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin:4px 0">';
+g.lifecycle.forEach(function(l){html+='<span class="gd-tag gd-tag-lc">'+l+'</span>'});
+html+='</div></div>';
+html+='<div class="gd-block"><div class="gd-title"><span class="gd-icon">\u2705</span> Do</div><ul class="gd-list">';
+g.dos.forEach(function(d){html+='<li>'+d+'</li>'});
+html+='</ul></div>';
+html+='<div class="gd-block"><div class="gd-title"><span class="gd-icon">🚫</span> Don’t</div><ul class="gd-list">';
+g.donts.forEach(function(d){html+='<li>'+d+'</li>'});
+html+='</ul></div>';
+html+='<div class="gd-block"><div class="gd-title"><span class="gd-icon">\u2699\uFE0F</span> Development Notes</div>';
+html+='<div class="gd-warn"><span>\u26A0\uFE0F</span><span>Template size: ~'+t.sz+'KB. ';
+html+=t.sz<50?'Within CleverTap’s recommended 50KB limit for Custom HTML in-app.':'Larger template — consider optimising images and removing unused code for production.';
+html+=' Ensure images are CDN-hosted HTTPS URLs under 200KB each.</span></div>';
+html+='<ul class="gd-list" style="margin-top:6px"><li>Uses <code style="font-size:10px;background:var(--s3);padding:1px 3px;border-radius:3px">wzrk://exit</code> to dismiss the CleverTap in-app container</li><li>Image URLs must be publicly accessible HTTPS (no auth)</li><li>Upload images via CleverTap Settings → Content Manager</li><li>Deep links must match your app’s URI scheme</li><li>Test on both iOS and Android — clipboard API behaviour differs</li></ul></div>';
+panel.innerHTML=html}
+
+// ═══ INIT ═══
+buildSpotlight();buildTicker();buildFilters();renderGrid();
+document.getElementById("search").addEventListener("input",function(e){searchTerm=e.target.value;renderGrid()});
+document.getElementById("backBtn").addEventListener("click",closeDetail);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&curKey)closeDetail()});
+["cpBtn","cpBtn2","cpBtn3"].forEach(function(id){document.getElementById(id).addEventListener("click",function(){if(curKey)copyText(getSrc())})});
+["dlBtn","dlBtn2","dlBtn3"].forEach(function(id){document.getElementById(id).addEventListener("click",function(){if(curKey){var t=T.find(function(x){return x.k===curKey});dlFile(t?t.f:"template.html",getSrc())}})});
+document.getElementById("refBtn").addEventListener("click",function(){if(curKey){modCache[curKey]=null;loadPreview(getSrc());buildConfig(curKey,getSrc());renderCode(getSrc());buildEvents(getSrc());toast("Reset to original")}});
+document.querySelectorAll(".ed-tab").forEach(function(tab){tab.addEventListener("click",function(){setTab(tab.dataset.t)})});
+// Channel + device toggle listeners
+document.querySelectorAll('#chToggle .tog-btn').forEach(function(b){b.addEventListener('click',function(){setChannel(b.dataset.ch)})});
+document.querySelectorAll('#dvToggle .tog-btn').forEach(function(b){b.addEventListener('click',function(){setDevice(b.dataset.dv)})});
+
+// Mobile preview/editor toggle
+document.querySelectorAll(".m-toggle-btn").forEach(function(btn){btn.addEventListener("click",function(){var db=document.getElementById("dBody");document.querySelectorAll(".m-toggle-btn").forEach(function(b){b.classList.remove("on")});btn.classList.add("on");if(btn.dataset.v==="preview"){db.classList.add("show-preview");db.classList.remove("show-editor")}else{db.classList.add("show-editor");db.classList.remove("show-preview")}})});
+document.querySelectorAll(".hero-phone").forEach(function(p){p.addEventListener("click",function(){openDetail(p.dataset.k)})});
+document.addEventListener("input",function(e){if(e.target.type==="color"&&e.target.dataset.path){var wrap=e.target.closest(".cfg-color-wrap");if(wrap){var txt=wrap.querySelector('input.cfg-input[data-type="str"]');if(txt){txt.value=e.target.value;txt.dispatchEvent(new Event("input"))}}}});
+</script>
+</body>
+</html>
