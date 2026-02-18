@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- -------------------- Configurable Settings -------------------- -->
+  <script>
+    const CONFIG = {
+      // ❌ Whether to show the X button to close/dismiss the quiz (true = show, false = hide)
+      includeDismissButton: true,
+
+      // 🌈 Background color/gradient of the quiz modal
+      background: "linear-gradient(165deg, #FFE8D6 0%, #FFD4B8 30%, #FBBF7C 100%)",
+
+      // 🎉 Background shown on result screen
+      revealedBackground: "linear-gradient(165deg, #E8F5E9 0%, #C8E6C9 50%, #A5D6A7 100%)",
+
+      // 🎉 Whether to enable the confetti effect on result reveal
+      enableConfettiOnReveal: true,
+
+      // 🗣️ Cover screen headline
+      coverTitle: {
+        text: "What Kind of <br>Driver Are You? 🚗",
+        fontSize: "28px",
+        color: "#2D1B00",
+      },
+
+      // 💬 Cover screen subtitle
+      coverSubtitle: {
+        text: "6 quick questions → your driving personality → a cheeky reward. Let's roll!",
+        fontSize: "14px",
+        color: "#6D4C1D",
+      },
+
+      // ▶️ Start button settings
+      startButton: {
+        text: "🏁  Start the Engine",
+        background: "#FF6B35",
+        color: "#ffffff",
+      },
+
+      // 🎨 Accent color used for progress bar & selected states
+      accentColor: "#FF6B35",
+
+      // 🎨 Question screen background (overrides modal background during questions)
+      questionBackground: "linear-gradient(165deg, #F0F4FF 0%, #E3ECFF 50%, #D1DEFF 100%)",
+
+      // 📋 Question choice button styling
+      choiceStyle: {
+        background: "#ffffff",
+        border: "2px solid #E2E8F0",
+        hoverBorder: "#FF6B35",
+        hoverBackground: "#FFF5F0",
+        selectedBorder: "#FF6B35",
+        selectedBackground: "#FFF0E8",
+        color: "#334155",
+        fontSize: "14px",
+      },
+
+      // 🛍️ CTA button on the result screen
+      claimButton: {
+        enabled: true,
+        text: "🎁  Unlock My Reward",
+        background: "#FF6B35",
+        color: "#ffffff",
+        url: "https://www.raa.com.au/car/roadside-assistance",
+      },
+
+      // 📋 Copy instruction text settings
+      copyInstruction: {
+        color: "#94A3B8",
+        copiedColor: "#16A34A",
+      },
+
+      // 📊 CleverTap event settings
+      events: {
+        quizStarted: "Quiz_Started",
+        questionAnswered: "Quiz_Question_Answered",
+        quizCompleted: "Quiz_Completed",
+        resultClaimed: "Quiz_Result_Claimed",
+        quizDismissed: "Quiz_Dismissed",
+      },
+
+      // ❓ Quiz questions
+      questions: [
+        {
+          text: "You've got a free Saturday. Where does the car take you?",
+          emoji: "🗺️",
+          choices: [
+            { text: "🌊  A scenic coastal drive — no destination needed", traits: { cruiser: 2, adventurer: 1 } },
+            { text: "🍷  Day trip to a winery or national park", traits: { adventurer: 2, cruiser: 1 } },
+            { text: "📦  Errands — shops, post office, done by noon", traits: { efficiency: 2, guardian: 1 } },
+            { text: "🛋️  Honestly? I'd rather stay home", traits: { guardian: 2, efficiency: 1 } },
+          ],
+        },
+        {
+          text: "Your GPS says there's a 15-min delay on your usual route. You...",
+          emoji: "📍",
+          choices: [
+            { text: "🛤️  Take the backroads — might find something cool", traits: { adventurer: 2, cruiser: 1 } },
+            { text: "🤖  Stick with the GPS. It knows best", traits: { efficiency: 2 } },
+            { text: "📱  Check 3 different map apps for the fastest way", traits: { efficiency: 2, guardian: 1 } },
+            { text: "😌  Not fussed — more driving time is fine by me", traits: { cruiser: 2 } },
+          ],
+        },
+        {
+          text: "What does your car's glovebox look like?",
+          emoji: "🚗",
+          choices: [
+            { text: "📋  Organised: rego, insurance, first-aid kit, torch", traits: { guardian: 2, efficiency: 1 } },
+            { text: "🍫  A mystery — could be snacks from 2019", traits: { cruiser: 2, adventurer: 1 } },
+            { text: "✨  Minimal — just the essentials, nothing extra", traits: { efficiency: 2 } },
+            { text: "🗺️  Maps, travel guides, and a playlist USB", traits: { adventurer: 2, cruiser: 1 } },
+          ],
+        },
+        {
+          text: "A mate asks to borrow your car for the weekend. Your reaction?",
+          emoji: "🤝",
+          choices: [
+            { text: "👍  Sure! Just bring it back with a full tank", traits: { cruiser: 2, adventurer: 1 } },
+            { text: "📅  Let me check my schedule first...", traits: { efficiency: 2 } },
+            { text: "🪞  Do they know how to adjust the mirrors properly?", traits: { guardian: 2 } },
+            { text: "🚫  Only if they promise NOT to eat in it", traits: { guardian: 2, efficiency: 1 } },
+          ],
+        },
+        {
+          text: "Your dream road trip soundtrack is...",
+          emoji: "🎵",
+          choices: [
+            { text: "🎸  Classic rock, sing-alongs, windows DOWN", traits: { cruiser: 2, adventurer: 1 } },
+            { text: "🎧  A true crime podcast — productive driving", traits: { efficiency: 2, guardian: 1 } },
+            { text: "🎶  A carefully curated playlist for every mood", traits: { adventurer: 2 } },
+            { text: "🤫  Silence — I like to hear the engine", traits: { guardian: 2, cruiser: 1 } },
+          ],
+        },
+        {
+          text: "You spot a yellow light ahead. What do you do?",
+          emoji: "🚦",
+          choices: [
+            { text: "🐢  Slow down — no need to rush anywhere", traits: { cruiser: 2, guardian: 1 } },
+            { text: "🧮  Assess the distance — if it's safe, I'll make it", traits: { efficiency: 2 } },
+            { text: "✋  Stop. Always stop. That's the rule", traits: { guardian: 2 } },
+            { text: "🤷  Depends on the vibe of the day, honestly", traits: { adventurer: 2, cruiser: 1 } },
+          ],
+        },
+      ],
+
+      // 🎁 Quiz results — key matches the highest-scoring trait
+      results: {
+        cruiser: {
+          title: "The Sunday Cruiser",
+          emoji: "😎",
+          vibe: "Chill vibes only",
+          color: "#3B82F6",
+          bgGradient: "linear-gradient(165deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%)",
+          description: "Life's a journey, not a race — and you drive like you mean it. You take the long way home because the sunset was too good. Your car is your happy place.",
+          promoCode: "CRUISER15",
+          promoText: "15% off your next RAA Roadside Assist renewal!",
+          promoSubtext: "Use at checkout · Valid until 30 Jun 2026",
+        },
+        adventurer: {
+          title: "The Road Trip Legend",
+          emoji: "🏕️",
+          vibe: "Born to explore",
+          color: "#16A34A",
+          bgGradient: "linear-gradient(165deg, #F0FDF4 0%, #DCFCE7 50%, #BBF7D0 100%)",
+          description: "You've got pins on a map, a camp chair in the boot, and a bucket list of drives. Every road is an invitation and you always RSVP 'yes'.",
+          promoCode: "ADVENTURE20",
+          promoText: "20% off RAA Travel Insurance for your next trip!",
+          promoSubtext: "Use at checkout · Valid until 30 Jun 2026",
+        },
+        efficiency: {
+          title: "The Efficiency Expert",
+          emoji: "âš¡",
+          vibe: "Optimised everything",
+          color: "#9333EA",
+          bgGradient: "linear-gradient(165deg, #FAF5FF 0%, #F3E8FF 50%, #E9D5FF 100%)",
+          description: "Commute optimised to the minute, fuel economy is a point of pride, car service always booked on time. Practical? Yes. Impressive? Also yes.",
+          promoCode: "EFFICIENT10",
+          promoText: "$10 off your next RAA Car Service booking!",
+          promoSubtext: "Use at checkout · Valid until 30 Jun 2026",
+        },
+        guardian: {
+          title: "The Safety Guardian",
+          emoji: "🛡️",
+          vibe: "Safety-first legend",
+          color: "#DC2626",
+          bgGradient: "linear-gradient(165deg, #FEF2F2 0%, #FEE2E2 50%, #FECACA 100%)",
+          description: "Mirrors adjusted, tyres checked, seatbelts on before the engine starts. You're the driver everyone trusts — and for good reason.",
+          promoCode: "GUARDIAN25",
+          promoText: "$25 off a RAA Car Safety Inspection!",
+          promoSubtext: "Book via the RAA app · Valid until 30 Jun 2026",
+        },
+      },
+    };
+  </script>
+  <!-- -------------------- End of Configurable Settings -------------------- -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAA – What Kind of Driver Are You?</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap');
+
+    :root {
+      --accent: #FF6B35;
+      --radius: 16px;
+      --shimmer-hue-1: 25deg;
+      --shimmer-hue-2: 15deg;
+    }
+
+    @property --mask {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 33deg;
+    }
+
+    @keyframes shimmerSpin {
+      0% { --mask: 0deg; }
+      100% { --mask: 360deg; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f0eb;
+    }
+
+    /* ========== MODAL ========== */
+    .modal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      max-height: 600px;
+      max-width: 340px;
+      padding: 24px 20px;
+      justify-content: center;
+      gap: 0;
+      width: 100%;
+      text-align: center;
+      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.5s ease;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    /* Decorative floating shapes */
+    .modal::before,
+    .modal::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .modal::before {
+      width: 200px; height: 200px;
+      background: var(--accent);
+      top: -60px; right: -40px;
+    }
+    .modal::after {
+      width: 140px; height: 140px;
+      background: var(--accent);
+      bottom: -30px; left: -30px;
+    }
+
+    /* ========== CLOSE BUTTON ========== */
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      appearance: none;
+      border: 0;
+      background: rgba(0,0,0,0.06);
+      color: rgba(0,0,0,0.4);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 20;
+      font-family: inherit;
+      font-weight: 700;
+    }
+    .close-btn:hover { background: rgba(0,0,0,0.1); }
+
+    /* ========== SCREENS ========== */
+    .screen {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .screen.active { display: flex; }
+
+    /* ========== COVER SCREEN ========== */
+    .cover-hero {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 72px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 24px rgba(255,107,53,0.15);
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+    }
+    .cover-hero::after {
+      content: '💨';
+      position: absolute;
+      font-size: 28px;
+      bottom: 8px;
+      right: -4px;
+      animation: puff 2s ease-in-out infinite 0.5s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes puff {
+      0%, 100% { opacity: 0.3; transform: translateX(0) scale(1); }
+      50% { opacity: 0.7; transform: translateX(6px) scale(1.1); }
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: rgba(255,107,53,0.12);
+      color: #CC4E1A;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .cover-title {
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+    .cover-subtitle {
+      line-height: 1.55;
+      margin-top: 10px;
+      padding: 0 4px;
+    }
+    .btn-start {
+      margin-top: 22px;
+      padding: 15px 44px;
+      border: none;
+      border-radius: 50px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(255,107,53,0.3);
+    }
+    .btn-start:hover { box-shadow: 0 6px 24px rgba(255,107,53,0.4); transform: translateY(-1px); }
+    .btn-start:active { transform: scale(0.97) translateY(0); }
+
+    .cover-counter {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(0,0,0,0.3);
+      font-weight: 700;
+    }
+    .cover-counter span { color: var(--accent); }
+
+    /* ========== QUESTION SCREEN ========== */
+    .q-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .progress-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .q-step {
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(0,0,0,0.3);
+      white-space: nowrap;
+    }
+
+    .q-emoji {
+      font-size: 48px;
+      margin: 12px 0 8px;
+      line-height: 1;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .q-text {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #1E293B;
+      margin-bottom: 14px;
+      padding: 0 2px;
+      min-height: 48px;
+    }
+    .choices {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .choice-btn {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1.4;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .choice-btn:active { transform: scale(0.98); }
+    .choice-btn.selected { font-weight: 700; box-shadow: 0 2px 12px rgba(255,107,53,0.2); }
+
+    /* ========== LOADING SCREEN ========== */
+    .loading-car {
+      font-size: 64px;
+      animation: drive 1.2s ease-in-out infinite;
+      margin-bottom: 18px;
+    }
+    @keyframes drive {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(8px) rotate(1deg); }
+      50% { transform: translateX(0) rotate(0deg); }
+      75% { transform: translateX(-8px) rotate(-1deg); }
+    }
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    .loading-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.3;
+      animation: dotPulse 1.2s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .loading-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: #1E293B;
+    }
+    .loading-subtext {
+      font-size: 13px;
+      color: #94A3B8;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* ========== RESULT SCREEN ========== */
+    .result-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .result-emoji {
+      font-size: 64px;
+      margin-bottom: 6px;
+      line-height: 1;
+      animation: resultPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes resultPop {
+      0% { transform: scale(0) rotate(-20deg); }
+      60% { transform: scale(1.15) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .result-title {
+      font-size: 26px;
+      font-weight: 900;
+      color: #1E293B;
+      letter-spacing: -0.3px;
+      margin: 0;
+    }
+    .result-vibe {
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 2px;
+      opacity: 0.6;
+    }
+    .result-desc {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #475569;
+      margin-top: 8px;
+      padding: 0 2px;
+    }
+
+    /* ========== PROMO CARD ========== */
+    .promo-wrapper {
+      width: 100%;
+      position: relative;
+      border-radius: 18px;
+      overflow: visible;
+      margin-top: 14px;
+    }
+    .promo-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 14px 14px 12px;
+      background: #ffffff;
+      border-radius: 18px;
+      width: 100%;
+      box-sizing: border-box;
+      cursor: pointer;
+      transition: transform 0.12s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 2px dashed #E2E8F0;
+    }
+    .promo-card:active { transform: scale(0.98); }
+
+    .promo-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #64748B;
+    }
+    .promo-code-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .promo-code {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+    .copy-btn {
+      appearance: none;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      transition: transform 0.1s;
+    }
+    .copy-btn:active { transform: scale(0.85); }
+    .copy-instruction {
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .promo-subtext {
+      font-size: 11px;
+      color: #94A3B8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Shimmer */
+    .shimmer {
+      position: absolute;
+      inset: -40px;
+      border-radius: inherit;
+      mix-blend-mode: plus-lighter;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      mask-image: conic-gradient(from var(--mask, 0deg),
+          transparent 0%, transparent 10%, black 36%, black 45%,
+          transparent 50%, transparent 60%, black 85%, black 95%, transparent 100%);
+      mask-size: cover;
+      animation: shimmerSpin 3s linear infinite both -0.5s;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    .shimmer::before {
+      content: "";
+      border-radius: inherit;
+      position: absolute;
+      inset: 40px;
+      opacity: 1;
+      box-shadow: 0 0 3px 1px hsl(var(--shimmer-hue-1) 90% 65%),
+        0 0 10px 6px hsl(var(--shimmer-hue-2) 80% 50%);
+      z-index: -1;
+    }
+    .promo-wrapper.shimmer-active .shimmer {
+      opacity: 1;
+      visibility: visible;
+      animation: shimmerSpin 2s linear infinite;
+    }
+
+    @keyframes pulsate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .pulsate { animation: pulsate 1.5s ease-in-out 3; }
+
+    /* Buttons */
+    .btn-claim {
+      margin-top: 14px;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(255,107,53,0.25);
+    }
+    .btn-claim:hover { box-shadow: 0 6px 24px rgba(255,107,53,0.35); transform: translateY(-1px); }
+    .btn-claim:active { transform: scale(0.97); }
+
+    .btn-retake {
+      margin-top: 8px;
+      padding: 8px 20px;
+      background: transparent;
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(0,0,0,0.3);
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .btn-retake:hover { color: rgba(0,0,0,0.5); }
+
+    /* ========== FADE IN ========== */
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== SCREEN-SPECIFIC BG CLASS ========== */
+    .modal.on-questions .close-btn { color: rgba(0,0,0,0.35); background: rgba(0,0,0,0.05); }
+    .modal.on-result .close-btn { color: rgba(0,0,0,0.35); background: rgba(0,0,0,0.05); }
+  </style>
+</head>
+
+<body>
+  <div class="modal" id="modal">
+    <button class="close-btn" id="closeBtn" aria-label="Close">✕</button>
+
+    <!-- ===== COVER ===== -->
+    <div id="screen-cover" class="screen active">
+      <div class="cover-hero" id="coverHero">🚗</div>
+      <span class="cover-badge">Personality Quiz</span>
+      <h1 class="cover-title" id="coverTitle"></h1>
+      <p class="cover-subtitle" id="coverSubtitle"></p>
+      <button class="btn-start" id="btnStart"></button>
+      <p class="cover-counter">⏱️ Takes only <span>1 minute</span></p>
+    </div>
+
+    <!-- ===== QUESTION ===== -->
+    <div id="screen-question" class="screen">
+      <div class="q-header">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="q-step" id="qStep"></span>
+      </div>
+      <div class="q-emoji" id="qEmoji"></div>
+      <p class="q-text" id="qText"></p>
+      <div class="choices" id="choicesContainer"></div>
+    </div>
+
+    <!-- ===== LOADING ===== -->
+    <div id="screen-loading" class="screen">
+      <div class="loading-car">🚗</div>
+      <p class="loading-text">Analysing your driving style...</p>
+      <p class="loading-subtext">Checking your glovebox vibes</p>
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- ===== RESULT ===== -->
+    <div id="screen-result" class="screen">
+      <div class="result-emoji" id="rEmoji"></div>
+      <span class="result-badge" id="rBadge"></span>
+      <h2 class="result-title" id="rTitle"></h2>
+      <p class="result-vibe" id="rVibe"></p>
+      <p class="result-desc" id="rDesc"></p>
+
+      <div class="promo-wrapper" id="promoWrapper">
+        <span class="shimmer"></span>
+        <div class="promo-card" id="promoCard">
+          <span class="promo-label" id="promoLabel"></span>
+          <div class="promo-code-row">
+            <span class="promo-code" id="promoCode"></span>
+            <button class="copy-btn" id="copyBtn" title="Copy code">
+              <svg width="18" height="19" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M13 13.8444V17.8444C13 18.4444 12.6 18.8444 12 18.8444H3C2.4 18.8444 2 18.4444 2 17.8444V8.84442C2 8.24442 2.4 7.84442 3 7.84442H7V3.84442C7 3.24442 7.4 2.84442 8 2.84442H17C17.6 2.84442 18 3.24442 18 3.84442V12.8444C18 13.4444 17.6 13.8444 17 13.8444H13ZM12 13.8444H8C7.4 13.8444 7 13.4444 7 12.8444V8.84442H3V17.8444H12V13.8444ZM17 3.84442H8V12.8444H17V3.84442Z"
+                  fill="#4A4C4C" />
+              </svg>
+            </button>
+          </div>
+          <div class="copy-instruction" id="copyInstruction">Tap to copy code</div>
+          <div class="promo-subtext" id="promoSubtext"></div>
+        </div>
+      </div>
+
+      <button class="btn-claim" id="btnClaim"></button>
+      <button class="btn-retake" id="btnRetake">↻ Retake Quiz</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // =============================================
+      // DOM
+      // =============================================
+      const modal        = document.getElementById('modal');
+      const closeBtn     = document.getElementById('closeBtn');
+      const btnStart     = document.getElementById('btnStart');
+      const progressFill = document.getElementById('progressFill');
+      const qStep        = document.getElementById('qStep');
+      const qEmoji       = document.getElementById('qEmoji');
+      const qText        = document.getElementById('qText');
+      const choices      = document.getElementById('choicesContainer');
+      const rEmoji       = document.getElementById('rEmoji');
+      const rBadge       = document.getElementById('rBadge');
+      const rTitle       = document.getElementById('rTitle');
+      const rVibe        = document.getElementById('rVibe');
+      const rDesc        = document.getElementById('rDesc');
+      const promoWrapper = document.getElementById('promoWrapper');
+      const promoCard    = document.getElementById('promoCard');
+      const promoLabel   = document.getElementById('promoLabel');
+      const promoCode    = document.getElementById('promoCode');
+      const promoSubtext = document.getElementById('promoSubtext');
+      const copyBtn      = document.getElementById('copyBtn');
+      const copyInst     = document.getElementById('copyInstruction');
+      const btnClaim     = document.getElementById('btnClaim');
+      const btnRetake    = document.getElementById('btnRetake');
+
+      const DISMISS = 'wzkr://thisleadstonowhere';
+      let curQ = 0, scores = {};
+
+      // =============================================
+      // APPLY CONFIG
+      // =============================================
+      modal.style.background = CONFIG.background;
+
+      if (!CONFIG.includeDismissButton) closeBtn.style.display = 'none';
+      closeBtn.addEventListener('click', () => {
+        pushEvent(CONFIG.events.quizDismissed, { Screen: activeScreen() });
+        window.location.href = DISMISS;
+      });
+
+      document.getElementById('coverTitle').innerHTML = CONFIG.coverTitle.text;
+      document.getElementById('coverTitle').style.fontSize = CONFIG.coverTitle.fontSize;
+      document.getElementById('coverTitle').style.color = CONFIG.coverTitle.color;
+
+      document.getElementById('coverSubtitle').textContent = CONFIG.coverSubtitle.text;
+      document.getElementById('coverSubtitle').style.fontSize = CONFIG.coverSubtitle.fontSize;
+      document.getElementById('coverSubtitle').style.color = CONFIG.coverSubtitle.color;
+
+      btnStart.textContent = CONFIG.startButton.text;
+      btnStart.style.background = CONFIG.startButton.background;
+      btnStart.style.color = CONFIG.startButton.color;
+
+      progressFill.style.background = CONFIG.accentColor;
+      copyInst.style.color = CONFIG.copyInstruction.color;
+
+      if (CONFIG.claimButton.enabled) {
+        btnClaim.textContent = CONFIG.claimButton.text;
+        btnClaim.style.background = CONFIG.claimButton.background;
+        btnClaim.style.color = CONFIG.claimButton.color;
+      } else { btnClaim.style.display = 'none'; }
+
+      // =============================================
+      // HELPERS
+      // =============================================
+      function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const s = document.getElementById(id);
+        s.classList.add('active');
+        s.classList.remove('fade-in');
+        void s.offsetWidth;
+        s.classList.add('fade-in');
+      }
+      function activeScreen() {
+        const s = document.querySelector('.screen.active');
+        return s ? s.id.replace('screen-','') : 'unknown';
+      }
+
+      // CleverTap event pushers (dual-SDK safe)
+      function pushEvent(name, props) {
+        if (!name) return;
+        try {
+          if (typeof clevertap !== 'undefined' && clevertap.event) clevertap.event.push(name, props || {});
+          if (typeof CleverTap !== 'undefined' && CleverTap.event) CleverTap.event.push(name, props || {});
+        } catch(e) { console.log('[CT]', name, props); }
+      }
+      function pushProfile(props) {
+        try {
+          if (typeof clevertap !== 'undefined' && clevertap.profile) clevertap.profile.push({ Site: props });
+          if (typeof CleverTap !== 'undefined' && CleverTap.profile) CleverTap.profile.push({ Site: props });
+        } catch(e) { console.log('[CT Profile]', props); }
+      }
+
+      // =============================================
+      // QUIZ ENGINE
+      // =============================================
+      function startQuiz() {
+        curQ = 0; scores = {};
+        modal.className = 'modal on-questions';
+        modal.style.background = CONFIG.questionBackground;
+        pushEvent(CONFIG.events.quizStarted, { Total_Questions: CONFIG.questions.length });
+        showScreen('screen-question');
+        renderQ();
+      }
+
+      function renderQ() {
+        const q = CONFIG.questions[curQ];
+        const total = CONFIG.questions.length;
+
+        progressFill.style.width = (curQ / total * 100) + '%';
+        qStep.textContent = (curQ + 1) + '/' + total;
+
+        // Animate emoji swap
+        qEmoji.style.animation = 'none';
+        void qEmoji.offsetWidth;
+        qEmoji.style.animation = 'popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+        qEmoji.textContent = q.emoji || '';
+
+        qText.textContent = q.text;
+        choices.innerHTML = '';
+
+        q.choices.forEach((c, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = c.text;
+          btn.style.background = CONFIG.choiceStyle.background;
+          btn.style.border = CONFIG.choiceStyle.border;
+          btn.style.color = CONFIG.choiceStyle.color;
+          btn.style.fontSize = CONFIG.choiceStyle.fontSize;
+
+          btn.addEventListener('mouseenter', () => {
+            if (!btn.classList.contains('selected')) {
+              btn.style.borderColor = CONFIG.choiceStyle.hoverBorder;
+              btn.style.background = CONFIG.choiceStyle.hoverBackground;
+            }
+          });
+          btn.addEventListener('mouseleave', () => {
+            if (!btn.classList.contains('selected')) {
+              btn.style.background = CONFIG.choiceStyle.background;
+              btn.style.border = CONFIG.choiceStyle.border;
+            }
+          });
+          btn.addEventListener('click', () => pick(i));
+          choices.appendChild(btn);
+        });
+      }
+
+      function pick(idx) {
+        const c = CONFIG.questions[curQ].choices[idx];
+        if (c.traits) {
+          Object.entries(c.traits).forEach(([t, pts]) => { scores[t] = (scores[t] || 0) + pts; });
+        }
+
+        // Visual feedback
+        const btns = choices.querySelectorAll('.choice-btn');
+        btns.forEach(b => {
+          b.style.background = CONFIG.choiceStyle.background;
+          b.style.border = CONFIG.choiceStyle.border;
+          b.classList.remove('selected');
+          b.style.pointerEvents = 'none';
+        });
+        btns[idx].classList.add('selected');
+        btns[idx].style.borderColor = CONFIG.choiceStyle.selectedBorder;
+        btns[idx].style.background = CONFIG.choiceStyle.selectedBackground;
+
+        // Per-question event
+        pushEvent(CONFIG.events.questionAnswered, {
+          Question_Number: curQ + 1,
+          Choice: c.text,
+        });
+
+        setTimeout(() => {
+          curQ++;
+          if (curQ < CONFIG.questions.length) { renderQ(); }
+          else { progressFill.style.width = '100%'; showLoading(); }
+        }, 380);
+      }
+
+      function showLoading() {
+        modal.style.background = CONFIG.questionBackground;
+        showScreen('screen-loading');
+        setTimeout(showResult, 2400);
+      }
+
+      function showResult() {
+        let best = '', hi = -1;
+        Object.entries(scores).forEach(([t, s]) => { if (s > hi) { hi = s; best = t; } });
+        const r = CONFIG.results[best];
+        if (!r) return;
+
+        // Apply result-specific theming
+        modal.className = 'modal on-result';
+        modal.style.background = r.bgGradient || CONFIG.revealedBackground;
+        document.documentElement.style.setProperty('--shimmer-hue-1', getHue(r.color) + 'deg');
+        document.documentElement.style.setProperty('--shimmer-hue-2', getHue(r.color) + 'deg');
+
+        rEmoji.textContent = r.emoji;
+        rBadge.textContent = r.vibe;
+        rBadge.style.background = r.color + '18';
+        rBadge.style.color = r.color;
+        rTitle.textContent = r.title;
+        rVibe.textContent = '"' + r.vibe + '"';
+        rVibe.style.color = r.color;
+        rDesc.textContent = r.description;
+        promoLabel.textContent = r.promoText;
+        promoCode.textContent = r.promoCode;
+        promoCode.style.color = r.color;
+        promoSubtext.textContent = r.promoSubtext;
+        promoCard.style.borderColor = r.color + '30';
+
+        promoWrapper.classList.add('shimmer-active');
+        promoCard.classList.add('pulsate');
+        showScreen('screen-result');
+
+        if (CONFIG.enableConfettiOnReveal) fireConfetti(r.color);
+
+        pushEvent(CONFIG.events.quizCompleted, {
+          Result: r.title,
+          Result_Key: best,
+          Promo_Code: r.promoCode,
+          Questions_Answered: CONFIG.questions.length,
+          Scores: JSON.stringify(scores),
+        });
+        pushProfile({
+          Driver_Personality: r.title,
+          Driver_Personality_Key: best,
+          Quiz_Promo_Code: r.promoCode,
+        });
+      }
+
+      // Rough hue extractor from hex
+      function getHue(hex) {
+        const r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+        const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+        let h = 0;
+        if (d !== 0) {
+          if (max === r) h = ((g-b)/d)%6;
+          else if (max === g) h = (b-r)/d+2;
+          else h = (r-g)/d+4;
+        }
+        return Math.round(h * 60 + 360) % 360;
+      }
+
+      // =============================================
+      // CLIPBOARD
+      // =============================================
+      function doCopy() {
+        const t = promoCode.textContent;
+        if (!t) return;
+        if (navigator.clipboard && navigator.clipboard.writeText)
+          navigator.clipboard.writeText(t).then(onCopied).catch(() => fbCopy(t));
+        else fbCopy(t);
+      }
+      function onCopied() {
+        copyInst.textContent = '✅ Code copied!';
+        copyInst.style.color = CONFIG.copyInstruction.copiedColor;
+        setTimeout(() => { copyInst.textContent = 'Tap to copy code'; copyInst.style.color = CONFIG.copyInstruction.color; }, 2000);
+      }
+      function fbCopy(t) {
+        const inp = document.createElement('input');
+        inp.setAttribute('readonly',''); inp.value = t;
+        inp.style.cssText = 'position:absolute;left:-9999px';
+        document.body.appendChild(inp);
+        if (/ipad|iphone/i.test(navigator.userAgent)) {
+          const rng = document.createRange(); rng.selectNodeContents(inp);
+          const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rng);
+          inp.setSelectionRange(0, t.length);
+        } else { inp.focus(); inp.select(); }
+        try { document.execCommand('copy'); onCopied(); } catch(e) { alert('Code: ' + t); }
+        document.body.removeChild(inp);
+      }
+      copyBtn.addEventListener('click', e => { e.stopPropagation(); doCopy(); });
+      promoCard.addEventListener('click', doCopy);
+
+      // =============================================
+      // CONFETTI
+      // =============================================
+      function fireConfetti(accent) {
+        const colors = [accent || '#FF6B35', '#FFC629', '#ffffff', '#3B82F6', '#16A34A', '#F472B6'];
+        const N = 110, grav = 0.3;
+        const cv = document.createElement('canvas');
+        cv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+        document.body.appendChild(cv);
+        const cx = cv.getContext('2d');
+        cv.width = window.innerWidth; cv.height = window.innerHeight;
+        const ps = [], rr = (a,b) => Math.random()*(b-a)+a;
+        for (let i=0;i<N;i++) ps.push({
+          x: cv.width/2, y: cv.height*0.5,
+          w: rr(5,12), h: rr(7,15),
+          ang: rr(0,360), tilt: rr(0.05,0.12),
+          col: colors[Math.floor(Math.random()*colors.length)],
+          vx: rr(-10,10), vy: rr(-16,-7),
+          op: 1, dec: rr(0.007,0.015),
+        });
+        function tick() {
+          cx.clearRect(0,0,cv.width,cv.height);
+          for (let i=ps.length-1;i>=0;i--) {
+            const p=ps[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=grav;
+            p.op-=p.dec; p.ang+=p.tilt*180/Math.PI;
+            if(p.op<=0||p.y>cv.height+20){ps.splice(i,1);continue;}
+            cx.save(); cx.globalAlpha=Math.max(p.op,0); cx.fillStyle=p.col;
+            cx.translate(p.x,p.y); cx.rotate(p.ang*Math.PI/180);
+            cx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx.restore();
+          }
+          if(ps.length)requestAnimationFrame(tick);else cv.remove();
+        }
+        tick();
+      }
+
+      // =============================================
+      // BUTTON HANDLERS
+      // =============================================
+      btnStart.addEventListener('click', startQuiz);
+      btnClaim.addEventListener('click', () => {
+        pushEvent(CONFIG.events.resultClaimed, { Result: rTitle.textContent, Promo_Code: promoCode.textContent });
+        if (CONFIG.claimButton.url) window.location.href = CONFIG.claimButton.url;
+      });
+      btnRetake.addEventListener('click', () => {
+        modal.className = 'modal';
+        modal.style.background = CONFIG.background;
+        promoWrapper.classList.remove('shimmer-active');
+        promoCard.classList.remove('pulsate');
+        showScreen('screen-cover');
+      });
+
+    })();
+  </script>
+</body>
+</html>
