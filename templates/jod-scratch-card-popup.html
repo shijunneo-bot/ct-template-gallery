@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Jod Scratch Card — Web Popup</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,sans-serif}
+.site-bg{position:fixed;inset:0;background:linear-gradient(180deg,#f8f9fa 0%,#e9ecef 100%);display:flex;flex-direction:column}
+.site-nav{height:52px;background:#fff;border-bottom:1px solid #dee2e6;display:flex;align-items:center;padding:0 32px;gap:16px}
+.site-nav-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.site-nav-items{display:flex;gap:20px}.site-nav-item{width:56px;height:8px;border-radius:4px;background:#e5e7eb}
+.site-nav-right{margin-left:auto;display:flex;gap:12px}.site-nav-btn{width:72px;height:28px;border-radius:6px;background:#e5e7eb}
+.site-body{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;padding:32px;opacity:.2;overflow:hidden}
+.site-card{border-radius:12px;background:#dee2e6;min-height:120px}
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:100}
+.popup-container{width:560px;max-width:92vw;max-height:88vh;border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.25),0 0 0 1px rgba(0,0,0,.05);position:relative;display:flex;flex-direction:column}
+.popup-container iframe{flex:1;width:100%;border:none;display:block}
+.popup-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.08);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;font-size:16px;color:#666;transition:all .15s}
+.popup-close:hover{background:rgba(0,0,0,.15)}
+@media(max-width:640px){
+  .site-body{grid-template-columns:1fr}
+  .popup-container{max-width:100vw;max-height:100vh;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;width:100%}
+  .popup-container iframe{height:80vh}
+}
+</style>
+</head>
+<body>
+<div class="site-bg">
+  <div class="site-nav">
+    <div class="site-nav-logo"></div>
+    <div class="site-nav-items"><div class="site-nav-item"></div><div class="site-nav-item"></div><div class="site-nav-item"></div></div>
+    <div class="site-nav-right"><div class="site-nav-btn"></div><div class="site-nav-btn"></div></div>
+  </div>
+  <div class="site-body">
+    <div class="site-card"></div><div class="site-card"></div><div class="site-card"></div>
+    <div class="site-card"></div><div class="site-card"></div><div class="site-card"></div>
+  </div>
+</div>
+<div class="popup-overlay" id="overlay">
+  <div class="popup-container">
+    <button class="popup-close" onclick="document.getElementById('overlay').style.display='none'" title="Close">&#x2715;</button>
+    <iframe id="popupFrame" src="jod-scratch-card.html"></iframe>
+  </div>
+</div>
+<script>
+document.getElementById('popupFrame').addEventListener('load', function() {
+  try {
+    var style = this.contentDocument.createElement('style');
+    style.textContent = 'html,body,.app,.container,.wrapper,.screen,.quiz-container,.modal,.page,[class*="container"],[class*="wrapper"],[class*="screen"],[class*="app"]{overflow-y:auto!important;overflow-x:hidden!important;height:auto!important;min-height:100%!important;max-height:none!important;position:relative!important}';
+    this.contentDocument.head.appendChild(style);
+  } catch(e) {}
+});
+</script>
+</body>
+</html>

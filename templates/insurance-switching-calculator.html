@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ==================== CONFIGURABLE SETTINGS ==================== -->
+  <script>
+    const CONFIG = {
+      // ✖ Whether to show the X button to close/dismiss
+      includeDismissButton: true,
+
+      // 🏢 Brand settings — swap these for FWD / Policystreet / any insurer
+      brand: {
+        name: "FWD",
+        logo: "🛡️",                        // Emoji fallback; replace with <img> tag if needed
+        tagline: "Celebrate living",
+        accentColor: "#EA5504",             // FWD Orange
+        accentColorLight: "#FFF3EC",
+        accentColorMid: "#FDCCB0",
+        darkColor: "#1A2B4A",               // Navy
+        successColor: "#0FA958",            // Savings green
+        warningColor: "#E8913A",            // Cost amber
+        ctaUrl: "https://www.fwd.com.sg/",  // Deep link or URL for final CTA
+      },
+
+      // 🌈 Background gradients per screen
+      backgrounds: {
+        cover:    "linear-gradient(165deg, #1A2B4A 0%, #243B60 40%, #2D4A73 100%)",
+        steps:    "linear-gradient(165deg, #F7F9FC 0%, #EDF1F7 50%, #E3E9F2 100%)",
+        loading:  "linear-gradient(165deg, #F7F9FC 0%, #EDF1F7 50%, #E3E9F2 100%)",
+        result:   "linear-gradient(165deg, #F0FDF4 0%, #DCFCE7 40%, #D1FAE5 100%)",
+      },
+
+      // 🎉 Confetti on result reveal
+      enableConfettiOnReveal: true,
+
+      // 📊 CleverTap event names
+      events: {
+        calcStarted:   "Insurance_Calc_Started",
+        stepCompleted:  "Insurance_Calc_Step",
+        calcCompleted:  "Insurance_Calc_Completed",
+        ctaClicked:     "Insurance_Calc_CTA_Clicked",
+        calcDismissed:  "Insurance_Calc_Dismissed",
+      },
+
+      // 🔢 Premium estimation model
+      // Base monthly premiums by [insuranceType][ageBand][tier]
+      // These are illustrative — replace with real rate tables
+      premiumTable: {
+        motor: {
+          "21-30": { basic: 95, standard: 135, premium: 195 },
+          "31-40": { basic: 80, standard: 115, premium: 170 },
+          "41-50": { basic: 85, standard: 125, premium: 185 },
+          "51-60": { basic: 100, standard: 145, premium: 215 },
+          "60+":   { basic: 120, standard: 170, premium: 250 },
+        },
+        health: {
+          "21-30": { basic: 45, standard: 85,  premium: 155 },
+          "31-40": { basic: 65, standard: 110, premium: 195 },
+          "41-50": { basic: 90, standard: 150, premium: 260 },
+          "51-60": { basic: 130, standard: 210, premium: 360 },
+          "60+":   { basic: 180, standard: 290, premium: 480 },
+        },
+        travel: {
+          "21-30": { basic: 15, standard: 28,  premium: 48 },
+          "31-40": { basic: 18, standard: 32,  premium: 55 },
+          "41-50": { basic: 22, standard: 38,  premium: 65 },
+          "51-60": { basic: 28, standard: 48,  premium: 80 },
+          "60+":   { basic: 35, standard: 58,  premium: 95 },
+        },
+      },
+
+      // 💸 Switching cost assumptions (illustrative)
+      switchingCosts: {
+        motor:  { earlyTermination: 50, adminFee: 25, ncdTransfer: 0, coverageGapDays: 0 },
+        health: { earlyTermination: 0,  adminFee: 15, waitingPeriod: 30, preExistingWait: 365 },
+        travel: { earlyTermination: 0,  adminFee: 0,  ncdTransfer: 0, coverageGapDays: 0 },
+      },
+
+      // 🎁 Promo offer on result screen
+      promo: {
+        enabled: true,
+        code: "SWITCH25",
+        text: "25% off your first 3 months",
+        subtext: "Auto-applied at checkout · T&Cs apply",
+      },
+
+      // ⚙️ Calculator steps
+      steps: [
+        {
+          id: "insurance-type",
+          title: "What are you looking to insure?",
+          subtitle: "We'll compare your current plan against ours.",
+          icon: "🔍",
+        },
+        {
+          id: "about-you",
+          title: "A bit about you",
+          subtitle: "This helps us estimate a more accurate premium.",
+          icon: "👤",
+        },
+        {
+          id: "current-plan",
+          title: "Your current plan",
+          subtitle: "Tell us what you're paying now — we'll do the math.",
+          icon: "💳",
+        },
+      ],
+    };
+  </script>
+  <!-- ==================== END OF CONFIGURABLE SETTINGS ==================== -->
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insurance Savings Calculator</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap');
+
+    :root {
+      --accent: #EA5504;
+      --accent-light: #FFF3EC;
+      --dark: #1A2B4A;
+      --success: #0FA958;
+      --warning: #E8913A;
+      --radius: 14px;
+      --radius-lg: 32px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #E8ECF2;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========== MODAL ========== */
+    .modal {
+      display: flex; flex-direction: column; align-items: center;
+      height: 100%; max-height: 620px; max-width: 340px; width: 100%;
+      padding: 24px 20px; text-align: center;
+      border-radius: var(--radius-lg); position: relative; overflow: hidden;
+      transition: background 0.6s ease;
+      box-shadow: 0 12px 48px rgba(26,43,74,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* ========== CLOSE ========== */
+    .close-btn {
+      position: absolute; top: 14px; right: 14px; z-index: 100;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px); transition: all 0.2s;
+    }
+    .close-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
+    .close-btn svg { width: 14px; height: 14px; }
+    .modal.on-steps .close-btn { background: rgba(26,43,74,0.06); }
+    .modal.on-steps .close-btn svg path { stroke: #64748B; }
+
+    /* ========== SCREENS ========== */
+    .screen { display: none; flex-direction: column; align-items: center; width: 100%; z-index: 1; }
+    .screen.active { display: flex; }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .screen.fade-in { animation: fadeSlideUp 0.35s ease-out forwards; }
+
+    /* ========== COVER SCREEN ========== */
+    .cover-logo { font-size: 48px; margin-bottom: 8px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2)); }
+
+    .cover-shield {
+      width: 88px; height: 88px; border-radius: 24px;
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+
+    .cover-brand {
+      font-size: 12px; font-weight: 600; letter-spacing: 2.5px;
+      text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 12px;
+    }
+    .cover-title {
+      font-size: 26px; font-weight: 700; color: #ffffff;
+      line-height: 1.2; margin-bottom: 8px;
+    }
+    .cover-subtitle {
+      font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5;
+      margin-bottom: 24px; padding: 0 8px;
+    }
+    .btn-start {
+      width: 100%; padding: 15px 24px; border: none; border-radius: 14px;
+      font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; position: relative; overflow: hidden;
+      box-shadow: 0 4px 16px rgba(234,85,4,0.3);
+    }
+    .btn-start:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(234,85,4,0.4); }
+    .btn-start:active { transform: translateY(0); }
+
+    .cover-trust {
+      display: flex; gap: 16px; margin-top: 16px; font-size: 11px;
+      color: rgba(255,255,255,0.4);
+    }
+    .cover-trust span { display: flex; align-items: center; gap: 4px; }
+
+    /* ========== STEP SCREENS ========== */
+    .step-progress {
+      display: flex; gap: 6px; width: 100%; margin-bottom: 20px;
+    }
+    .step-dot {
+      flex: 1; height: 4px; border-radius: 4px;
+      background: #D1D5DB; transition: background 0.3s ease;
+    }
+    .step-dot.done { background: var(--accent); }
+    .step-dot.active { background: var(--accent); animation: pulseBar 1.5s ease infinite; }
+    @keyframes pulseBar { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    .step-icon { font-size: 36px; margin-bottom: 8px; }
+    .step-title {
+      font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 4px;
+    }
+    .step-subtitle {
+      font-size: 12px; color: #64748B; margin-bottom: 20px; line-height: 1.4;
+    }
+
+    /* Choice pills */
+    .pill-grid {
+      display: flex; flex-direction: column; gap: 8px; width: 100%;
+    }
+    .pill-btn {
+      width: 100%; padding: 13px 16px; border-radius: 12px;
+      border: 1.5px solid #E2E8F0; background: #ffffff;
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      color: #334155; cursor: pointer; text-align: left;
+      transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+    }
+    .pill-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+    .pill-btn.selected {
+      border-color: var(--accent); background: var(--accent-light);
+      color: var(--accent); font-weight: 600;
+    }
+    .pill-btn .pill-icon { font-size: 18px; flex-shrink: 0; }
+    .pill-btn .pill-check {
+      margin-left: auto; width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid #D1D5DB; display: flex; align-items: center;
+      justify-content: center; transition: all 0.2s; flex-shrink: 0;
+    }
+    .pill-btn.selected .pill-check {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .pill-btn.selected .pill-check::after {
+      content: '✓'; font-size: 11px; color: white; font-weight: 700;
+    }
+
+    /* Slider */
+    .slider-group {
+      width: 100%; text-align: left; margin-bottom: 16px;
+    }
+    .slider-label {
+      font-size: 12px; font-weight: 600; color: #64748B;
+      margin-bottom: 10px; display: block; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .slider-value-display {
+      font-family: 'JetBrains Mono', monospace; font-size: 36px;
+      font-weight: 600; color: var(--dark); text-align: center;
+      margin-bottom: 4px;
+    }
+    .slider-value-display .currency { font-size: 20px; color: #94A3B8; vertical-align: super; }
+    .slider-value-display .period { font-size: 13px; color: #94A3B8; font-weight: 400; }
+
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      border-radius: 3px; background: #E2E8F0; outline: none;
+      margin: 12px 0 4px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(234,85,4,0.3);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(234,85,4,0.3);
+    }
+    .slider-range-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: #94A3B8; font-weight: 500;
+    }
+
+    /* Satisfaction mini-pills */
+    .satisfaction-row {
+      display: flex; gap: 6px; width: 100%; margin-top: 4px;
+    }
+    .sat-pill {
+      flex: 1; padding: 10px 6px; border-radius: 10px; border: 1.5px solid #E2E8F0;
+      background: white; font-family: inherit; font-size: 11px; font-weight: 600;
+      color: #64748B; cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .sat-pill .sat-emoji { display: block; font-size: 20px; margin-bottom: 3px; }
+    .sat-pill:hover { border-color: var(--accent); }
+    .sat-pill.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+    /* Next button */
+    .btn-next {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; margin-top: 12px;
+      opacity: 0.4; pointer-events: none;
+    }
+    .btn-next.enabled { opacity: 1; pointer-events: auto; }
+    .btn-next.enabled:hover { transform: translateY(-1px); }
+
+    /* ========== LOADING ========== */
+    .loading-icon {
+      font-size: 48px; margin-bottom: 16px;
+      animation: loadBounce 0.8s ease infinite alternate;
+    }
+    @keyframes loadBounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-8px) scale(1.05); } }
+
+    .loading-text { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+    .loading-subtext { font-size: 12px; color: #64748B; }
+
+    .loading-bar-track {
+      width: 80%; height: 4px; border-radius: 4px;
+      background: #D1D5DB; margin-top: 20px; overflow: hidden;
+    }
+    .loading-bar-fill {
+      height: 100%; border-radius: 4px; background: var(--accent);
+      animation: loadFill 2.2s ease forwards;
+    }
+    @keyframes loadFill { from { width: 0; } to { width: 100%; } }
+
+    /* ========== RESULT SCREEN ========== */
+    .result-header-icon { font-size: 40px; margin-bottom: 4px; }
+    .result-headline {
+      font-size: 14px; font-weight: 600; color: var(--success);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;
+    }
+    .result-savings-number {
+      font-family: 'JetBrains Mono', monospace; font-size: 42px;
+      font-weight: 600; color: var(--dark); margin-bottom: 2px;
+    }
+    .result-savings-number .currency { font-size: 24px; color: #64748B; vertical-align: super; }
+    .result-savings-label { font-size: 12px; color: #64748B; margin-bottom: 16px; }
+
+    /* Breakdown card */
+    .breakdown-card {
+      width: 100%; background: white; border-radius: 16px; padding: 16px;
+      text-align: left; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid #E8ECF0; margin-bottom: 12px;
+    }
+    .breakdown-title {
+      font-size: 11px; font-weight: 700; color: #94A3B8;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+    }
+    .breakdown-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; font-size: 13px;
+    }
+    .breakdown-row .label { color: #475569; display: flex; align-items: center; gap: 6px; }
+    .breakdown-row .label .dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .breakdown-row .value {
+      font-family: 'JetBrains Mono', monospace; font-weight: 600;
+      font-size: 13px;
+    }
+    .breakdown-row .value.negative { color: #DC2626; }
+    .breakdown-row .value.positive { color: var(--success); }
+    .breakdown-row .value.neutral { color: var(--dark); }
+
+    .breakdown-divider {
+      border: none; border-top: 1px dashed #E2E8F0; margin: 8px 0;
+    }
+    .breakdown-row.total { font-weight: 700; }
+    .breakdown-row.total .label { color: var(--dark); font-weight: 700; font-size: 14px; }
+    .breakdown-row.total .value { font-size: 15px; }
+
+    /* Year projection pills */
+    .projection-row {
+      display: flex; gap: 6px; width: 100%; margin-bottom: 12px;
+    }
+    .proj-pill {
+      flex: 1; padding: 10px 8px; border-radius: 10px; text-align: center;
+      background: white; border: 1px solid #E8ECF0;
+    }
+    .proj-pill .proj-label { font-size: 10px; color: #94A3B8; font-weight: 600; text-transform: uppercase; }
+    .proj-pill .proj-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 15px;
+      font-weight: 600; color: var(--success); margin-top: 2px;
+    }
+    .proj-pill.highlighted {
+      background: var(--success); border-color: var(--success);
+    }
+    .proj-pill.highlighted .proj-label { color: rgba(255,255,255,0.7); }
+    .proj-pill.highlighted .proj-value { color: white; }
+
+    /* Promo card */
+    .promo-strip {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      background: white; border: 1.5px dashed var(--accent);
+      border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .promo-strip:hover { background: var(--accent-light); }
+    .promo-strip .promo-tag {
+      font-size: 10px; font-weight: 700; color: white;
+      background: var(--accent); border-radius: 4px; padding: 3px 6px;
+      text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .promo-strip .promo-details { text-align: left; flex: 1; }
+    .promo-strip .promo-text { font-size: 12px; font-weight: 600; color: var(--dark); }
+    .promo-strip .promo-code-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--accent); font-weight: 600; margin-top: 1px;
+    }
+    .promo-strip .promo-copy-hint { font-size: 10px; color: #94A3B8; flex-shrink: 0; }
+
+    /* CTA & retake */
+    .btn-cta {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(234,85,4,0.25);
+    }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(234,85,4,0.35); }
+    .btn-recalc {
+      background: none; border: none; font-family: inherit;
+      font-size: 12px; color: #94A3B8; cursor: pointer;
+      margin-top: 8px; font-weight: 600;
+    }
+    .btn-recalc:hover { color: var(--dark); }
+
+    /* ========== SCROLLABLE CONTENT ========== */
+    .scroll-content {
+      flex: 1; overflow-y: auto; width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll-content::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+
+<body>
+  <div class="modal" id="modal">
+    <!-- CLOSE -->
+    <button class="close-btn" id="closeBtn">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1L13 13M13 1L1 13" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- ===== SCREEN: COVER ===== -->
+    <div id="screen-cover" class="screen active">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div class="cover-shield">
+          <span class="cover-logo" id="coverLogo"></span>
+        </div>
+        <div class="cover-brand" id="coverBrand"></div>
+        <h1 class="cover-title">Could you be<br>paying less? 🤔</h1>
+        <p class="cover-subtitle">Quick 30-second calculator — see your estimated savings and real switching costs, no signup needed.</p>
+        <button class="btn-start" id="btnStart">Calculate My Savings →</button>
+        <div class="cover-trust">
+          <span>🔒 No data stored</span>
+          <span>⚡ 30 seconds</span>
+          <span>📊 Instant quote</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: STEP 1 — INSURANCE TYPE ===== -->
+    <div id="screen-step-1" class="screen">
+      <div class="step-progress" id="stepProgress1"></div>
+      <span class="step-icon" id="stepIcon1"></span>
+      <h2 class="step-title" id="stepTitle1"></h2>
+      <p class="step-subtitle" id="stepSubtitle1"></p>
+      <div class="pill-grid">
+        <button class="pill-btn" data-value="motor" onclick="selectType(this)">
+          <span class="pill-icon">🚗</span>
+          <span>Motor Insurance</span>
+          <span class="pill-check"></span>
+        </button>
+        <button class="pill-btn" data-value="health" onclick="selectType(this)">
+          <span class="pill-icon">🏥</span>
+          <span>Health Insurance</span>
+          <span class="pill-check"></span>
+        </button>
+        <button class="pill-btn" data-value="travel" onclick="selectType(this)">
+          <span class="pill-icon">✈️</span>
+          <span>Travel Insurance</span>
+          <span class="pill-check"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: STEP 2 — ABOUT YOU ===== -->
+    <div id="screen-step-2" class="screen">
+      <div class="step-progress" id="stepProgress2"></div>
+      <span class="step-icon" id="stepIcon2"></span>
+      <h2 class="step-title" id="stepTitle2"></h2>
+      <p class="step-subtitle" id="stepSubtitle2"></p>
+
+      <div class="slider-group">
+        <label class="slider-label">Age range</label>
+        <div class="pill-grid" id="ageGrid">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="sat-pill" data-value="21-30" onclick="selectAge(this)" style="flex:1;min-width:0;"><span class="sat-emoji">🧑</span>21–30</button>
+            <button class="sat-pill" data-value="31-40" onclick="selectAge(this)" style="flex:1;min-width:0;"><span class="sat-emoji">👨</span>31–40</button>
+            <button class="sat-pill" data-value="41-50" onclick="selectAge(this)" style="flex:1;min-width:0;"><span class="sat-emoji">🧔</span>41–50</button>
+          </div>
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button class="sat-pill" data-value="51-60" onclick="selectAge(this)" style="flex:1;min-width:0;"><span class="sat-emoji">👨‍🦳</span>51–60</button>
+            <button class="sat-pill" data-value="60+" onclick="selectAge(this)" style="flex:1;min-width:0;"><span class="sat-emoji">👴</span>60+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-group" style="margin-top: 8px;">
+        <label class="slider-label">Coverage tier</label>
+        <div class="pill-grid" id="tierGrid">
+          <div style="display:flex; gap:6px;">
+            <button class="sat-pill" data-value="basic" onclick="selectTier(this)" style="flex:1;min-width:0;"><span class="sat-emoji">🥉</span>Basic</button>
+            <button class="sat-pill" data-value="standard" onclick="selectTier(this)" style="flex:1;min-width:0;"><span class="sat-emoji">🥈</span>Standard</button>
+            <button class="sat-pill" data-value="premium" onclick="selectTier(this)" style="flex:1;min-width:0;"><span class="sat-emoji">🥇</span>Premium</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-next" id="btnNext2" onclick="goToStep(3)">Continue →</button>
+    </div>
+
+    <!-- ===== SCREEN: STEP 3 — CURRENT PLAN ===== -->
+    <div id="screen-step-3" class="screen">
+      <div class="step-progress" id="stepProgress3"></div>
+      <span class="step-icon" id="stepIcon3"></span>
+      <h2 class="step-title" id="stepTitle3"></h2>
+      <p class="step-subtitle" id="stepSubtitle3"></p>
+
+      <div class="slider-group">
+        <label class="slider-label">Monthly premium you pay now</label>
+        <div class="slider-value-display">
+          <span class="currency">$</span><span id="premiumValue">150</span>
+          <span class="period">/mo</span>
+        </div>
+        <input type="range" id="premiumSlider" min="20" max="600" value="150" step="5" oninput="updateSlider()">
+        <div class="slider-range-labels">
+          <span>$20/mo</span><span>$600/mo</span>
+        </div>
+      </div>
+
+      <div class="slider-group" style="margin-top: 6px;">
+        <label class="slider-label">How happy are you with your current plan?</label>
+        <div class="satisfaction-row">
+          <button class="sat-pill" data-value="unhappy" onclick="selectSat(this)">
+            <span class="sat-emoji">😤</span>Unhappy
+          </button>
+          <button class="sat-pill" data-value="meh" onclick="selectSat(this)">
+            <span class="sat-emoji">😐</span>It's OK
+          </button>
+          <button class="sat-pill" data-value="happy" onclick="selectSat(this)">
+            <span class="sat-emoji">😊</span>Happy
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-next" id="btnNext3" onclick="calculate()">See My Results →</button>
+    </div>
+
+    <!-- ===== SCREEN: LOADING ===== -->
+    <div id="screen-loading" class="screen">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div class="loading-icon">🧮</div>
+        <p class="loading-text">Crunching your numbers...</p>
+        <p class="loading-subtext">Comparing 3 plan options</p>
+        <div class="loading-bar-track">
+          <div class="loading-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: RESULT ===== -->
+    <div id="screen-result" class="screen">
+      <div class="scroll-content" id="resultScroll">
+        <span class="result-header-icon">🎉</span>
+        <div class="result-headline" id="resultHeadline">ESTIMATED ANNUAL SAVINGS</div>
+        <div class="result-savings-number">
+          <span class="currency">$</span><span id="savingsAmount">0</span>
+        </div>
+        <div class="result-savings-label" id="savingsLabel">per year after switching costs</div>
+
+        <!-- Projection pills -->
+        <div class="projection-row" id="projectionRow">
+          <div class="proj-pill">
+            <div class="proj-label">Year 1</div>
+            <div class="proj-value" id="projY1">$0</div>
+          </div>
+          <div class="proj-pill">
+            <div class="proj-label">Year 2</div>
+            <div class="proj-value" id="projY2">$0</div>
+          </div>
+          <div class="proj-pill highlighted">
+            <div class="proj-label">Year 3</div>
+            <div class="proj-value" id="projY3">$0</div>
+          </div>
+        </div>
+
+        <!-- Breakdown card -->
+        <div class="breakdown-card">
+          <div class="breakdown-title">Switching Cost Breakdown</div>
+
+          <div class="breakdown-row">
+            <span class="label"><span class="dot" style="background:#DC2626"></span>Your current plan (annual)</span>
+            <span class="value neutral" id="bdCurrentAnnual">$0</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="label"><span class="dot" style="background:#0FA958"></span><span id="bdBrandName">FWD</span> estimate (annual)</span>
+            <span class="value positive" id="bdNewAnnual">$0</span>
+          </div>
+
+          <hr class="breakdown-divider">
+
+          <div class="breakdown-row">
+            <span class="label"><span class="dot" style="background:#E8913A"></span>Early termination fee</span>
+            <span class="value negative" id="bdTermFee">$0</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="label"><span class="dot" style="background:#E8913A"></span>Admin / processing fee</span>
+            <span class="value negative" id="bdAdminFee">$0</span>
+          </div>
+          <div class="breakdown-row" id="bdExtraRow" style="display:none;">
+            <span class="label"><span class="dot" style="background:#94A3B8"></span><span id="bdExtraLabel">NCD Transfer</span></span>
+            <span class="value neutral" id="bdExtraValue">Free</span>
+          </div>
+
+          <hr class="breakdown-divider">
+
+          <div class="breakdown-row total">
+            <span class="label">Net Year 1 savings</span>
+            <span class="value positive" id="bdNetSavings">$0</span>
+          </div>
+        </div>
+
+        <!-- Promo strip -->
+        <div class="promo-strip" id="promoStrip" onclick="copyPromo()">
+          <span class="promo-tag">PROMO</span>
+          <div class="promo-details">
+            <div class="promo-text" id="promoText"></div>
+            <div class="promo-code-label" id="promoCodeLabel"></div>
+          </div>
+          <span class="promo-copy-hint" id="promoCopyHint">Tap to copy</span>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn-cta" id="btnCTA" onclick="handleCTA()">Get My Quote →</button>
+        <button class="btn-recalc" onclick="recalculate()">↻ Recalculate</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // =============================================
+      // STATE
+      // =============================================
+      let state = {
+        insuranceType: null,
+        ageBand: null,
+        tier: null,
+        currentPremium: 150,
+        satisfaction: null,
+      };
+
+      // =============================================
+      // DOM
+      // =============================================
+      const modal    = document.getElementById('modal');
+      const closeBtn = document.getElementById('closeBtn');
+      const DISMISS  = 'wzkr://thisleadstonowhere';
+
+      // =============================================
+      // APPLY CONFIG
+      // =============================================
+      document.documentElement.style.setProperty('--accent', CONFIG.brand.accentColor);
+      document.documentElement.style.setProperty('--accent-light', CONFIG.brand.accentColorLight);
+      document.documentElement.style.setProperty('--dark', CONFIG.brand.darkColor);
+      document.documentElement.style.setProperty('--success', CONFIG.brand.successColor);
+      document.documentElement.style.setProperty('--warning', CONFIG.brand.warningColor);
+
+      modal.style.background = CONFIG.backgrounds.cover;
+
+      document.getElementById('coverLogo').textContent = CONFIG.brand.logo;
+      document.getElementById('coverBrand').textContent = CONFIG.brand.name + ' · ' + CONFIG.brand.tagline;
+
+      const btnStart = document.getElementById('btnStart');
+      btnStart.style.background = CONFIG.brand.accentColor;
+      btnStart.style.color = '#ffffff';
+
+      if (!CONFIG.includeDismissButton) closeBtn.style.display = 'none';
+      closeBtn.addEventListener('click', () => {
+        pushEvent(CONFIG.events.calcDismissed, { Screen: activeScreen() });
+        window.location.href = DISMISS;
+      });
+
+      // Populate step headers
+      CONFIG.steps.forEach((step, i) => {
+        const n = i + 1;
+        const icon = document.getElementById('stepIcon' + n);
+        const title = document.getElementById('stepTitle' + n);
+        const sub = document.getElementById('stepSubtitle' + n);
+        if (icon) icon.textContent = step.icon;
+        if (title) title.textContent = step.title;
+        if (sub) sub.textContent = step.subtitle;
+      });
+
+      // Setup next buttons
+      document.getElementById('btnNext2').style.background = CONFIG.brand.accentColor;
+      document.getElementById('btnNext2').style.color = '#ffffff';
+      document.getElementById('btnNext3').style.background = CONFIG.brand.accentColor;
+      document.getElementById('btnNext3').style.color = '#ffffff';
+      document.getElementById('btnCTA').style.background = CONFIG.brand.accentColor;
+      document.getElementById('btnCTA').style.color = '#ffffff';
+
+      // Promo
+      if (CONFIG.promo.enabled) {
+        document.getElementById('promoText').textContent = CONFIG.promo.text;
+        document.getElementById('promoCodeLabel').textContent = 'Code: ' + CONFIG.promo.code;
+      } else {
+        document.getElementById('promoStrip').style.display = 'none';
+      }
+
+      // =============================================
+      // HELPERS
+      // =============================================
+      function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const s = document.getElementById(id);
+        s.classList.add('active');
+        s.classList.remove('fade-in');
+        void s.offsetWidth;
+        s.classList.add('fade-in');
+      }
+      function activeScreen() {
+        const s = document.querySelector('.screen.active');
+        return s ? s.id.replace('screen-', '') : 'unknown';
+      }
+
+      function renderStepProgress(stepNum) {
+        const total = CONFIG.steps.length;
+        for (let n = 1; n <= total; n++) {
+          const container = document.getElementById('stepProgress' + n);
+          if (!container) continue;
+          container.innerHTML = '';
+          for (let i = 1; i <= total; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'step-dot';
+            if (i < stepNum) dot.classList.add('done');
+            if (i === stepNum) dot.classList.add('active');
+            container.appendChild(dot);
+          }
+        }
+      }
+
+      // CleverTap event pushers (dual-SDK safe)
+      function pushEvent(name, props) {
+        if (!name) return;
+        try {
+          if (typeof clevertap !== 'undefined' && clevertap.event) clevertap.event.push(name, props || {});
+          if (typeof CleverTap !== 'undefined' && CleverTap.event) CleverTap.event.push(name, props || {});
+        } catch (e) { console.log('[CT]', name, props); }
+      }
+      function pushProfile(props) {
+        try {
+          if (typeof clevertap !== 'undefined' && clevertap.profile) clevertap.profile.push({ Site: props });
+          if (typeof CleverTap !== 'undefined' && CleverTap.profile) CleverTap.profile.push({ Site: props });
+        } catch (e) { console.log('[CT Profile]', props); }
+      }
+
+      // =============================================
+      // STEP NAVIGATION
+      // =============================================
+      btnStart.addEventListener('click', () => {
+        modal.className = 'modal on-steps';
+        modal.style.background = CONFIG.backgrounds.steps;
+        renderStepProgress(1);
+        pushEvent(CONFIG.events.calcStarted, { Brand: CONFIG.brand.name });
+        showScreen('screen-step-1');
+      });
+
+      // Step 1: Insurance type
+      window.selectType = function (btn) {
+        document.querySelectorAll('#screen-step-1 .pill-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.insuranceType = btn.dataset.value;
+
+        pushEvent(CONFIG.events.stepCompleted, { Step: 1, Insurance_Type: state.insuranceType });
+
+        setTimeout(() => {
+          renderStepProgress(2);
+          showScreen('screen-step-2');
+        }, 300);
+      };
+
+      // Step 2: Age + Tier
+      window.selectAge = function (btn) {
+        document.querySelectorAll('#ageGrid .sat-pill').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.ageBand = btn.dataset.value;
+        checkStep2();
+      };
+      window.selectTier = function (btn) {
+        document.querySelectorAll('#tierGrid .sat-pill').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.tier = btn.dataset.value;
+        checkStep2();
+      };
+      function checkStep2() {
+        const btn = document.getElementById('btnNext2');
+        if (state.ageBand && state.tier) btn.classList.add('enabled');
+        else btn.classList.remove('enabled');
+      }
+
+      window.goToStep = function (n) {
+        if (n === 3) {
+          pushEvent(CONFIG.events.stepCompleted, {
+            Step: 2, Age_Band: state.ageBand, Tier: state.tier
+          });
+          renderStepProgress(3);
+          showScreen('screen-step-3');
+          // Enable step 3 next button by default (slider has a value)
+          updateStep3();
+        }
+      };
+
+      // Step 3: Current premium + satisfaction
+      window.updateSlider = function () {
+        const val = document.getElementById('premiumSlider').value;
+        document.getElementById('premiumValue').textContent = val;
+        state.currentPremium = parseInt(val);
+      };
+
+      window.selectSat = function (btn) {
+        document.querySelectorAll('.satisfaction-row .sat-pill').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.satisfaction = btn.dataset.value;
+        updateStep3();
+      };
+
+      function updateStep3() {
+        const btn = document.getElementById('btnNext3');
+        if (state.satisfaction) btn.classList.add('enabled');
+        else btn.classList.remove('enabled');
+      }
+
+      // =============================================
+      // CALCULATION ENGINE
+      // =============================================
+      window.calculate = function () {
+        pushEvent(CONFIG.events.stepCompleted, {
+          Step: 3,
+          Current_Premium: state.currentPremium,
+          Satisfaction: state.satisfaction,
+        });
+
+        modal.style.background = CONFIG.backgrounds.loading;
+        showScreen('screen-loading');
+
+        setTimeout(() => {
+          const results = computeSavings();
+          displayResults(results);
+        }, 2500);
+      };
+
+      function computeSavings() {
+        const type = state.insuranceType;
+        const age = state.ageBand;
+        const tier = state.tier;
+        const currentMonthly = state.currentPremium;
+        const currentAnnual = currentMonthly * 12;
+
+        // Get estimated new premium from table
+        const tableRate = CONFIG.premiumTable[type]?.[age]?.[tier] || currentMonthly;
+        const newMonthly = tableRate;
+        const newAnnual = newMonthly * 12;
+
+        // Switching costs
+        const sc = CONFIG.switchingCosts[type] || {};
+        const termFee = sc.earlyTermination || 0;
+        const adminFee = sc.adminFee || 0;
+        const totalSwitchCost = termFee + adminFee;
+
+        // Savings
+        const grossAnnualSavings = currentAnnual - newAnnual;
+        const netYear1 = grossAnnualSavings - totalSwitchCost;
+        const netYear2 = grossAnnualSavings; // No switching costs from year 2
+        const netYear3Cumulative = netYear1 + netYear2 + grossAnnualSavings;
+
+        return {
+          currentMonthly, currentAnnual,
+          newMonthly, newAnnual,
+          termFee, adminFee, totalSwitchCost,
+          grossAnnualSavings, netYear1,
+          netYear2Cumulative: netYear1 + netYear2,
+          netYear3Cumulative,
+          type, sc,
+        };
+      }
+
+      function displayResults(r) {
+        modal.className = 'modal on-result';
+
+        // Determine if savings or not
+        const hasSavings = r.netYear1 > 0;
+
+        if (hasSavings) {
+          modal.style.background = CONFIG.backgrounds.result;
+          document.getElementById('resultHeadline').textContent = 'ESTIMATED ANNUAL SAVINGS';
+          document.getElementById('resultHeadline').style.color = CONFIG.brand.successColor;
+          document.getElementById('savingsAmount').textContent = Math.abs(r.netYear1).toLocaleString();
+          document.getElementById('savingsLabel').textContent = 'net savings in year 1 after switching costs';
+          document.querySelector('.result-header-icon').textContent = '🎉';
+        } else {
+          modal.style.background = 'linear-gradient(165deg, #FFFBEB 0%, #FEF3C7 40%, #FDE68A 100%)';
+          document.getElementById('resultHeadline').textContent = 'SWITCHING COST ANALYSIS';
+          document.getElementById('resultHeadline').style.color = CONFIG.brand.warningColor;
+          document.getElementById('savingsAmount').textContent = Math.abs(r.netYear1).toLocaleString();
+          document.getElementById('savingsLabel').textContent = r.netYear1 === 0
+            ? 'your current plan is competitively priced'
+            : 'net additional cost in year 1 — consider staying';
+          document.querySelector('.result-header-icon').textContent = '🤔';
+        }
+
+        // Projections
+        document.getElementById('projY1').textContent = (r.netYear1 >= 0 ? '+' : '-') + '$' + Math.abs(r.netYear1).toLocaleString();
+        document.getElementById('projY2').textContent = (r.netYear2Cumulative >= 0 ? '+' : '-') + '$' + Math.abs(r.netYear2Cumulative).toLocaleString();
+        document.getElementById('projY3').textContent = (r.netYear3Cumulative >= 0 ? '+' : '-') + '$' + Math.abs(r.netYear3Cumulative).toLocaleString();
+
+        // Projection pill colors
+        document.getElementById('projY1').style.color = r.netYear1 >= 0 ? CONFIG.brand.successColor : '#DC2626';
+
+        // Breakdown
+        document.getElementById('bdBrandName').textContent = CONFIG.brand.name;
+        document.getElementById('bdCurrentAnnual').textContent = '$' + r.currentAnnual.toLocaleString();
+        document.getElementById('bdNewAnnual').textContent = '$' + r.newAnnual.toLocaleString();
+        document.getElementById('bdTermFee').textContent = r.termFee > 0 ? '-$' + r.termFee : '$0';
+        document.getElementById('bdAdminFee').textContent = r.adminFee > 0 ? '-$' + r.adminFee : '$0';
+
+        // Extra row (type-specific)
+        const extraRow = document.getElementById('bdExtraRow');
+        if (r.type === 'motor') {
+          extraRow.style.display = 'flex';
+          document.getElementById('bdExtraLabel').textContent = 'NCD Transfer';
+          document.getElementById('bdExtraValue').textContent = 'Free';
+          document.getElementById('bdExtraValue').className = 'value positive';
+        } else if (r.type === 'health' && r.sc.waitingPeriod) {
+          extraRow.style.display = 'flex';
+          document.getElementById('bdExtraLabel').textContent = 'Waiting period';
+          document.getElementById('bdExtraValue').textContent = r.sc.waitingPeriod + ' days';
+          document.getElementById('bdExtraValue').className = 'value neutral';
+        } else {
+          extraRow.style.display = 'none';
+        }
+
+        // Net savings
+        const netEl = document.getElementById('bdNetSavings');
+        if (r.netYear1 >= 0) {
+          netEl.textContent = '+$' + r.netYear1.toLocaleString();
+          netEl.className = 'value positive';
+        } else {
+          netEl.textContent = '-$' + Math.abs(r.netYear1).toLocaleString();
+          netEl.className = 'value negative';
+        }
+
+        showScreen('screen-result');
+
+        if (hasSavings && CONFIG.enableConfettiOnReveal) fireConfetti(CONFIG.brand.accentColor);
+
+        // Push events
+        pushEvent(CONFIG.events.calcCompleted, {
+          Insurance_Type: state.insuranceType,
+          Age_Band: state.ageBand,
+          Tier: state.tier,
+          Current_Monthly: state.currentPremium,
+          Current_Annual: r.currentAnnual,
+          Estimated_Monthly: r.newMonthly,
+          Estimated_Annual: r.newAnnual,
+          Switching_Cost: r.totalSwitchCost,
+          Net_Year1_Savings: r.netYear1,
+          Net_Year3_Savings: r.netYear3Cumulative,
+          Satisfaction: state.satisfaction,
+          Has_Savings: hasSavings,
+        });
+
+        pushProfile({
+          Insurance_Interest: state.insuranceType,
+          Insurance_Tier: state.tier,
+          Insurance_Savings_Potential: r.netYear1,
+          Insurance_Satisfaction: state.satisfaction,
+        });
+      }
+
+      // =============================================
+      // PROMO CLIPBOARD
+      // =============================================
+      window.copyPromo = function () {
+        const code = CONFIG.promo.code;
+        const hint = document.getElementById('promoCopyHint');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(() => onPromoCopied(hint)).catch(() => fbCopy(code, hint));
+        } else { fbCopy(code, hint); }
+      };
+      function onPromoCopied(hint) {
+        hint.textContent = '✅ Copied!';
+        setTimeout(() => { hint.textContent = 'Tap to copy'; }, 2000);
+      }
+      function fbCopy(t, hint) {
+        const inp = document.createElement('input');
+        inp.setAttribute('readonly', ''); inp.value = t;
+        inp.style.cssText = 'position:absolute;left:-9999px';
+        document.body.appendChild(inp);
+        if (/ipad|iphone/i.test(navigator.userAgent)) {
+          const rng = document.createRange(); rng.selectNodeContents(inp);
+          const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rng);
+          inp.setSelectionRange(0, t.length);
+        } else { inp.focus(); inp.select(); }
+        try { document.execCommand('copy'); onPromoCopied(hint); } catch (e) { alert('Code: ' + t); }
+        document.body.removeChild(inp);
+      }
+
+      // =============================================
+      // CTA & RETAKE
+      // =============================================
+      window.handleCTA = function () {
+        pushEvent(CONFIG.events.ctaClicked, {
+          Insurance_Type: state.insuranceType,
+          Promo_Code: CONFIG.promo.code,
+        });
+        if (CONFIG.brand.ctaUrl) window.location.href = CONFIG.brand.ctaUrl;
+      };
+
+      window.recalculate = function () {
+        state = { insuranceType: null, ageBand: null, tier: null, currentPremium: 150, satisfaction: null };
+        // Reset UI selections
+        document.querySelectorAll('.pill-btn, .sat-pill').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.btn-next').forEach(b => b.classList.remove('enabled'));
+        document.getElementById('premiumSlider').value = 150;
+        document.getElementById('premiumValue').textContent = '150';
+        modal.className = 'modal';
+        modal.style.background = CONFIG.backgrounds.cover;
+        showScreen('screen-cover');
+      };
+
+      // =============================================
+      // CONFETTI
+      // =============================================
+      function fireConfetti(accent) {
+        const colors = [accent || '#EA5504', '#0FA958', '#FFC629', '#ffffff', '#3B82F6', '#F472B6'];
+        const N = 100, grav = 0.3;
+        const cv = document.createElement('canvas');
+        cv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+        document.body.appendChild(cv);
+        const cx = cv.getContext('2d');
+        cv.width = window.innerWidth; cv.height = window.innerHeight;
+        const ps = [], rr = (a, b) => Math.random() * (b - a) + a;
+        for (let i = 0; i < N; i++) ps.push({
+          x: cv.width / 2, y: cv.height * 0.5,
+          w: rr(5, 12), h: rr(7, 15),
+          ang: rr(0, 360), tilt: rr(0.05, 0.12),
+          col: colors[Math.floor(Math.random() * colors.length)],
+          vx: rr(-10, 10), vy: rr(-16, -7),
+          op: 1, dec: rr(0.007, 0.015),
+        });
+        function tick() {
+          cx.clearRect(0, 0, cv.width, cv.height);
+          for (let i = ps.length - 1; i >= 0; i--) {
+            const p = ps[i]; p.x += p.vx; p.y += p.vy; p.vy += grav;
+            p.op -= p.dec; p.ang += p.tilt * 180 / Math.PI;
+            if (p.op <= 0 || p.y > cv.height + 20) { ps.splice(i, 1); continue; }
+            cx.save(); cx.globalAlpha = Math.max(p.op, 0); cx.fillStyle = p.col;
+            cx.translate(p.x, p.y); cx.rotate(p.ang * Math.PI / 180);
+            cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cx.restore();
+          }
+          if (ps.length) requestAnimationFrame(tick); else cv.remove();
+        }
+        tick();
+      }
+
+    })();
+  </script>
+</body>
+
+</html>

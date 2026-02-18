@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Slot Machine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0f0a1e;--surface:#1a1230;--card:#221940;
+    --text:#e4e0db;--muted:#7a6f96;
+    --gold:#fbbf24;--gold2:#f59e0b;--purple:#a855f7;
+    --border:rgba(255,255,255,0.06);
+  }
+  body{
+    font-family:'Outfit',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 30%,rgba(168,85,247,0.1),var(--bg) 60%);
+  }
+
+  .slot-header{text-align:center;margin-bottom:24px;padding:0 24px;}
+  .slot-emoji{font-size:40px;margin-bottom:12px;}
+  .slot-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2;}
+  .slot-title .gold{color:var(--gold);}
+  .slot-sub{font-size:13px;color:var(--muted);line-height:1.5;}
+
+  /* MACHINE */
+  .machine{
+    background:var(--card);border:2px solid var(--border);
+    border-radius:24px;padding:24px 20px;margin:0 20px 24px;
+    width:calc(100% - 40px);
+  }
+  .reels{
+    display:flex;gap:10px;justify-content:center;
+    margin-bottom:20px;
+  }
+  .reel{
+    width:90px;height:90px;background:var(--surface);
+    border-radius:16px;border:2px solid var(--border);
+    overflow:hidden;position:relative;
+  }
+  .reel-track{
+    display:flex;flex-direction:column;
+    transition:transform 0.1s linear;
+  }
+  .reel-item{
+    width:90px;height:90px;display:flex;
+    align-items:center;justify-content:center;
+    font-size:40px;flex-shrink:0;
+  }
+  /* Glow when matched */
+  .reel.matched{
+    border-color:var(--gold);
+    box-shadow:0 0 20px rgba(251,191,36,0.2);
+  }
+
+  /* PULL LEVER */
+  .lever-area{text-align:center;}
+  .lever-btn{
+    width:100%;padding:18px;border-radius:16px;border:none;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));
+    font-family:'Outfit',sans-serif;font-size:18px;
+    font-weight:900;color:var(--bg);cursor:pointer;
+    transition:all 0.2s;position:relative;overflow:hidden;
+  }
+  .lever-btn:active{transform:scale(0.97);}
+  .lever-btn.spinning{
+    background:var(--surface);color:var(--muted);
+    pointer-events:none;
+  }
+  .lever-btn::after{
+    content:'';position:absolute;top:0;left:-100%;
+    width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+    animation:btnShimmer 2.5s ease infinite;
+  }
+  @keyframes btnShimmer{0%{left:-100%}100%{left:200%}}
+
+  .spins-left{
+    font-size:11px;color:var(--muted);margin-top:10px;
+  }
+
+  /* RESULT OVERLAY */
+  .result-overlay{
+    position:fixed;inset:0;background:rgba(15,10,30,0.95);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;opacity:0;pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  .result-overlay.show{opacity:1;pointer-events:all;}
+  .result-card{
+    background:var(--card);border:2px solid rgba(251,191,36,0.3);
+    border-radius:24px;padding:32px 24px;text-align:center;
+    margin:0 24px;width:calc(100% - 48px);
+    transform:scale(0.9);transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .result-overlay.show .result-card{transform:scale(1);}
+  .result-emoji{font-size:56px;margin-bottom:16px;}
+  .result-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:4px;}
+  .result-prize{
+    font-size:36px;font-weight:900;margin:8px 0;
+    background:linear-gradient(90deg,var(--gold),var(--gold2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .result-desc{font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5;}
+  .result-code{
+    display:inline-block;background:var(--surface);
+    padding:10px 20px;border-radius:10px;margin:12px 0 20px;
+    font-size:20px;font-weight:800;color:var(--gold);
+    letter-spacing:3px;border:1px dashed rgba(251,191,36,0.3);
+  }
+  .result-btn{
+    width:100%;padding:16px;border-radius:14px;border:none;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));
+    font-family:'Outfit',sans-serif;font-size:15px;
+    font-weight:800;color:var(--bg);cursor:pointer;
+    margin-bottom:8px;
+  }
+  .result-close{
+    width:100%;padding:10px;background:none;border:none;
+    font-family:'Outfit',sans-serif;font-size:12px;
+    color:var(--muted);cursor:pointer;
+  }
+
+  /* CONFETTI */
+  .confetti{
+    position:fixed;top:-10px;left:0;right:0;
+    pointer-events:none;z-index:101;
+  }
+  .conf-piece{
+    position:absolute;width:8px;height:8px;
+    border-radius:2px;animation:confFall 2.5s ease forwards;
+  }
+  @keyframes confFall{
+    0%{transform:translateY(0) rotate(0);opacity:1;}
+    100%{transform:translateY(100vh) rotate(720deg);opacity:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="slot-header">
+  <div class="slot-emoji">🎰</div>
+  <div class="slot-title">Spin to Win <span class="gold">Big</span></div>
+  <div class="slot-sub">Match 3 symbols to unlock exclusive rewards. Every spin wins something!</div>
+</div>
+
+<div class="machine">
+  <div class="reels">
+    <div class="reel" id="reel1"><div class="reel-track" id="track1"></div></div>
+    <div class="reel" id="reel2"><div class="reel-track" id="track2"></div></div>
+    <div class="reel" id="reel3"><div class="reel-track" id="track3"></div></div>
+  </div>
+  <div class="lever-area">
+    <button class="lever-btn" id="leverBtn" onclick="spin()">🎰 SPIN NOW</button>
+    <div class="spins-left">🎟️ <span id="spinsLeft">3</span> spins remaining</div>
+  </div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="result-emoji" id="rEmoji">🎉</div>
+    <div class="result-title" id="rTitle">You Won!</div>
+    <div class="result-prize" id="rPrize">20% OFF</div>
+    <div class="result-desc" id="rDesc">Use this code on your next purchase</div>
+    <div class="result-code" id="rCode">SPIN20</div>
+    <button class="result-btn" onclick="trackEvent('Prize_Claimed');document.getElementById('resultOverlay').classList.remove('show');">Claim My Prize</button>
+    <button class="result-close" onclick="document.getElementById('resultOverlay').classList.remove('show');">Save for later</button>
+  </div>
+</div>
+
+<div class="confetti" id="confetti"></div>
+
+<script>
+const symbols=['🍒','💎','⭐','🔔','🍋','7️⃣','👑','🎯'];
+const prizes=[
+  {match:3,emoji:'🏆',title:'JACKPOT!',prize:'50% OFF',desc:'The ultimate reward!',code:'JACKPOT50'},
+  {match:2,emoji:'🎉',title:'Great Spin!',prize:'25% OFF',desc:'Solid win — use it before it expires',code:'WIN25'},
+  {match:0,emoji:'🎁',title:'You Won!',prize:'10% OFF',desc:'Every spin is a winner',code:'LUCKY10'},
+];
+
+let spins=3,spinning=false;
+
+// Build reels
+function buildReel(trackId){
+  const track=document.getElementById(trackId);
+  const items=[];
+  for(let i=0;i<40;i++){
+    items.push(symbols[Math.floor(Math.random()*symbols.length)]);
+  }
+  track.innerHTML=items.map(s=>`<div class="reel-item">${s}</div>`).join('');
+  return items;
+}
+
+let reel1Items=buildReel('track1');
+let reel2Items=buildReel('track2');
+let reel3Items=buildReel('track3');
+
+function spin(){
+  if(spinning||spins<=0) return;
+  spinning=true;spins--;
+  document.getElementById('spinsLeft').textContent=spins;
+  document.getElementById('leverBtn').classList.add('spinning');
+  document.getElementById('leverBtn').textContent='Spinning...';
+
+  // Pick result (weighted: 5% jackpot, 30% 2-match, 65% consolation)
+  const roll=Math.random();
+  let matchLevel=roll<0.05?3:roll<0.35?2:0;
+
+  const target1=5+Math.floor(Math.random()*5);
+  const target2=target1+3+Math.floor(Math.random()*3);
+  const target3=target2+3+Math.floor(Math.random()*3);
+
+  // If match, set same symbols
+  if(matchLevel===3){
+    const sym=symbols[Math.floor(Math.random()*symbols.length)];
+    reel1Items[target1]=sym;reel2Items[target2]=sym;reel3Items[target3]=sym;
+    document.querySelectorAll(`#track1 .reel-item`)[target1].textContent=sym;
+    document.querySelectorAll(`#track2 .reel-item`)[target2].textContent=sym;
+    document.querySelectorAll(`#track3 .reel-item`)[target3].textContent=sym;
+  } else if(matchLevel===2){
+    const sym=symbols[Math.floor(Math.random()*symbols.length)];
+    reel1Items[target1]=sym;reel2Items[target2]=sym;
+    document.querySelectorAll(`#track1 .reel-item`)[target1].textContent=sym;
+    document.querySelectorAll(`#track2 .reel-item`)[target2].textContent=sym;
+  }
+
+  // Animate
+  animateReel('track1',target1,600);
+  animateReel('track2',target2,900);
+  animateReel('track3',target3,1200,()=>{
+    spinning=false;
+    const btn=document.getElementById('leverBtn');
+    btn.classList.remove('spinning');
+    btn.textContent=spins>0?'🎰 SPIN AGAIN':'No spins left';
+    if(spins<=0) btn.style.opacity='0.4';
+
+    // Check matches
+    if(matchLevel>=2){
+      document.querySelectorAll('.reel').forEach(r=>r.classList.add('matched'));
+    }
+
+    // Show result
+    const prize=matchLevel===3?prizes[0]:matchLevel===2?prizes[1]:prizes[2];
+    setTimeout(()=>{
+      document.getElementById('rEmoji').textContent=prize.emoji;
+      document.getElementById('rTitle').textContent=prize.title;
+      document.getElementById('rPrize').textContent=prize.prize;
+      document.getElementById('rDesc').textContent=prize.desc;
+      document.getElementById('rCode').textContent=prize.code;
+      document.getElementById('resultOverlay').classList.add('show');
+      if(matchLevel>=2) fireConfetti();
+      trackEvent('Spin_Result',{match:matchLevel,prize:prize.code});
+    },400);
+  });
+}
+
+function animateReel(trackId,targetIdx,duration,cb){
+  const track=document.getElementById(trackId);
+  const itemH=90;
+  let current=0;const target=targetIdx*itemH;
+  const start=performance.now();
+  function step(now){
+    const elapsed=now-start;
+    const progress=Math.min(elapsed/duration,1);
+    const eased=1-Math.pow(1-progress,3);
+    track.style.transform=`translateY(-${eased*target}px)`;
+    if(progress<1) requestAnimationFrame(step);
+    else if(cb) cb();
+  }
+  requestAnimationFrame(step);
+}
+
+function fireConfetti(){
+  const container=document.getElementById('confetti');
+  const colors=['#fbbf24','#a855f7','#ef4444','#22c55e','#3b82f6','#ec4899'];
+  for(let i=0;i<40;i++){
+    const piece=document.createElement('div');
+    piece.className='conf-piece';
+    piece.style.left=Math.random()*100+'%';
+    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDelay=Math.random()*0.5+'s';
+    piece.style.animationDuration=(2+Math.random())+'s';
+    container.appendChild(piece);
+  }
+  setTimeout(()=>container.innerHTML='',3000);
+}
+
+function trackEvent(n,p){
+  console.log('CT:',n,p||{});
+  if(window.clevertap) window.clevertap.event.push(n,p||{});
+}
+trackEvent('Slot_Machine_Opened');
+</script>
+</body>
+</html>

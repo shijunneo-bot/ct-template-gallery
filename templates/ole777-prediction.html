@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    const CONFIG = {
+      includeDismissButton: true,
+
+      brand: {
+        name: "OLE777",
+        navy: "#0F1923",
+        navyLight: "#162029",
+        surface: "#1A2A36",
+        surfaceRaised: "#1F3040",
+        gold: "#FFB800",
+        goldDark: "#E5A500",
+        goldGlow: "rgba(255,184,0,0.2)",
+        goldSubtle: "rgba(255,184,0,0.06)",
+        green: "#22C55E",
+        greenSubtle: "rgba(34,197,94,0.08)",
+        red: "#EF4444",
+        redSubtle: "rgba(239,68,68,0.08)",
+        white: "#F0F4F8",
+        grey: "#6B8299",
+        greyLight: "#8BA3B9",
+        border: "rgba(255,255,255,0.05)",
+      },
+
+      // =============================================
+      // STATE: "predict" | "pending" | "reveal"
+      //   predict = user hasn't chosen yet
+      //   pending = user chose, waiting for result
+      //   reveal  = result is in
+      // =============================================
+      state: "predict",
+
+      // 🏆 User's prediction accuracy
+      accuracy: {
+        total: 18,
+        correct: 13,
+        // Calculated: 72.2%
+      },
+
+      // Points awarded per correct prediction
+      pointsPerCorrect: 50,
+
+      // ⚽ Prediction cards
+      // Each card has two options (home/away or up/down etc)
+      // correctOption is only used in "reveal" state
+      predictions: [
+        {
+          id: "match1",
+          category: "⚽ Premier League",
+          question: "Who wins tonight?",
+          eventTime: "20:00 GMT",
+          revealTime: "Tomorrow, 10:00 AM",
+          optionA: { label: "Chelsea", short: "CHE", icon: "🔵" },
+          optionB: { label: "Arsenal", short: "ARS", icon: "🔴" },
+          selected: null,         // user's choice: "A" or "B" (set when locked in)
+          correctOption: "B",     // revealed answer (used in reveal state)
+          oddsA: "2.85",
+          oddsB: "2.40",
+        },
+        {
+          id: "match2",
+          category: "⚽ La Liga",
+          question: "Who wins tonight?",
+          eventTime: "21:00 GMT",
+          revealTime: "Tomorrow, 10:00 AM",
+          optionA: { label: "Real Madrid", short: "RMA", icon: "⚪" },
+          optionB: { label: "Barcelona", short: "BAR", icon: "🔴" },
+          selected: null,
+          correctOption: "A",
+          oddsA: "1.95",
+          oddsB: "3.10",
+        },
+        {
+          id: "match3",
+          category: "⚽ Serie A",
+          question: "Who wins tonight?",
+          eventTime: "20:45 GMT",
+          revealTime: "Tomorrow, 10:00 AM",
+          optionA: { label: "AC Milan", short: "MIL", icon: "🔴" },
+          optionB: { label: "Juventus", short: "JUV", icon: "⚫" },
+          selected: null,
+          correctOption: "A",
+          oddsA: "2.50",
+          oddsB: "2.60",
+        },
+      ],
+
+      cta: {
+        predict: { text: "Lock In Predictions", url: null },
+        pending: { text: "Set Reminder", url: null },
+        reveal:  { text: "Claim 100 Points", url: "ole777://wallet" },
+      },
+
+      events: {
+        viewed:      "Prediction_Viewed",
+        made:        "Prediction_Made",
+        lockedIn:    "Prediction_LockedIn",
+        revealed:    "Prediction_Revealed",
+        ctaClicked:  "Prediction_CTA_Clicked",
+        dismissed:   "Prediction_Dismissed",
+      },
+    };
+  </script>
+
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>OLE777 — Match Predictions</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap');
+
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html,body{
+      width:100%;height:100%;
+      font-family:'Outfit',sans-serif;
+      background:#0F1923;
+      -webkit-font-smoothing:antialiased;
+      overflow:hidden;
+    }
+
+    .modal{
+      width:100%;height:100%;
+      display:flex;flex-direction:column;
+      position:relative;
+      background:linear-gradient(175deg,#0F1923 0%,#1A2A36 50%,#0F1923 100%);
+      overflow-y:auto;overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .modal::before{
+      content:'';position:fixed;inset:0;
+      background:radial-gradient(ellipse 50% 25% at 50% 0%,rgba(255,184,0,0.05) 0%,transparent 70%);
+      pointer-events:none;z-index:0;
+    }
+
+    /* Dismiss */
+    .dismiss{
+      position:fixed;top:12px;right:12px;
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.06);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent;
+    }
+    .dismiss:active{background:rgba(255,255,255,0.08)}
+    .dismiss svg{width:13px;height:13px;stroke:rgba(255,255,255,0.35);stroke-width:2}
+
+    /* Content */
+    .content{
+      position:relative;z-index:1;
+      padding:16px 16px 24px;
+      width:100%;max-width:400px;
+      margin:0 auto;
+    }
+
+    /* =============================================
+       HEADER
+       ============================================= */
+    .header{
+      margin-bottom:14px;
+      opacity:0;animation:fadeUp .4s ease .1s forwards;
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(8px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    .top-row{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:8px;
+    }
+
+    .badge{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:3px 10px;border-radius:100px;
+      background:rgba(255,184,0,0.08);
+      border:1px solid rgba(255,184,0,0.12);
+      font-size:10px;font-weight:700;
+      color:#FFB800;text-transform:uppercase;
+      letter-spacing:0.6px;
+    }
+
+    /* Accuracy pill */
+    .accuracy-pill{
+      display:flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:100px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.05);
+    }
+    .acc-pct{
+      font-family:'JetBrains Mono',monospace;
+      font-size:12px;font-weight:700;
+      color:#FFB800;
+    }
+    .acc-label{
+      font-size:10px;font-weight:600;
+      color:#6B8299;
+    }
+
+    .headline{
+      font-size:22px;font-weight:800;
+      color:#F0F4F8;line-height:1.2;
+    }
+    .headline .gold{color:#FFB800}
+
+    .sub{
+      font-size:12px;color:#6B8299;
+      font-weight:500;line-height:1.4;margin-top:2px;
+    }
+
+    /* =============================================
+       PREDICTION CARDS
+       ============================================= */
+    .cards{
+      display:flex;flex-direction:column;
+      gap:10px;margin-bottom:14px;
+    }
+
+    .pred-card{
+      background:#1A2A36;
+      border:1px solid rgba(255,255,255,0.05);
+      border-radius:16px;
+      padding:14px;
+      opacity:0;
+      transition:border-color .3s ease;
+    }
+    .pred-card.entered{opacity:1;transform:translateY(0)}
+
+    /* Card header */
+    .card-head{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .card-cat{
+      font-size:10px;font-weight:700;
+      color:#6B8299;text-transform:uppercase;
+      letter-spacing:0.4px;
+    }
+    .card-time{
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px;font-weight:600;
+      color:#8BA3B9;
+    }
+
+    /* VS layout */
+    .vs-row{
+      display:flex;align-items:center;gap:0;
+    }
+
+    .team-btn{
+      flex:1;
+      display:flex;flex-direction:column;
+      align-items:center;gap:4px;
+      padding:12px 6px;
+      border-radius:12px;
+      border:2px solid transparent;
+      background:rgba(255,255,255,0.02);
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:all .25s ease;
+      position:relative;
+    }
+    .team-btn:active{transform:scale(.97)}
+
+    .team-btn.selected{
+      background:rgba(255,184,0,0.06);
+      border-color:rgba(255,184,0,0.3);
+    }
+    .team-btn.selected .team-name{color:#FFB800}
+
+    /* Disabled states */
+    .team-btn.locked{cursor:default;pointer-events:none}
+    .team-btn.locked:not(.selected){opacity:.35}
+
+    /* Reveal states */
+    .team-btn.correct{
+      background:rgba(34,197,94,0.06);
+      border-color:rgba(34,197,94,0.3);
+    }
+    .team-btn.correct .team-name{color:#22C55E}
+    .team-btn.correct .result-badge{display:flex}
+
+    .team-btn.wrong{
+      background:rgba(239,68,68,0.04);
+      border-color:rgba(239,68,68,0.15);
+    }
+    .team-btn.wrong .team-name{color:#EF4444;text-decoration:line-through;text-decoration-color:rgba(239,68,68,0.3)}
+
+    .team-btn.neutral-correct{
+      background:rgba(34,197,94,0.04);
+      border-color:rgba(34,197,94,0.15);
+    }
+    .team-btn.neutral-correct .team-name{color:#22C55E}
+
+    /* Team elements */
+    .team-icon{font-size:28px;line-height:1}
+    .team-name{
+      font-size:13px;font-weight:700;
+      color:#F0F4F8;
+      transition:color .3s ease;
+    }
+    .team-odds{
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px;font-weight:600;
+      color:#6B8299;
+    }
+
+    /* Result badge */
+    .result-badge{
+      display:none;
+      position:absolute;top:-6px;right:-4px;
+      width:18px;height:18px;border-radius:50%;
+      background:#22C55E;
+      align-items:center;justify-content:center;
+      font-size:10px;color:#fff;font-weight:900;
+    }
+
+    /* VS divider */
+    .vs-divider{
+      width:36px;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      flex-shrink:0;
+    }
+    .vs-text{
+      font-size:10px;font-weight:800;
+      color:#6B8299;
+      letter-spacing:1px;
+    }
+
+    /* Lock-in pulse on card */
+    .pred-card.locked-in{
+      border-color:rgba(255,184,0,0.12);
+    }
+
+    /* =============================================
+       PENDING STATE OVERLAY PER CARD
+       ============================================= */
+    .pending-badge{
+      display:none;
+      align-items:center;justify-content:center;gap:5px;
+      margin-top:8px;
+      padding:6px 12px;
+      border-radius:8px;
+      background:rgba(255,184,0,0.04);
+      border:1px solid rgba(255,184,0,0.08);
+    }
+    .pending-badge.show{display:flex}
+    .pending-icon{font-size:12px}
+    .pending-text{
+      font-size:10px;font-weight:700;
+      color:#FFB800;
+    }
+
+    /* =============================================
+       REVEAL RESULT PER CARD
+       ============================================= */
+    .reveal-badge{
+      display:none;
+      align-items:center;justify-content:center;gap:5px;
+      margin-top:8px;
+      padding:6px 12px;
+      border-radius:8px;
+    }
+    .reveal-badge.show{display:flex}
+    .reveal-badge.correct-badge{
+      background:rgba(34,197,94,0.06);
+      border:1px solid rgba(34,197,94,0.12);
+    }
+    .reveal-badge.wrong-badge{
+      background:rgba(239,68,68,0.04);
+      border:1px solid rgba(239,68,68,0.1);
+    }
+    .reveal-icon{font-size:12px}
+    .reveal-text{font-size:10px;font-weight:700}
+    .reveal-badge.correct-badge .reveal-text{color:#22C55E}
+    .reveal-badge.wrong-badge .reveal-text{color:#EF4444}
+
+    /* =============================================
+       SCORE SUMMARY (reveal state only)
+       ============================================= */
+    .score-summary{
+      display:none;
+      padding:16px;
+      border-radius:14px;
+      background:rgba(255,184,0,0.04);
+      border:1px solid rgba(255,184,0,0.1);
+      text-align:center;
+      margin-bottom:14px;
+    }
+    .score-summary.show{display:block}
+
+    .score-emoji{font-size:32px;margin-bottom:6px}
+    .score-headline{
+      font-size:18px;font-weight:800;
+      color:#F0F4F8;margin-bottom:2px;
+    }
+    .score-headline .gold{color:#FFB800}
+    .score-detail{
+      font-size:12px;color:#6B8299;
+      font-weight:500;
+    }
+
+    /* =============================================
+       CTA
+       ============================================= */
+    .cta-area{
+      position:relative;z-index:1;
+    }
+
+    .cta-btn{
+      width:100%;padding:15px;
+      border-radius:14px;border:none;
+      font-family:'Outfit',sans-serif;
+      font-size:15px;font-weight:700;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:all .2s ease;
+      letter-spacing:0.3px;
+    }
+    .cta-btn:active{transform:scale(.97)}
+    .cta-btn:disabled{opacity:.4;cursor:default;transform:none}
+
+    .cta-btn.gold-btn{
+      background:#FFB800;color:#0F1923;
+      box-shadow:0 4px 20px rgba(255,184,0,0.2);
+    }
+    .cta-btn.gold-btn:active{background:#E5A500}
+
+    .cta-btn.outline-btn{
+      background:transparent;
+      border:2px solid rgba(255,184,0,0.2);
+      color:#FFB800;
+    }
+    .cta-btn.outline-btn:active{background:rgba(255,184,0,0.06)}
+
+    .cta-btn.green-btn{
+      background:#22C55E;color:#fff;
+      box-shadow:0 4px 20px rgba(34,197,94,0.2);
+    }
+
+    .cta-secondary{
+      margin-top:8px;
+      width:100%;padding:10px;
+      background:transparent;border:none;
+      color:#6B8299;font-size:12px;font-weight:600;
+      font-family:'Outfit',sans-serif;
+      cursor:pointer;text-align:center;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    /* =============================================
+       LOCK-IN ANIMATION
+       ============================================= */
+    @keyframes lockPulse{
+      0%{box-shadow:0 0 0 0 rgba(255,184,0,0.3)}
+      70%{box-shadow:0 0 0 10px rgba(255,184,0,0)}
+      100%{box-shadow:0 0 0 0 rgba(255,184,0,0)}
+    }
+    .lock-pulse{animation:lockPulse .6s ease}
+
+    /* Checkmark animation */
+    @keyframes checkPop{
+      0%{transform:scale(0);opacity:0}
+      50%{transform:scale(1.3)}
+      100%{transform:scale(1);opacity:1}
+    }
+    .check-pop{
+      animation:checkPop .4s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+
+    /* Confetti for reveal */
+    .confetti-container{
+      position:fixed;inset:0;pointer-events:none;z-index:99999;
+    }
+    .confetti-piece{
+      position:absolute;border-radius:2px;
+      animation:confettiFall linear forwards;
+    }
+    @keyframes confettiFall{
+      0%{transform:translateY(-20px) rotate(0) scale(1);opacity:1}
+      80%{opacity:1}
+      100%{transform:translateY(105vh) rotate(720deg) scale(.3);opacity:0}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="modal">
+    <button class="dismiss" onclick="dismiss()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div class="content">
+      <!-- Header -->
+      <div class="header">
+        <div class="top-row">
+          <div class="badge" id="stateBadge">🔮 Predict</div>
+          <div class="accuracy-pill">
+            <span class="acc-pct" id="accPct"></span>
+            <span class="acc-label">accuracy</span>
+          </div>
+        </div>
+        <div class="headline" id="headline"></div>
+        <div class="sub" id="subText"></div>
+      </div>
+
+      <!-- Score summary (reveal only) -->
+      <div class="score-summary" id="scoreSummary">
+        <div class="score-emoji" id="scoreEmoji"></div>
+        <div class="score-headline" id="scoreHeadline"></div>
+        <div class="score-detail" id="scoreDetail"></div>
+      </div>
+
+      <!-- Prediction cards -->
+      <div class="cards" id="cardsContainer"></div>
+
+      <!-- CTA -->
+      <div class="cta-area">
+        <button class="cta-btn gold-btn" id="ctaBtn" onclick="ctaAction()" disabled></button>
+        <button class="cta-secondary" id="ctaSecondary" onclick="dismiss()">Maybe Later</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const B = CONFIG.brand;
+    const PREDS = CONFIG.predictions;
+    const STATE = CONFIG.state;
+    let selectionsCount = 0;
+
+    // =============================================
+    // ACCURACY CALC
+    // =============================================
+    const accTotal = CONFIG.accuracy.total;
+    const accCorrect = CONFIG.accuracy.correct;
+    const accPct = accTotal > 0 ? ((accCorrect / accTotal) * 100).toFixed(1) : '0.0';
+    document.getElementById('accPct').textContent = `${accPct}%`;
+
+    // =============================================
+    // STATE-DEPENDENT HEADER
+    // =============================================
+    const headline = document.getElementById('headline');
+    const subText = document.getElementById('subText');
+    const stateBadge = document.getElementById('stateBadge');
+    const ctaBtn = document.getElementById('ctaBtn');
+    const ctaSecondary = document.getElementById('ctaSecondary');
+
+    if (STATE === 'predict') {
+      headline.innerHTML = '<span class="gold">Predict</span> Tonight\'s Results';
+      subText.textContent = 'Pick winners across 3 matches. Return tomorrow to see how you did.';
+      stateBadge.innerHTML = '🔮 Predict';
+      ctaBtn.textContent = CONFIG.cta.predict.text;
+      ctaBtn.className = 'cta-btn gold-btn';
+    } else if (STATE === 'pending') {
+      headline.innerHTML = 'Predictions <span class="gold">Locked In</span>';
+      subText.textContent = 'Results reveal tomorrow at 10:00 AM. We\'ll remind you.';
+      stateBadge.innerHTML = '⏳ Pending';
+      ctaBtn.textContent = CONFIG.cta.pending.text;
+      ctaBtn.className = 'cta-btn outline-btn';
+      ctaBtn.disabled = false;
+      ctaSecondary.textContent = 'Close';
+    } else if (STATE === 'reveal') {
+      stateBadge.innerHTML = '🏆 Results';
+      ctaSecondary.textContent = 'Close';
+    }
+
+    // =============================================
+    // BUILD CARDS
+    // =============================================
+    const container = document.getElementById('cardsContainer');
+
+    PREDS.forEach((pred, idx) => {
+      const card = document.createElement('div');
+      card.className = 'pred-card';
+      card.id = `card-${pred.id}`;
+      card.style.animation = `fadeUp .4s ease ${0.15 + idx * 0.08}s forwards`;
+
+      const isLocked = STATE === 'pending' || STATE === 'reveal';
+      const lockedClass = isLocked ? 'locked' : '';
+
+      // Determine classes for reveal state
+      let classA = '', classB = '';
+      if (STATE === 'reveal') {
+        const isCorrectA = pred.correctOption === 'A';
+        const pickedA = pred.selected === 'A';
+        const pickedB = pred.selected === 'B';
+
+        if (isCorrectA) {
+          classA = pickedA ? 'correct' : 'neutral-correct';
+          classB = pickedB ? 'wrong' : '';
+        } else {
+          classB = pickedB ? 'correct' : 'neutral-correct';
+          classA = pickedA ? 'wrong' : '';
+        }
+      } else if (STATE === 'pending') {
+        classA = pred.selected === 'A' ? 'selected' : '';
+        classB = pred.selected === 'B' ? 'selected' : '';
+      }
+
+      card.innerHTML = `
+        <div class="card-head">
+          <span class="card-cat">${pred.category}</span>
+          <span class="card-time">${pred.eventTime}</span>
+        </div>
+        <div class="vs-row">
+          <button class="team-btn ${lockedClass} ${classA}" id="btn-${pred.id}-A" onclick="selectOption('${pred.id}','A')">
+            <span class="result-badge check-pop">✓</span>
+            <span class="team-icon">${pred.optionA.icon}</span>
+            <span class="team-name">${pred.optionA.label}</span>
+            <span class="team-odds">${pred.oddsA}</span>
+          </button>
+          <div class="vs-divider">
+            <span class="vs-text">VS</span>
+          </div>
+          <button class="team-btn ${lockedClass} ${classB}" id="btn-${pred.id}-B" onclick="selectOption('${pred.id}','B')">
+            <span class="result-badge check-pop">✓</span>
+            <span class="team-icon">${pred.optionB.icon}</span>
+            <span class="team-name">${pred.optionB.label}</span>
+            <span class="team-odds">${pred.oddsB}</span>
+          </button>
+        </div>
+        <div class="pending-badge ${STATE === 'pending' && pred.selected ? 'show' : ''}" id="pending-${pred.id}">
+          <span class="pending-icon">🔒</span>
+          <span class="pending-text">Locked — reveals ${pred.revealTime}</span>
+        </div>
+        <div class="reveal-badge" id="reveal-badge-${pred.id}"></div>
+      `;
+
+      container.appendChild(card);
+    });
+
+    // =============================================
+    // REVEAL STATE — show results
+    // =============================================
+    if (STATE === 'reveal') {
+      let correctCount = 0;
+      PREDS.forEach(pred => {
+        const isCorrect = pred.selected === pred.correctOption;
+        if (isCorrect) correctCount++;
+
+        const badge = document.getElementById(`reveal-badge-${pred.id}`);
+        badge.classList.add('show');
+        if (isCorrect) {
+          badge.classList.add('correct-badge');
+          badge.innerHTML = `
+            <span class="reveal-icon">✅</span>
+            <span class="reveal-text">Correct! +${CONFIG.pointsPerCorrect} pts</span>
+          `;
+        } else {
+          badge.classList.add('wrong-badge');
+          const winnerLabel = pred.correctOption === 'A' ? pred.optionA.label : pred.optionB.label;
+          badge.innerHTML = `
+            <span class="reveal-icon">❌</span>
+            <span class="reveal-text">${winnerLabel} won</span>
+          `;
+        }
+      });
+
+      // Score summary
+      const summary = document.getElementById('scoreSummary');
+      summary.classList.add('show');
+
+      const totalPts = correctCount * CONFIG.pointsPerCorrect;
+      const pctRight = Math.round((correctCount / PREDS.length) * 100);
+
+      if (correctCount === PREDS.length) {
+        document.getElementById('scoreEmoji').textContent = '🎯';
+        document.getElementById('scoreHeadline').innerHTML = `Perfect! <span class="gold">All ${correctCount} correct</span>`;
+      } else if (correctCount > 0) {
+        document.getElementById('scoreEmoji').textContent = '🏆';
+        document.getElementById('scoreHeadline').innerHTML = `<span class="gold">${correctCount}/${PREDS.length}</span> Correct`;
+      } else {
+        document.getElementById('scoreEmoji').textContent = '😤';
+        document.getElementById('scoreHeadline').innerHTML = 'Better luck next time';
+      }
+      document.getElementById('scoreDetail').textContent =
+        correctCount > 0
+          ? `You earned ${totalPts} points · Accuracy: ${accPct}%`
+          : `0 points this round · Accuracy: ${accPct}%`;
+
+      headline.innerHTML = 'Results Are <span class="gold">In!</span>';
+      subText.textContent = `${correctCount} of ${PREDS.length} predictions correct.`;
+
+      ctaBtn.textContent = correctCount > 0 ? `Claim ${totalPts} Points` : 'Try Again Tomorrow';
+      ctaBtn.className = correctCount > 0 ? 'cta-btn green-btn' : 'cta-btn outline-btn';
+      ctaBtn.disabled = false;
+
+      // Confetti if all correct
+      if (correctCount === PREDS.length) spawnConfetti();
+
+      pushEvent(CONFIG.events.revealed, {
+        Correct: correctCount,
+        Total: PREDS.length,
+        Points_Earned: totalPts,
+        Accuracy: accPct + '%',
+      });
+    }
+
+    // =============================================
+    // SELECT OPTION (predict state only)
+    // =============================================
+    window.selectOption = function (predId, option) {
+      if (STATE !== 'predict') return;
+
+      const pred = PREDS.find(p => p.id === predId);
+      if (!pred) return;
+
+      const wasSelected = pred.selected;
+      pred.selected = option;
+
+      // Update visual state
+      const btnA = document.getElementById(`btn-${predId}-A`);
+      const btnB = document.getElementById(`btn-${predId}-B`);
+
+      btnA.classList.remove('selected');
+      btnB.classList.remove('selected');
+
+      if (option === 'A') {
+        btnA.classList.add('selected');
+        btnA.classList.add('lock-pulse');
+        setTimeout(() => btnA.classList.remove('lock-pulse'), 600);
+      } else {
+        btnB.classList.add('selected');
+        btnB.classList.add('lock-pulse');
+        setTimeout(() => btnB.classList.remove('lock-pulse'), 600);
+      }
+
+      // Count selections
+      selectionsCount = PREDS.filter(p => p.selected).length;
+
+      // Enable/disable CTA
+      ctaBtn.disabled = selectionsCount < PREDS.length;
+      if (selectionsCount === PREDS.length) {
+        ctaBtn.textContent = `Lock In ${selectionsCount} Predictions`;
+      } else {
+        ctaBtn.textContent = `Pick ${PREDS.length - selectionsCount} more`;
+      }
+
+      // Fire event
+      const chosenLabel = option === 'A' ? pred.optionA.label : pred.optionB.label;
+      pushEvent(CONFIG.events.made, {
+        Match_ID: predId,
+        Category: pred.category,
+        Selected: chosenLabel,
+        Option: option,
+      });
+    };
+
+    // =============================================
+    // CTA ACTION
+    // =============================================
+    window.ctaAction = function () {
+      if (STATE === 'predict') {
+        // Lock in all predictions
+        lockInAll();
+      } else if (STATE === 'pending') {
+        // Set reminder (in production: schedule push)
+        pushEvent(CONFIG.events.ctaClicked, { Action: 'set_reminder' });
+        ctaBtn.textContent = '✓ Reminder Set';
+        ctaBtn.disabled = true;
+        ctaBtn.className = 'cta-btn outline-btn';
+      } else if (STATE === 'reveal') {
+        pushEvent(CONFIG.events.ctaClicked, { Action: 'claim_points' });
+        if (CONFIG.cta.reveal.url) window.location.href = CONFIG.cta.reveal.url;
+        else dismiss();
+      }
+    };
+
+    function lockInAll() {
+      // Lock all buttons
+      document.querySelectorAll('.team-btn').forEach(btn => {
+        btn.classList.add('locked');
+        if (!btn.classList.contains('selected')) btn.style.opacity = '.35';
+      });
+
+      // Show pending badges
+      PREDS.forEach(pred => {
+        if (pred.selected) {
+          const pendingBadge = document.getElementById(`pending-${pred.id}`);
+          pendingBadge.classList.add('show');
+          document.getElementById(`card-${pred.id}`).classList.add('locked-in');
+        }
+      });
+
+      // Switch CTA to pending mode
+      headline.innerHTML = 'Predictions <span class="gold">Locked In</span> 🔒';
+      subText.textContent = 'Return tomorrow to see your results!';
+      stateBadge.innerHTML = '⏳ Pending';
+      ctaBtn.textContent = CONFIG.cta.pending.text;
+      ctaBtn.className = 'cta-btn outline-btn';
+      ctaBtn.disabled = false;
+      ctaSecondary.textContent = 'Close';
+
+      // Fire lock-in event
+      const selections = PREDS.map(p => ({
+        match: p.id,
+        picked: p.selected === 'A' ? p.optionA.label : p.optionB.label,
+      }));
+
+      pushEvent(CONFIG.events.lockedIn, {
+        Predictions: JSON.stringify(selections),
+        Count: PREDS.length,
+      });
+    }
+
+    // =============================================
+    // CONFETTI
+    // =============================================
+    function spawnConfetti() {
+      const c = document.createElement('div');
+      c.className = 'confetti-container';
+      document.body.appendChild(c);
+      const colors = ['#FFB800','#22C55E','#E5A500','#34D399','#FFD740','#fff'];
+      for (let i = 0; i < 50; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = `${15 + Math.random() * 70}%`;
+        p.style.top = `${-5 - Math.random() * 10}px`;
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.width = `${3 + Math.random() * 5}px`;
+        p.style.height = `${6 + Math.random() * 10}px`;
+        p.style.animationDuration = `${1.5 + Math.random() * 2.5}s`;
+        p.style.animationDelay = `${Math.random() * 0.4}s`;
+        c.appendChild(p);
+      }
+      setTimeout(() => c.remove(), 5000);
+    }
+
+    // =============================================
+    // DISMISS
+    // =============================================
+    if (!CONFIG.includeDismissButton) document.querySelector('.dismiss').style.display = 'none';
+
+    window.dismiss = function () {
+      pushEvent(CONFIG.events.dismissed, { State: STATE });
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.dismissInAppNotification) {
+          CleverTap.dismissInAppNotification(); return;
+        }
+      } catch (e) {}
+      window.location.href = 'wzrk://exit';
+    };
+
+    // =============================================
+    // CLEVERTAP
+    // =============================================
+    function pushEvent(name, props) {
+      const p = props || {};
+      p.Timestamp = new Date().toISOString();
+      try {
+        if (typeof CleverTap !== 'undefined' && CleverTap.pushEvent)
+          CleverTap.pushEvent(name, JSON.stringify(p));
+        if (typeof clevertap !== 'undefined' && clevertap.event)
+          clevertap.event.push(name, p);
+        if (window.webkit?.messageHandlers?.clevertap)
+          window.webkit.messageHandlers.clevertap.postMessage(
+            JSON.stringify({ type: 'event', name, props: p })
+          );
+      } catch (e) { console.log('[CT]', name, p); }
+    }
+
+    pushEvent(CONFIG.events.viewed, {
+      State: STATE,
+      Match_Count: PREDS.length,
+      Accuracy: accPct + '%',
+    });
+  </script>
+</body>
+</html>

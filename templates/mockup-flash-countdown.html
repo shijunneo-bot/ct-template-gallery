@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Flash Countdown</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0a0f;--surface:#12121a;--card:#1a1a24;
+    --text:#eae7e2;--muted:#6a6578;
+    --fire:#ef4444;--fire2:#f97316;--gold:#fbbf24;
+    --border:rgba(255,255,255,0.05);
+  }
+  body{
+    font-family:'Outfit',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;
+    min-height:100vh;overflow-x:hidden;
+  }
+
+  /* URGENCY BAR */
+  .urgency-bar{
+    background:linear-gradient(90deg,var(--fire),var(--fire2));
+    padding:8px 20px;display:flex;align-items:center;
+    justify-content:center;gap:8px;
+  }
+  .urgency-bar .pulse-dot{
+    width:8px;height:8px;border-radius:50%;background:#fff;
+    animation:urgPulse 1s ease infinite;
+  }
+  .urgency-bar span{
+    font-size:11px;font-weight:700;color:#fff;
+    letter-spacing:0.5px;text-transform:uppercase;
+  }
+  @keyframes urgPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+
+  /* COUNTDOWN */
+  .countdown-section{padding:28px 20px 24px;text-align:center;}
+  .cd-label{
+    font-size:11px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:16px;
+  }
+  .cd-timer{
+    display:flex;justify-content:center;gap:10px;margin-bottom:20px;
+  }
+  .cd-unit{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:12px 14px;min-width:68px;
+    text-align:center;
+  }
+  .cd-num{
+    font-size:36px;font-weight:900;color:#fff;
+    line-height:1;font-variant-numeric:tabular-nums;
+  }
+  .cd-name{
+    font-size:9px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1.5px;margin-top:4px;
+  }
+  .cd-title{
+    font-size:28px;font-weight:900;color:#fff;
+    line-height:1.15;margin-bottom:8px;letter-spacing:-0.5px;
+  }
+  .cd-title .highlight{
+    background:linear-gradient(90deg,var(--fire),var(--gold));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .cd-sub{font-size:13px;color:var(--muted);line-height:1.5;}
+
+  /* DEAL CARDS */
+  .deals{padding:0 16px 24px;display:flex;flex-direction:column;gap:12px;}
+
+  .deal-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:18px;padding:18px;display:flex;gap:14px;
+    cursor:pointer;transition:all 0.2s;position:relative;
+    overflow:hidden;
+  }
+  .deal-card:active{transform:scale(0.98);border-color:rgba(239,68,68,0.2);}
+
+  .deal-thumb{
+    width:80px;height:80px;border-radius:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:36px;position:relative;
+  }
+  .deal-body{flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .deal-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .deal-price{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+  .price-now{font-size:22px;font-weight:900;color:var(--fire);}
+  .price-was{font-size:13px;color:var(--muted);text-decoration:line-through;}
+  .price-save{
+    font-size:10px;font-weight:700;background:rgba(239,68,68,0.12);
+    color:var(--fire);padding:2px 8px;border-radius:4px;
+  }
+  .deal-stock{
+    font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;
+  }
+  .stock-bar{
+    width:80px;height:4px;border-radius:2px;background:var(--surface);
+    overflow:hidden;
+  }
+  .stock-fill{
+    height:100%;border-radius:2px;
+    background:linear-gradient(90deg,var(--fire),var(--fire2));
+    transition:width 0.3s;
+  }
+
+  /* BADGE */
+  .deal-badge{
+    position:absolute;top:0;right:0;
+    background:var(--gold);color:var(--bg);
+    font-size:9px;font-weight:800;padding:4px 10px;
+    border-radius:0 0 0 10px;text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+
+  /* CTA */
+  .cta-section{padding:0 16px 32px;}
+  .cta-btn{
+    width:100%;padding:18px;border-radius:16px;border:none;
+    background:linear-gradient(135deg,var(--fire),var(--fire2));
+    font-family:'Outfit',sans-serif;font-size:16px;
+    font-weight:800;color:#fff;cursor:pointer;
+    position:relative;overflow:hidden;
+    transition:transform 0.2s;
+  }
+  .cta-btn:active{transform:scale(0.98);}
+  .cta-btn::after{
+    content:'';position:absolute;top:0;left:-100%;
+    width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+    animation:shimmer 2s ease infinite;
+  }
+  @keyframes shimmer{0%{left:-100%;}100%{left:200%;}}
+
+  .cta-sub{
+    text-align:center;font-size:11px;color:var(--muted);
+    margin-top:10px;
+  }
+
+  .dt-1{background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(249,115,22,0.08));}
+  .dt-2{background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(139,92,246,0.08));}
+  .dt-3{background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(52,211,153,0.08));}
+</style>
+</head>
+<body>
+
+<div class="urgency-bar">
+  <span class="pulse-dot"></span>
+  <span>Flash sale ends soon — limited stock</span>
+</div>
+
+<div class="countdown-section">
+  <div class="cd-label">⚡ Sale Ends In</div>
+  <div class="cd-timer">
+    <div class="cd-unit"><div class="cd-num" id="hrs">02</div><div class="cd-name">Hours</div></div>
+    <div class="cd-unit"><div class="cd-num" id="mins">47</div><div class="cd-name">Mins</div></div>
+    <div class="cd-unit"><div class="cd-num" id="secs">33</div><div class="cd-name">Secs</div></div>
+  </div>
+  <div class="cd-title">Up to <span class="highlight">60% OFF</span> Everything</div>
+  <div class="cd-sub">Members-only flash sale. Prices you won't see again.</div>
+</div>
+
+<div class="deals">
+  <div class="deal-card" onclick="trackEvent('Deal_Clicked',{deal:'Premium Annual'})">
+    <div class="deal-badge">Best Deal</div>
+    <div class="deal-thumb dt-1">👑</div>
+    <div class="deal-body">
+      <div class="deal-name">Premium Annual Plan</div>
+      <div class="deal-price">
+        <span class="price-now">$49</span>
+        <span class="price-was">$119</span>
+        <span class="price-save">-59%</span>
+      </div>
+      <div class="deal-stock">
+        <div class="stock-bar"><div class="stock-fill" style="width:23%"></div></div>
+        Only 12 left at this price
+      </div>
+    </div>
+  </div>
+
+  <div class="deal-card" onclick="trackEvent('Deal_Clicked',{deal:'Pro Monthly'})">
+    <div class="deal-thumb dt-2">⚡</div>
+    <div class="deal-body">
+      <div class="deal-name">Pro Monthly</div>
+      <div class="deal-price">
+        <span class="price-now">$9</span>
+        <span class="price-was">$19</span>
+        <span class="price-save">-53%</span>
+      </div>
+      <div class="deal-stock">
+        <div class="stock-bar"><div class="stock-fill" style="width:45%"></div></div>
+        38 claimed today
+      </div>
+    </div>
+  </div>
+
+  <div class="deal-card" onclick="trackEvent('Deal_Clicked',{deal:'Starter Bundle'})">
+    <div class="deal-thumb dt-3">🎁</div>
+    <div class="deal-body">
+      <div class="deal-name">Starter Bundle</div>
+      <div class="deal-price">
+        <span class="price-now">$29</span>
+        <span class="price-was">$59</span>
+        <span class="price-save">-51%</span>
+      </div>
+      <div class="deal-stock">
+        <div class="stock-bar"><div class="stock-fill" style="width:60%"></div></div>
+        52 claimed today
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-section">
+  <button class="cta-btn" onclick="trackEvent('Flash_CTA_Clicked')">🔥 Claim My Deal Now</button>
+  <div class="cta-sub">One-time offer · Cancel anytime · Money-back guarantee</div>
+</div>
+
+<script>
+  // Countdown timer
+  let total = 2*3600 + 47*60 + 33;
+  function updateTimer(){
+    if(total<=0) return;
+    total--;
+    const h=Math.floor(total/3600), m=Math.floor((total%3600)/60), s=total%60;
+    document.getElementById('hrs').textContent=String(h).padStart(2,'0');
+    document.getElementById('mins').textContent=String(m).padStart(2,'0');
+    document.getElementById('secs').textContent=String(s).padStart(2,'0');
+  }
+  setInterval(updateTimer,1000);
+
+  function trackEvent(n,p){
+    console.log('CT:',n,p||{});
+    if(window.clevertap) window.clevertap.event.push(n,p||{});
+  }
+  trackEvent('Flash_Sale_Viewed');
+</script>
+</body>
+</html>
