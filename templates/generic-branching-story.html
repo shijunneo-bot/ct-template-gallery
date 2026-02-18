@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Branching Story</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0C0E12;--card:#161920;--card2:#1D2028;
+    --border:rgba(255,255,255,0.06);
+    --accent:#6C63FF;--accent-glow:rgba(108,99,255,0.2);
+    --warm:#FF8A65;--teal:#4DD0B8;--rose:#F472B6;
+    --text:#EAEAEA;--muted:rgba(255,255,255,0.4);
+  }
+  body{
+    font-family:'DM Sans',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;
+    min-height:100vh;display:flex;flex-direction:column;
+    overflow-x:hidden;
+  }
+
+  /* Dismiss */
+  .dismiss{
+    position:fixed;top:12px;right:12px;width:28px;height:28px;
+    background:rgba(255,255,255,0.08);border:none;border-radius:50%;
+    color:var(--muted);font-size:14px;cursor:pointer;z-index:20;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Progress */
+  .progress-bar{
+    position:fixed;top:0;left:0;right:0;height:3px;
+    background:rgba(255,255,255,0.05);z-index:15;
+    max-width:390px;margin:0 auto;
+  }
+  .progress-fill{
+    height:100%;background:var(--accent);border-radius:0 2px 2px 0;
+    transition:width 0.5s ease;
+  }
+  .step-counter{
+    position:fixed;top:10px;left:16px;z-index:15;
+    font-size:11px;font-weight:500;color:var(--muted);
+    font-family:'DM Sans',sans-serif;
+  }
+
+  /* Scene container */
+  .scene{
+    flex:1;display:flex;flex-direction:column;
+    padding:48px 20px 24px;
+    animation:sceneIn 0.4s ease both;
+  }
+  @keyframes sceneIn{
+    0%{opacity:0;transform:translateX(30px)}
+    100%{opacity:1;transform:translateX(0)}
+  }
+  @keyframes sceneOut{
+    0%{opacity:1;transform:translateX(0)}
+    100%{opacity:0;transform:translateX(-30px)}
+  }
+
+  /* Scene illustration */
+  .scene-visual{
+    width:100%;height:180px;border-radius:16px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:64px;margin-bottom:20px;
+    position:relative;overflow:hidden;
+  }
+  .scene-visual::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(77,208,184,0.1));
+    border:1px solid var(--border);border-radius:16px;
+  }
+  .scene-emoji{position:relative;z-index:1;animation:float 3s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+  /* Scene text */
+  .scene-chapter{
+    font-size:10px;font-weight:600;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent);margin-bottom:10px;
+  }
+  .scene-title{
+    font-family:'Instrument Serif',serif;font-size:26px;
+    line-height:1.25;color:#fff;margin-bottom:12px;
+  }
+  .scene-body{
+    font-size:14px;line-height:1.65;color:var(--muted);
+    margin-bottom:auto;padding-bottom:20px;
+  }
+
+  /* Choices */
+  .choices{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+  .choice-btn{
+    display:flex;align-items:center;gap:12px;
+    padding:16px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;cursor:pointer;transition:all 0.25s;
+    text-align:left;
+  }
+  .choice-btn:active{
+    transform:scale(0.97);border-color:var(--accent);
+    background:var(--accent-glow);
+  }
+  .choice-icon{
+    width:40px;height:40px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;flex-shrink:0;background:rgba(255,255,255,0.04);
+  }
+  .choice-body{flex:1;min-width:0}
+  .choice-label{font-size:14px;font-weight:600;color:#fff;margin-bottom:2px}
+  .choice-hint{font-size:11px;color:var(--muted)}
+  .choice-arrow{color:var(--muted);font-size:14px;flex-shrink:0;transition:transform 0.2s}
+  .choice-btn:active .choice-arrow{transform:translateX(3px);color:var(--accent)}
+
+  /* Ending screen */
+  .ending{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:48px 24px 24px;
+    animation:sceneIn 0.5s ease both;
+  }
+  .ending-emoji{font-size:72px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+  .ending-tag{
+    font-size:10px;font-weight:600;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent);margin-bottom:10px;
+    padding:4px 12px;border:1px solid var(--accent-glow);border-radius:20px;
+  }
+  .ending-title{
+    font-family:'Instrument Serif',serif;font-size:28px;
+    line-height:1.25;color:#fff;margin-bottom:10px;
+  }
+  .ending-desc{font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:24px;max-width:300px}
+  .ending-cta{
+    width:100%;max-width:300px;padding:16px;border:none;border-radius:14px;
+    background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;
+    font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+    margin-bottom:10px;
+  }
+  .ending-cta:active{transform:scale(0.97)}
+  .ending-restart{
+    background:none;border:none;color:var(--muted);
+    font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;
+    padding:10px;
+  }
+
+  /* Path summary pills */
+  .path-summary{
+    display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+    margin-bottom:20px;
+  }
+  .path-pill{
+    padding:4px 10px;background:var(--card);border:1px solid var(--border);
+    border-radius:20px;font-size:10px;color:var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<script>
+  // ═══════════════════════════════════════════════════
+  // CONFIG — Story Graph
+  // ═══════════════════════════════════════════════════
+  // Each node has: id, chapter, title, body, emoji, bg
+  // Choices: array of { label, hint, icon, next }
+  // Endings: have cta + ctaUrl instead of choices
+  const CONFIG = {
+    includeDismissButton: true,
+
+    brand: {
+      name: "TravelApp",
+    },
+
+    tracking: {
+      eventPrefix: "BranchStory",
+    },
+
+    // Story graph — nodes keyed by ID
+    story: {
+      start: {
+        id: "start",
+        chapter: "Chapter 1",
+        title: "You just landed in Tokyo",
+        body: "It's 8am, cherry blossom season. You have one perfect day. The morning light is golden and the city is waking up. How do you want to start?",
+        emoji: "✈️",
+        choices: [
+          { label: "Hit the streets early", hint: "Explore Tsukiji market at dawn", icon: "🌅", next: "market" },
+          { label: "Find the perfect coffee", hint: "A hidden kissaten in Shimokitazawa", icon: "☕", next: "coffee" },
+        ],
+      },
+
+      market: {
+        id: "market",
+        chapter: "Chapter 2 · The Early Bird",
+        title: "Tsukiji is alive",
+        body: "The outer market buzzes with vendors preparing the freshest seafood you've ever seen. Steam rises from grills, the smell of charcoal and soy fills the narrow alleys. A vendor waves you over — the tamagoyaki is legendary here.",
+        emoji: "🐟",
+        choices: [
+          { label: "Eat everything in sight", hint: "A full market tasting tour", icon: "🍣", next: "feast" },
+          { label: "Buy gifts for home", hint: "Japanese knives, ceramics, tea", icon: "🎁", next: "gifts" },
+        ],
+      },
+
+      coffee: {
+        id: "coffee",
+        chapter: "Chapter 2 · The Wanderer",
+        title: "A tiny kissaten, frozen in time",
+        body: "Down a side street in Shimokitazawa, you find a 40-year-old coffee shop. The owner hand-drips each cup with surgical precision. Jazz vinyl crackles softly. The coffee is extraordinary — deep, clean, no bitterness.",
+        emoji: "☕",
+        choices: [
+          { label: "Stay and sketch the moment", hint: "Slow down, journal, absorb", icon: "✏️", next: "slow" },
+          { label: "Ask the owner for local secrets", hint: "Where do locals actually go?", icon: "🗝️", next: "secrets" },
+        ],
+      },
+
+      feast: {
+        id: "feast",
+        chapter: "Chapter 3 · The Feast",
+        title: "Your stomach is grateful",
+        body: "Tamagoyaki, fresh uni, grilled mochi, and a bowl of the richest ramen of your life. You've eaten six things before 10am. The market vendors love your enthusiasm — one hands you a free matcha mochi as a gift.",
+        emoji: "🍜",
+        choices: [
+          { label: "Walk it off in a garden", hint: "Hamarikyu Gardens, right nearby", icon: "🌿", next: "ending_zen" },
+          { label: "Keep the energy going", hint: "Akihabara's electric streets await", icon: "âš¡", next: "ending_electric" },
+        ],
+      },
+
+      gifts: {
+        id: "gifts",
+        chapter: "Chapter 3 · The Collector",
+        title: "A knife that will outlive you",
+        body: "A third-generation blacksmith shows you hand-forged kitchen knives. You pick one with a Damascus steel blade and an octagonal magnolia handle. It costs more than your flight, and it's worth every yen.",
+        emoji: "🔪",
+        choices: [
+          { label: "Head to a temple for balance", hint: "Meiji Shrine through the forest path", icon: "⛩️", next: "ending_zen" },
+          { label: "Find more hidden craft shops", hint: "Yanaka district — old Tokyo", icon: "🏮", next: "ending_craft" },
+        ],
+      },
+
+      slow: {
+        id: "slow",
+        chapter: "Chapter 3 · The Observer",
+        title: "Time stops for a moment",
+        body: "You sketch the interior — the curved wooden counter, the worn leather stools, the light falling through frosted glass. The owner brings you a second cup, on the house. 'You understand coffee,' he says simply.",
+        emoji: "✏️",
+        choices: [
+          { label: "Find a quiet garden", hint: "Shinjuku Gyoen in morning light", icon: "🌸", next: "ending_zen" },
+          { label: "Get lost in backstreet vinyl shops", hint: "Shimokitazawa is Japan's vinyl capital", icon: "🎵", next: "ending_vinyl" },
+        ],
+      },
+
+      secrets: {
+        id: "secrets",
+        chapter: "Chapter 3 · The Insider",
+        title: "The owner's eyes light up",
+        body: "'Ah, you want real Tokyo?' He writes an address on a napkin — a tiny yakitori bar that seats eight, run by a retired sumo wrestler. 'Go at 6pm. Tell them Takeshi sent you. Order the tsukune.'",
+        emoji: "🗝️",
+        choices: [
+          { label: "Follow the recommendation", hint: "Trust the local — go at 6pm", icon: "🍢", next: "ending_yakitori" },
+          { label: "Explore until sunset", hint: "Wander Yanaka's temple district", icon: "🌅", next: "ending_craft" },
+        ],
+      },
+
+      // ── ENDINGS ──
+      ending_zen: {
+        id: "ending_zen",
+        type: "ending",
+        emoji: "🌿",
+        tag: "Your Tokyo Style",
+        title: "The Zen Seeker",
+        desc: "You found peace in the chaos. While others rushed between landmarks, you breathed in gardens, savored silence, and let Tokyo reveal itself slowly. You'll carry this stillness home.",
+        cta: "Book Your Tokyo Trip",
+        ctaUrl: "app://book?dest=tokyo&style=zen",
+      },
+
+      ending_electric: {
+        id: "ending_electric",
+        type: "ending",
+        emoji: "âš¡",
+        tag: "Your Tokyo Style",
+        title: "The Electric Soul",
+        desc: "Maximum input, maximum joy. You soaked in every flavor, color, and sound Tokyo threw at you. Your camera roll is 400 photos deep and you haven't even had lunch yet. This is how you travel.",
+        cta: "Book Your Tokyo Trip",
+        ctaUrl: "app://book?dest=tokyo&style=electric",
+      },
+
+      ending_craft: {
+        id: "ending_craft",
+        type: "ending",
+        emoji: "🏮",
+        tag: "Your Tokyo Style",
+        title: "The Craft Hunter",
+        desc: "You see beauty in the handmade. While tourists lined up for photos, you found artisans who've spent decades perfecting a single craft. You came home with objects that tell stories.",
+        cta: "Book Your Tokyo Trip",
+        ctaUrl: "app://book?dest=tokyo&style=craft",
+      },
+
+      ending_vinyl: {
+        id: "ending_vinyl",
+        type: "ending",
+        emoji: "🎵",
+        tag: "Your Tokyo Style",
+        title: "The Analog Romantic",
+        desc: "You travel by feel, not by plan. A coffee shop became a sketchbook moment became a vinyl hunt became the best afternoon of your year. Tokyo rewards those who wander.",
+        cta: "Book Your Tokyo Trip",
+        ctaUrl: "app://book?dest=tokyo&style=analog",
+      },
+
+      ending_yakitori: {
+        id: "ending_yakitori",
+        type: "ending",
+        emoji: "🍢",
+        tag: "Your Tokyo Style",
+        title: "The Insider",
+        desc: "You ate where the locals eat, learned what the guidebooks don't print, and got a napkin with an address that changed your whole trip. The best travel stories start with 'a stranger told me about this place.'",
+        cta: "Book Your Tokyo Trip",
+        ctaUrl: "app://book?dest=tokyo&style=insider",
+      },
+    },
+  };
+</script>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="step-counter" id="stepCounter"></div>
+<button class="dismiss" id="dismissBtn" onclick="dismiss()" style="display:none">✕</button>
+
+<div id="container"></div>
+
+<script>
+  // ═══════════════════════════════════════════════════
+  // ENGINE
+  // ═══════════════════════════════════════════════════
+  const { story, tracking, includeDismissButton, brand } = CONFIG;
+
+  if (includeDismissButton) document.getElementById('dismissBtn').style.display = 'flex';
+
+  let currentNode = 'start';
+  let pathHistory = [];
+  let stepCount = 0;
+
+  // Count total max depth for progress
+  const totalScenes = Object.keys(story).filter(k => !story[k].type).length;
+
+  function renderScene(nodeId) {
+    const node = story[nodeId];
+    if (!node) return;
+
+    currentNode = nodeId;
+    pathHistory.push(nodeId);
+    stepCount++;
+
+    const container = document.getElementById('container');
+
+    // Progress
+    const progress = Math.min((stepCount / 4) * 100, 100);
+    document.getElementById('progressFill').style.width = progress + '%';
+    document.getElementById('stepCounter').textContent = node.chapter || ('Step ' + stepCount);
+
+    if (node.type === 'ending') {
+      renderEnding(node);
+      return;
+    }
+
+    // Animate out then in
+    container.style.animation = 'sceneOut 0.25s ease forwards';
+    setTimeout(function() {
+      let html = '<div class="scene">' +
+        '<div class="scene-visual"><span class="scene-emoji">' + node.emoji + '</span></div>' +
+        '<div class="scene-chapter">' + (node.chapter || '') + '</div>' +
+        '<h2 class="scene-title">' + node.title + '</h2>' +
+        '<p class="scene-body">' + node.body + '</p>' +
+        '<div class="choices">';
+
+      node.choices.forEach(function(c, i) {
+        html += '<div class="choice-btn" onclick="choose(\'' + c.next + '\', \'' + c.label.replace(/'/g, "\\'") + '\')" style="animation-delay:' + (0.15 + i * 0.08) + 's">' +
+          '<div class="choice-icon">' + c.icon + '</div>' +
+          '<div class="choice-body"><div class="choice-label">' + c.label + '</div><div class="choice-hint">' + c.hint + '</div></div>' +
+          '<div class="choice-arrow">→</div>' +
+        '</div>';
+      });
+
+      html += '</div></div>';
+      container.innerHTML = html;
+      container.style.animation = 'sceneIn 0.4s ease both';
+    }, 250);
+
+    trackEvent(tracking.eventPrefix + '_Scene_Viewed', {
+      scene_id: nodeId,
+      step: stepCount,
+      chapter: node.chapter || ''
+    });
+  }
+
+  function renderEnding(node) {
+    const container = document.getElementById('container');
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('stepCounter').textContent = 'Your Result';
+
+    container.style.animation = 'sceneOut 0.25s ease forwards';
+    setTimeout(function() {
+      let pathPills = pathHistory.map(function(id) {
+        const n = story[id];
+        return '<div class="path-pill">' + (n.emoji || '') + ' ' + (n.title ? n.title.substring(0, 20) : id) + '</div>';
+      }).join('');
+
+      container.innerHTML = '<div class="ending">' +
+        '<div class="ending-emoji">' + node.emoji + '</div>' +
+        '<div class="ending-tag">' + node.tag + '</div>' +
+        '<h2 class="ending-title">' + node.title + '</h2>' +
+        '<p class="ending-desc">' + node.desc + '</p>' +
+        '<div class="path-summary">' + pathPills + '</div>' +
+        '<button class="ending-cta" onclick="endingCTA()">' + node.cta + '</button>' +
+        '<button class="ending-restart" onclick="restart()">↻ Try a different path</button>' +
+      '</div>';
+      container.style.animation = 'sceneIn 0.5s ease both';
+    }, 250);
+
+    trackEvent(tracking.eventPrefix + '_Ending_Reached', {
+      ending_id: node.id,
+      ending_title: node.title,
+      path: pathHistory.join(' → '),
+      total_steps: stepCount
+    });
+  }
+
+  function choose(nextId, choiceLabel) {
+    trackEvent(tracking.eventPrefix + '_Choice_Made', {
+      scene: currentNode,
+      choice: choiceLabel,
+      next: nextId,
+      step: stepCount
+    });
+    renderScene(nextId);
+  }
+
+  function endingCTA() {
+    const node = story[currentNode];
+    trackEvent(tracking.eventPrefix + '_CTA_Clicked', {
+      ending: currentNode,
+      ending_title: node.title
+    });
+    if (node.ctaUrl) window.location.href = node.ctaUrl;
+  }
+
+  function restart() {
+    trackEvent(tracking.eventPrefix + '_Restarted', { previous_ending: currentNode });
+    currentNode = 'start';
+    pathHistory = [];
+    stepCount = 0;
+    renderScene('start');
+  }
+
+  function dismiss() {
+    trackEvent(tracking.eventPrefix + '_Dismissed', { at_scene: currentNode, step: stepCount });
+    try { window.location.href = 'wzrk://exit'; } catch(e) {}
+  }
+
+  function trackEvent(name, props) {
+    console.log('CT Event:', name, props || {});
+    if (window.CleverTap) window.CleverTap.pushEvent(name, props || {});
+    if (window.clevertap) window.clevertap.event.push(name, props || {});
+    try { window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({ event: name, properties: props || {} })); } catch(e) {}
+  }
+
+  // Start
+  renderScene('start');
+</script>
+</body>
+</html>
