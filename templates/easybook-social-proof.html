@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Easybook – Live Ticker</title>
+<script>
+var CONFIG = {
+  brandColor: '#1565C0',
+  interval: 3500,
+  maxCycles: 1,
+  position: 'bottom',
+  eventName: 'Easybook_SocialProof',
+  deeplink: 'easybook://search',
+  messages: [
+    { name: 'Ahmad', city: 'KL', text: 'booked a bus to Singapore', icon: '🚌', ago: '2 min ago' },
+    { name: 'Siti', city: 'Penang', text: 'booked a ferry to Langkawi', icon: '⛴️', ago: '4 min ago' },
+    { name: 'Wei Jie', city: 'JB', text: 'booked a train to KL Sentral', icon: '🚆', ago: '5 min ago' },
+    { name: 'Priya', city: 'Singapore', text: 'booked a bus to Malacca', icon: '🚌', ago: '7 min ago' },
+    { name: 'Rizal', city: 'Ipoh', text: 'booked a bus to Cameron Highlands', icon: '🚌', ago: '9 min ago' }
+  ]
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:transparent}
+.toast{position:fixed;left:12px;right:12px;max-width:400px;padding:10px 14px;background:rgba(17,30,51,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:0;transform:translateY(20px);transition:opacity .35s ease,transform .35s ease;z-index:9999;border:1px solid rgba(255,255,255,.06)}
+.toast.top{top:12px;transform:translateY(-20px)}
+.toast.bottom{bottom:12px;transform:translateY(20px)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.hide{opacity:0}
+.toast.hide.bottom{transform:translateY(20px)}
+.toast.hide.top{transform:translateY(-20px)}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:rgba(21,101,192,.2)}
+.body{flex:1;min-width:0}
+.msg{font-size:13px;color:#E2E8F0;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg strong{color:#fff;font-weight:600}
+.ago{font-size:11px;color:rgba(255,255,255,.35);margin-top:1px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast">
+  <div class="avatar" id="avatar"></div>
+  <div class="body">
+    <div class="msg" id="msg"></div>
+    <div class="ago" id="ago"></div>
+  </div>
+  <div class="dot" id="dot"></div>
+</div>
+<script>
+(function(){
+  var toast = document.getElementById('toast');
+  var avatar = document.getElementById('avatar');
+  var msg = document.getElementById('msg');
+  var ago = document.getElementById('ago');
+  var dot = document.getElementById('dot');
+  var bc = CONFIG.brandColor;
+
+  dot.style.background = bc;
+  toast.classList.add(CONFIG.position);
+
+  var idx = 0;
+  var cycle = 0;
+  var total = CONFIG.messages.length;
+  var timer;
+
+  function fireEvent(name, props){
+    try{
+      if(window.CleverTap) window.CleverTap.pushEvent(name, props);
+      else if(window.clevertap) window.clevertap.event.push(name, props);
+    }catch(e){}
+    try{
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
+        window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:name,properties:props}));
+      }
+    }catch(e){}
+  }
+
+  function showMessage(){
+    var m = CONFIG.messages[idx];
+    avatar.textContent = m.icon;
+    msg.innerHTML = '<strong>' + m.name + '</strong> from ' + m.city + ' ' + m.text;
+    ago.textContent = m.ago;
+
+    toast.classList.remove('hide');
+    toast.classList.add('show');
+
+    fireEvent(CONFIG.eventName + '_Viewed', {
+      Message_Index: idx + 1,
+      Name: m.name,
+      City: m.city,
+      Text: m.text
+    });
+
+    timer = setTimeout(function(){
+      toast.classList.remove('show');
+      toast.classList.add('hide');
+
+      idx++;
+      if(idx >= total){
+        idx = 0;
+        cycle++;
+      }
+      if(cycle < CONFIG.maxCycles){
+        setTimeout(showMessage, 400);
+      } else {
+        setTimeout(function(){ window.location.href = 'wzrk://exit'; }, 500);
+      }
+    }, CONFIG.interval);
+  }
+
+  toast.addEventListener('click', function(){
+    var m = CONFIG.messages[idx < total ? idx : 0];
+    fireEvent(CONFIG.eventName + '_Tapped', {
+      Message_Index: idx + 1,
+      Name: m.name,
+      Deeplink: CONFIG.deeplink
+    });
+    clearTimeout(timer);
+    if(CONFIG.deeplink) window.location.href = CONFIG.deeplink;
+  });
+
+  setTimeout(showMessage, 600);
+})();
+</script>
+</body>
+</html>
