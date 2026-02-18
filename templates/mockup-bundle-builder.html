@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bundle Builder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0d0d14;--surface:#15151e;--card:#1c1c28;
+    --text:#e4e0db;--muted:#6a6578;
+    --green:#10b981;--green-bg:rgba(16,185,129,0.08);
+    --accent:#f59e0b;--accent2:#fbbf24;
+    --red:#ef4444;--border:rgba(255,255,255,0.05);
+  }
+  body{
+    font-family:'Outfit',sans-serif;background:var(--bg);
+    color:var(--text);max-width:390px;margin:0 auto;min-height:100vh;
+  }
+
+  .bundle-header{padding:24px 20px 16px;text-align:center;}
+  .bh-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);
+    padding:5px 12px;border-radius:100px;
+    font-size:10px;font-weight:700;color:var(--accent);
+    letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px;
+  }
+  .bh-title{font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.2;}
+  .bh-sub{font-size:13px;color:var(--muted);line-height:1.5;}
+
+  /* ITEMS */
+  .items-section{padding:0 16px 12px;}
+
+  .bundle-item{
+    background:var(--card);border:1.5px solid var(--border);
+    border-radius:16px;padding:16px;margin-bottom:10px;
+    display:flex;align-items:center;gap:14px;
+    cursor:pointer;transition:all 0.25s;
+  }
+  .bundle-item:active{transform:scale(0.98);}
+  .bundle-item.selected{
+    border-color:var(--green);
+    background:var(--green-bg);
+  }
+
+  .bi-check{
+    width:24px;height:24px;border-radius:8px;
+    border:2px solid rgba(255,255,255,0.1);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;transition:all 0.2s;flex-shrink:0;
+  }
+  .bundle-item.selected .bi-check{
+    background:var(--green);border-color:var(--green);color:#fff;
+  }
+  .bi-icon{
+    width:44px;height:44px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;
+  }
+  .bi-body{flex:1;min-width:0;}
+  .bi-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;}
+  .bi-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+  .bi-price{
+    font-size:14px;font-weight:700;color:var(--text);
+    flex-shrink:0;
+  }
+
+  .bic-1{background:rgba(245,158,11,0.1);}
+  .bic-2{background:rgba(99,102,241,0.1);}
+  .bic-3{background:rgba(236,72,153,0.1);}
+  .bic-4{background:rgba(56,189,248,0.1);}
+  .bic-5{background:rgba(16,185,129,0.1);}
+
+  /* SAVINGS CALCULATOR */
+  .savings-bar{
+    margin:4px 16px 16px;background:var(--card);
+    border:1px solid var(--border);border-radius:16px;
+    padding:18px;
+  }
+  .sb-row{
+    display:flex;justify-content:space-between;
+    align-items:center;margin-bottom:8px;
+    font-size:13px;
+  }
+  .sb-label{color:var(--muted);}
+  .sb-original{color:var(--muted);text-decoration:line-through;}
+  .sb-discount{color:var(--green);font-weight:700;}
+  .sb-divider{height:1px;background:var(--border);margin:12px 0;}
+  .sb-total{
+    display:flex;justify-content:space-between;
+    align-items:baseline;font-size:14px;font-weight:700;
+  }
+  .sb-price{font-size:24px;font-weight:800;color:#fff;}
+  .sb-save-badge{
+    display:inline-flex;align-items:center;gap:4px;
+    background:rgba(16,185,129,0.12);color:var(--green);
+    padding:4px 10px;border-radius:100px;
+    font-size:11px;font-weight:700;margin-top:8px;
+  }
+
+  /* TIER INDICATORS */
+  .tier-strip{
+    margin:0 16px 16px;display:flex;gap:4px;
+  }
+  .tier-seg{
+    flex:1;height:6px;border-radius:3px;
+    background:var(--surface);transition:background 0.3s;
+  }
+  .tier-seg.lit{background:var(--green);}
+  .tier-labels{
+    display:flex;justify-content:space-between;
+    margin:-8px 16px 16px;font-size:9px;color:var(--muted);
+    font-weight:600;letter-spacing:0.5px;
+  }
+  .tier-labels .active-tier{color:var(--green);}
+
+  /* CTA */
+  .cta-area{padding:0 16px 32px;}
+  .cta-btn{
+    width:100%;padding:18px;border-radius:16px;border:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    font-family:'Outfit',sans-serif;font-size:16px;
+    font-weight:800;color:var(--bg);cursor:pointer;
+    transition:all 0.2s;position:relative;overflow:hidden;
+  }
+  .cta-btn:active{transform:scale(0.98);}
+  .cta-btn::after{
+    content:'';position:absolute;top:0;left:-100%;
+    width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+    animation:shimmer 2.5s ease infinite;
+  }
+  @keyframes shimmer{0%{left:-100%}100%{left:200%}}
+  .cta-sub{
+    text-align:center;font-size:11px;color:var(--muted);margin-top:10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="bundle-header">
+  <div class="bh-badge">ðŸ”¥ Limited Time Bundle</div>
+  <div class="bh-title">Build Your Perfect Stack</div>
+  <div class="bh-sub">Pick 3+ items to unlock bundle pricing. More you add, more you save.</div>
+</div>
+
+<div class="tier-strip" id="tierStrip">
+  <div class="tier-seg"></div><div class="tier-seg"></div>
+  <div class="tier-seg"></div><div class="tier-seg"></div><div class="tier-seg"></div>
+</div>
+<div class="tier-labels">
+  <span>Pick 3 = 15% off</span>
+  <span>Pick 4 = 25% off</span>
+  <span class="active-tier">All 5 = 40% off</span>
+</div>
+
+<div class="items-section" id="itemsSection">
+  <div class="bundle-item selected" data-price="49" onclick="toggleItem(this)">
+    <div class="bi-check">âœ“</div>
+    <div class="bi-icon bic-1">ðŸ‘‘</div>
+    <div class="bi-body"><div class="bi-name">Premium Plan</div><div class="bi-desc">Full feature access</div></div>
+    <div class="bi-price">$49</div>
+  </div>
+  <div class="bundle-item selected" data-price="29" onclick="toggleItem(this)">
+    <div class="bi-check">âœ“</div>
+    <div class="bi-icon bic-2">ðŸ“Š</div>
+    <div class="bi-body"><div class="bi-name">Analytics Pro</div><div class="bi-desc">Advanced insights + reporting</div></div>
+    <div class="bi-price">$29</div>
+  </div>
+  <div class="bundle-item selected" data-price="19" onclick="toggleItem(this)">
+    <div class="bi-check">âœ“</div>
+    <div class="bi-icon bic-3">ðŸŽ¨</div>
+    <div class="bi-body"><div class="bi-name">Template Library</div><div class="bi-desc">200+ custom templates</div></div>
+    <div class="bi-price">$19</div>
+  </div>
+  <div class="bundle-item" data-price="39" onclick="toggleItem(this)">
+    <div class="bi-check">âœ“</div>
+    <div class="bi-icon bic-4">ðŸ”Œ</div>
+    <div class="bi-body"><div class="bi-name">API Access</div><div class="bi-desc">Full developer toolkit</div></div>
+    <div class="bi-price">$39</div>
+  </div>
+  <div class="bundle-item" data-price="29" onclick="toggleItem(this)">
+    <div class="bi-check">âœ“</div>
+    <div class="bi-icon bic-5">ðŸŽ“</div>
+    <div class="bi-body"><div class="bi-name">Expert Training</div><div class="bi-desc">6-module certification</div></div>
+    <div class="bi-price">$29</div>
+  </div>
+</div>
+
+<div class="savings-bar" id="savingsBar">
+  <div class="sb-row"><span class="sb-label">Items selected</span><span id="sbCount">3 items</span></div>
+  <div class="sb-row"><span class="sb-label">Regular price</span><span class="sb-original" id="sbOriginal">$97</span></div>
+  <div class="sb-row"><span class="sb-label">Bundle discount</span><span class="sb-discount" id="sbDiscount">-15%</span></div>
+  <div class="sb-divider"></div>
+  <div class="sb-total"><span>You pay</span><span class="sb-price" id="sbTotal">$82</span></div>
+  <div class="sb-save-badge" id="sbSave">ðŸŽ‰ You save $15</div>
+</div>
+
+<div class="cta-area">
+  <button class="cta-btn" id="ctaBtn" onclick="trackEvent('Bundle_CTA_Clicked',{items:getSelected().length})">Get My Bundle â†’</button>
+  <div class="cta-sub">30-day money-back guarantee Â· Cancel anytime</div>
+</div>
+
+<script>
+  function getSelected(){
+    return document.querySelectorAll('.bundle-item.selected');
+  }
+
+  function toggleItem(el){
+    el.classList.toggle('selected');
+    recalculate();
+  }
+
+  function recalculate(){
+    const items=getSelected();
+    const count=items.length;
+    let total=0;
+    items.forEach(i=>total+=parseInt(i.dataset.price));
+
+    // Tier discount
+    let discount=0,tierLabel='';
+    if(count>=5){discount=0.4;tierLabel='40%';}
+    else if(count>=4){discount=0.25;tierLabel='25%';}
+    else if(count>=3){discount=0.15;tierLabel='15%';}
+
+    const discounted=Math.round(total*(1-discount));
+    const saved=total-discounted;
+
+    document.getElementById('sbCount').textContent=count+' item'+(count!==1?'s':'');
+    document.getElementById('sbOriginal').textContent='$'+total;
+    document.getElementById('sbDiscount').textContent=discount>0?'-'+tierLabel:'â€”';
+    document.getElementById('sbTotal').textContent='$'+discounted;
+    document.getElementById('sbSave').textContent=saved>0?'ðŸŽ‰ You save $'+saved:'Pick 3+ to unlock savings';
+    document.getElementById('sbSave').style.display=saved>0?'':'none';
+
+    // Update tier strip
+    const segs=document.querySelectorAll('.tier-seg');
+    segs.forEach((s,i)=>s.classList.toggle('lit',i<count));
+
+    // CTA
+    const btn=document.getElementById('ctaBtn');
+    btn.textContent=discount>0?`Get My Bundle â€” $${discounted}/mo â†’`:'Select 3+ to unlock';
+    btn.style.opacity=discount>0?1:0.4;
+
+    trackEvent('Bundle_Updated',{count,total,discount:tierLabel,final:discounted});
+  }
+
+  function trackEvent(n,p){
+    console.log('CT:',n,p||{});
+    if(window.clevertap) window.clevertap.event.push(n,p||{});
+  }
+  recalculate();
+  trackEvent('Bundle_Builder_Opened');
+</script>
+</body>
+</html>
