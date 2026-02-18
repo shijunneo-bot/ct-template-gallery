@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Neuron – Get Started</title>
+<script>
+var CONFIG = {
+  brandColor: '#FF6B00',
+  brandDark: '#E85D00',
+  brandName: 'Neuron',
+  heading: 'Your first ride awaits',
+  subtitle: 'Complete setup to unlock 3 free rides',
+  rewardText: '3 Free Rides Unlocked!',
+  rewardSubtext: 'Credits added to your wallet',
+  eventName: 'Neuron_Onboarding',
+  items: [
+    {
+      id: 'account',
+      label: 'Create your account',
+      done: true,
+      deeplink: ''
+    },
+    {
+      id: 'verify_id',
+      label: 'Verify your ID',
+      done: false,
+      deeplink: 'neuron://verify'
+    },
+    {
+      id: 'payment',
+      label: 'Add a payment method',
+      done: false,
+      deeplink: 'neuron://payment'
+    },
+    {
+      id: 'find_scooter',
+      label: 'Find a scooter near you',
+      done: false,
+      deeplink: 'neuron://map'
+    },
+    {
+      id: 'first_ride',
+      label: 'Complete your first ride',
+      done: false,
+      deeplink: 'neuron://ride'
+    },
+    {
+      id: 'invite',
+      label: 'Invite a friend',
+      done: false,
+      deeplink: 'neuron://referral'
+    }
+  ]
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0D1117;color:#F0F4F8;display:flex;align-items:center;justify-content:center}
+.card{width:100%;max-width:380px;background:#161B22;border-radius:20px;padding:24px 20px;position:relative;overflow:hidden;margin:16px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.close{position:absolute;top:14px;right:14px;background:none;border:none;color:#6B7A94;font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s}
+.close:hover{background:rgba(255,255,255,.08)}
+.header{margin-bottom:20px}
+.brand-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.brand-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff}
+.brand-label{font-size:12px;font-weight:600;color:#6B7A94;letter-spacing:.4px;text-transform:uppercase}
+h2{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:4px}
+.sub{font-size:13px;color:#6B7A94;line-height:1.4}
+.progress-bar{width:100%;height:6px;background:#1C2128;border-radius:3px;margin:16px 0 6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.progress-label{font-size:12px;color:#6B7A94;margin-bottom:16px;display:flex;justify-content:space-between}
+.progress-label span:last-child{font-weight:600}
+.items{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#1C2128;border-radius:12px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
+.item:active{transform:scale(.98)}
+.item.done{opacity:.6;cursor:default}
+.item.done:active{transform:none}
+.check-circle{width:24px;height:24px;border-radius:50%;border:2px solid #2D3748;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.item.done .check-circle{border-color:var(--bc);background:var(--bc)}
+.check-svg{width:12px;height:12px;opacity:0;transform:scale(0);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.item.done .check-svg{opacity:1;transform:scale(1)}
+.item-label{font-size:14px;color:#C9D1D9;flex:1}
+.item.done .item-label{text-decoration:line-through;color:#6B7A94}
+.item-arrow{font-size:14px;color:#2D3748;transition:color .15s}
+.item:not(.done):hover .item-arrow{color:#6B7A94}
+.reward-preview{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,#1C2128 0%,#1E2530 100%);border-radius:14px;border:1.5px dashed #2D3748;transition:all .5s}
+.reward-preview.active{border-style:solid;border-color:var(--bc);background:linear-gradient(135deg,rgba(255,107,0,.08) 0%,rgba(255,107,0,.03) 100%)}
+.reward-emoji{font-size:28px;filter:grayscale(1) opacity(.4);transition:all .5s}
+.reward-preview.active .reward-emoji{filter:none}
+.reward-info{flex:1}
+.reward-title{font-size:14px;font-weight:600;color:#2D3748;transition:color .5s}
+.reward-preview.active .reward-title{color:#F0F4F8}
+.reward-sub{font-size:12px;color:#2D3748;transition:color .5s}
+.reward-preview.active .reward-sub{color:#6B7A94}
+/* Celebration overlay */
+.celebrate{display:none;position:absolute;inset:0;z-index:10;pointer-events:none}
+.celebrate.show{display:block}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.stagger{opacity:0;animation:fadeSlideIn .35s ease forwards}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <button class="close" id="closeBtn" aria-label="Close">×</button>
+  <canvas class="celebrate" id="confetti"></canvas>
+
+  <div class="header">
+    <div class="brand-row">
+      <div class="brand-icon" id="brandIcon">N</div>
+      <span class="brand-label" id="brandLabel"></span>
+    </div>
+    <h2 id="heading"></h2>
+    <p class="sub" id="subtitle"></p>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label"><span id="progressText"></span><span id="progressPct"></span></div>
+
+  <div class="items" id="items"></div>
+
+  <div class="reward-preview" id="reward">
+    <div class="reward-emoji">🛴</div>
+    <div class="reward-info">
+      <div class="reward-title" id="rewardTitle"></div>
+      <div class="reward-sub" id="rewardSub"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var bc = CONFIG.brandColor;
+  document.documentElement.style.setProperty('--bc', bc);
+  document.getElementById('brandIcon').style.background = bc;
+  document.getElementById('brandLabel').textContent = CONFIG.brandName.toUpperCase();
+  document.getElementById('heading').textContent = CONFIG.heading;
+  document.getElementById('subtitle').textContent = CONFIG.subtitle;
+  document.getElementById('rewardTitle').textContent = CONFIG.rewardText;
+  document.getElementById('rewardSub').textContent = CONFIG.rewardSubtext;
+
+  var total = CONFIG.items.length;
+  var doneCount = 0;
+  CONFIG.items.forEach(function(item){ if(item.done) doneCount++; });
+
+  function updateProgress(){
+    var pct = Math.round((doneCount / total) * 100);
+    var fill = document.getElementById('progressFill');
+    fill.style.width = pct + '%';
+    fill.style.background = bc;
+    document.getElementById('progressText').textContent = doneCount + ' of ' + total + ' complete';
+    document.getElementById('progressPct').textContent = pct + '%';
+
+    var rewardEl = document.getElementById('reward');
+    if(doneCount === total){
+      rewardEl.classList.add('active');
+      showCelebration();
+    } else {
+      rewardEl.classList.remove('active');
+    }
+  }
+
+  var itemsEl = document.getElementById('items');
+  CONFIG.items.forEach(function(item, i){
+    var el = document.createElement('div');
+    el.className = 'item stagger' + (item.done ? ' done' : '');
+    el.style.animationDelay = (i * 0.06) + 's';
+    el.innerHTML =
+      '<div class="check-circle">' +
+        '<svg class="check-svg" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M2.5 6L5 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>' +
+      '</div>' +
+      '<span class="item-label">' + item.label + '</span>' +
+      (item.done ? '' : '<span class="item-arrow">›</span>');
+
+    if(!item.done){
+      el.addEventListener('click', function(){
+        fireEvent(CONFIG.eventName + '_Item_Clicked', {
+          Item_ID: item.id,
+          Item_Label: item.label,
+          Completed_Count: doneCount,
+          Total_Items: total
+        });
+        if(item.deeplink){
+          window.location.href = item.deeplink;
+        }
+      });
+    }
+    itemsEl.appendChild(el);
+  });
+
+  function fireEvent(name, props){
+    try{
+      if(window.CleverTap) window.CleverTap.pushEvent(name, props);
+      else if(window.clevertap) window.clevertap.event.push(name, props);
+    }catch(e){}
+    try{
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
+        window.webkit.messageHandlers.clevertap.postMessage(JSON.stringify({event:name, properties:props}));
+      }
+    }catch(e){}
+  }
+
+  function showCelebration(){
+    var canvas = document.getElementById('confetti');
+    canvas.classList.add('show');
+    var ctx = canvas.getContext('2d');
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.scale(dpr, dpr);
+
+    var W = rect.width, H = rect.height;
+    var colors = [bc, '#FBBF24', '#34D399', '#F87171', '#60A5FA', '#fff'];
+    var particles = [];
+    for(var i = 0; i < 60; i++){
+      particles.push({
+        x: W/2, y: H * 0.4,
+        vx: (Math.random() - 0.5) * 10,
+        vy: Math.random() * -10 - 4,
+        w: 4 + Math.random() * 6,
+        h: 3 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        angle: Math.random() * 360,
+        spin: (Math.random() - 0.5) * 8,
+        life: 0, maxLife: 80 + Math.random() * 40
+      });
+    }
+    var frame = 0;
+    function animate(){
+      ctx.clearRect(0, 0, W, H);
+      var alive = 0;
+      particles.forEach(function(p){
+        p.life++;
+        if(p.life > p.maxLife) return;
+        alive++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.15;
+        p.angle += p.spin;
+        var alpha = 1 - (p.life / p.maxLife);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      if(alive > 0) requestAnimationFrame(animate);
+      else canvas.classList.remove('show');
+    }
+    animate();
+  }
+
+  fireEvent(CONFIG.eventName + '_Viewed', {
+    Completed_Count: doneCount,
+    Total_Items: total,
+    Items_Remaining: total - doneCount
+  });
+
+  updateProgress();
+
+  document.getElementById('closeBtn').addEventListener('click', function(){
+    fireEvent(CONFIG.eventName + '_Dismissed', {
+      Completed_Count: doneCount,
+      Total_Items: total
+    });
+    window.location.href = 'wzrk://exit';
+  });
+})();
+</script>
+</body>
+</html>
