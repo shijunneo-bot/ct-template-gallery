@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G163 — FAVE "COMPANION EVOLVE" · Virtual-Pet + Evolution-Gacha Hybrid
+  Spec F (state-decay pet + evolution gacha, made HONEST). IP-neutral pet logic:
+  care state vars (hunger/happiness), care-mistake tracking, evolution branch by
+  care tier. Reward layer = care quality weights the evolution pool (TRANSPARENT
+  odds shown per tier — no hidden pity manipulation). NO trademarked art/names
+  (generic "companion" creature, not Tamagotchi). Brand-skinned as a Fave companion.
+  Surface: in-app interstitial (demo compresses real-time decay to taps). Grade C ⚠️
+  (real version persists pet state). Lifecycle: habit. SETS: {{profile.companion_tier}}.
+  PROMOS: perk on evolve. NOT for White Hat accounts. Brand: Fave teal (approx)
+  *** C-NOTE: real-time decay + state persistence needs user-property writes. ***
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e8b84b"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fave · Companion Evolve</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#00B5AD;--deep:#00857F;--gold:var(--cfg-accent,#e8b84b);--grn:#3FAE6A;--red:#E1251B;--ink:#0C2422;--paper:#F0FCFB;--soft:#D2F0ED}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0a2e2b,#061816);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,16,15,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(4,20,18,.5);overflow:hidden;position:relative}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Nunito;letter-spacing:3px;color:#4a8a86;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer;z-index:5}
+h1{font-family:'Baloo 2';font-weight:700;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a8a86;margin-top:2px;line-height:1.35}
+.pen{position:relative;margin:8px 22px 4px;height:150px;background:radial-gradient(circle at 50% 40%,#d2f5f2,#b5ece8);border-radius:18px;display:flex;align-items:center;justify-content:center}
+.pet{font-size:64px;transition:.3s}
+.pet.happy{animation:bob 1.4s infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.hearts{position:absolute;font-size:20px;opacity:0;pointer-events:none}
+.stats{display:flex;gap:8px;padding:8px 22px 0}
+.stat{flex:1}
+.stat .lb{font:800 8px Nunito;color:#5a8a86;text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between}
+.stat .bar{height:8px;background:#cdeeeb;border-radius:4px;overflow:hidden;margin-top:3px}
+.stat .fill{height:100%;border-radius:4px;transition:.3s}
+.care{display:flex;gap:7px;padding:10px 22px 0}
+.cbtn{flex:1;border:0;border-radius:11px;padding:11px 0;background:#fff;border:2px solid var(--soft);font-size:19px;cursor:pointer}
+.cbtn:active{background:var(--soft)}
+.body{padding:10px 20px 14px;text-align:center}
+.status{font:700 10.5px Nunito;color:#5a8a86;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.mistakes{font:700 9px Nunito;color:#9a7a6a;margin-bottom:7px}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--teal);color:#fff;font:700 13px 'Baloo 2';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#6a9c98;background:#e0f5f3;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+.evo{position:absolute;inset:0;background:rgba(4,16,15,.84);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:10;text-align:center}
+.evo.show{display:flex}
+.evo .big{font-size:74px;animation:pop .6s}
+@keyframes pop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.evo .ename{font-family:'Baloo 2';font-size:21px;color:#fff;margin:6px 0 2px}
+.evo .etier{font:800 11px Nunito;letter-spacing:1px;margin-bottom:14px}
+.evo .odds{font-size:9px;color:#9fd0cc;margin-top:10px;line-height:1.5}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FAVE</div>
+    <h1>Companion Evolve 🐾</h1>
+    <p>Care for Pip across 5 rounds. Your care quality shapes which companion it grows into — odds shown, always fair.</p>
+  </div>
+  <div class="pen" id="pen"><div class="pet" id="pet">🥚</div></div>
+  <div class="stats">
+    <div class="stat"><div class="lb"><span>🍴 Hunger</span><span id="hN">100</span></div><div class="bar"><div class="fill" id="hF" style="width:100%;background:#3FAE6A"></div></div></div>
+    <div class="stat"><div class="lb"><span>😊 Happy</span><span id="pN">100</span></div><div class="bar"><div class="fill" id="pF" style="width:100%;background:#00B5AD"></div></div></div>
+  </div>
+  <div class="care">
+    <button class="cbtn" onclick="careAction('feed')">🍱</button>
+    <button class="cbtn" onclick="careAction('play')">🎾</button>
+    <button class="cbtn" onclick="careAction('clean')">🧼</button>
+    <button class="cbtn" onclick="careAction('rest')">😴</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to hatch Pip!</div>
+    <div class="mistakes" id="mistakes">Round 0/5 · Care mistakes: 0</div>
+    <button class="btn" id="start">START CARING</button>
+    
+  </div>
+  <div class="evo" id="evo">
+    <div class="big" id="evoEmo">🦊</div>
+    <div class="ename" id="evoName"></div>
+    <div class="etier" id="evoTier"></div>
+    <button class="btn" id="evoOk" style="max-width:200px">CLAIM COMPANION 🎁</button>
+    <div class="odds" id="evoOdds"></div>
+  </div>
+</div></div>
+<script>
+/* Spec F: state-decay pet + HONEST evolution gacha. Care tier weights pool;
+   true odds shown per tier. IP-neutral generic companion. */
+let hunger,happy,round,mistakes,playing=false,decayT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){hunger=100;happy=100;round=0;mistakes=0;won=false;updateBars();
+ document.getElementById('pet').textContent='🐣';document.getElementById('pet').classList.add('happy');
+ document.getElementById('mistakes').textContent='Round 0/5 · Care mistakes: 0';}
+function updateBars(){document.getElementById('hN').textContent=Math.round(hunger);
+ document.getElementById('pN').textContent=Math.round(happy);
+ const hF=document.getElementById('hF'),pF=document.getElementById('pF');
+ hF.style.width=Math.max(0,hunger)+'%';pF.style.width=Math.max(0,happy)+'%';
+ hF.style.background=hunger<30?'#E1251B':(hunger<55?CONFIG.accentColor:'#3FAE6A');
+ pF.style.background=happy<30?'#E1251B':(happy<55?CONFIG.accentColor:'#00B5AD');}
+function popHeart(emo){const h=document.createElement('div');h.className='hearts';h.textContent=emo;
+ h.style.left=(40+Math.random()*20)+'%';h.style.top='40%';pen.appendChild(h);
+ h.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-40px)'}],{duration:800});
+ setTimeout(()=>h.remove(),800);}
+function careAction(a){if(!playing)return;
+ if(a==='feed'){hunger=Math.min(100,hunger+30);popHeart('🍱');}
+ else if(a==='play'){happy=Math.min(100,happy+30);hunger=Math.max(0,hunger-5);popHeart('💚');}
+ else if(a==='clean'){happy=Math.min(100,happy+15);popHeart('✨');}
+ else if(a==='rest'){hunger=Math.min(100,hunger+10);happy=Math.min(100,happy+10);popHeart('😴');}
+ updateBars();ct('care_action',{action:a,hunger:Math.round(hunger),happy:Math.round(happy)});}
+function decay(){if(!playing)return;
+ hunger=Math.max(0,hunger-9);happy=Math.max(0,happy-7);updateBars();
+ // care mistake check (doc: state at zero = mistake)
+ if(hunger<=0||happy<=0){mistakes++;ct('care_mistake',{mistakes:mistakes});
+  hunger=Math.max(hunger,8);happy=Math.max(happy,8);updateBars();}
+ round++;document.getElementById('mistakes').textContent='Round '+round+'/5 · Care mistakes: '+mistakes;
+ status.innerHTML='Round <b>'+round+'</b> — keep Pip happy & fed!';
+ if(round>=5){return evolve();}}
+function start(){reset();playing=true;status.textContent='Feed, play, clean & rest to keep Pip thriving!';
+ document.getElementById('start').style.display='none';
+ if(decayT)clearInterval(decayT);decayT=setInterval(decay,3000);
+ ct('game_started',{game:'companion_evolve'});}
+// ---- HONEST evolution gacha (doc Spec F table) ----
+const POOLS={
+ serious:[{n:'Radiant Fox',e:'🦊',t:'Serious',tc:CONFIG.accentColor,w:80},{n:'Gentle Deer',e:'🦌',t:'Normal',tc:'#00857F',w:19},{n:'Cheeky Cat',e:'🐱',t:'Naughty',tc:'#9a7a6a',w:1}],
+ normal:[{n:'Radiant Fox',e:'🦊',t:'Serious',tc:CONFIG.accentColor,w:15},{n:'Gentle Deer',e:'🦌',t:'Normal',tc:'#00857F',w:70},{n:'Cheeky Cat',e:'🐱',t:'Naughty',tc:'#9a7a6a',w:15}],
+ naughty:[{n:'Radiant Fox',e:'🦊',t:'Serious',tc:CONFIG.accentColor,w:1},{n:'Gentle Deer',e:'🦌',t:'Normal',tc:'#00857F',w:19},{n:'Cheeky Cat',e:'🐱',t:'Naughty',tc:'#9a7a6a',w:80}]};
+function evolve(){playing=false;clearInterval(decayT);won=true;
+ // care tier by mistakes (doc: 0-1 serious, 2 normal, 3+ naughty)
+ const tier=mistakes<=1?'serious':(mistakes===2?'normal':'naughty');
+ const pool=POOLS[tier];const tot=pool.reduce((a,p)=>a+p.w,0);
+ let r=Math.random()*tot,pick=pool[0];for(const p of pool){if(r<p.w){pick=p;break;}r-=p.w;}
+ ct('companion_evolved',{care_tier:tier,result:pick.n,result_tier:pick.t,companion_tier:pick.t});
+ document.getElementById('evoEmo').textContent=pick.e;
+ document.getElementById('evoName').textContent=pick.n;
+ document.getElementById('evoTier').textContent=pick.t.toUpperCase()+' TIER';
+ document.getElementById('evoTier').style.color=pick.tc;
+ document.getElementById('evoOdds').innerHTML='Care tier: '+tier+' → '+pool.map(p=>p.t+' '+Math.round(p.w/tot*100)+'%').join(' · ');
+ document.getElementById('evo').classList.add('show');
+ document.getElementById('evoOk').onclick=()=>{ct('reward_won',{reward:pick.n+'_companion_perk'});
+  document.getElementById('evoOk').textContent='CLAIMED ✓';document.getElementById('evoOk').disabled=true;};}
+document.getElementById('start').onclick=start;
+ct('Notification Viewed',{game:'companion_evolve',mechanic:'pet_plus_evolution_gacha',spec:'F',grade:'C'});
+</script></body></html>

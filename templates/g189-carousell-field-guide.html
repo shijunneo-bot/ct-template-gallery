@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G189 — CAROUSELL "COLLECTOR'S FIELD GUIDE" · Archive-as-Reward Meta
+  Concept (doc-4): the LIBRARY itself is the long-term reward. Blank silhouettes
+  fill in as the user earns entries over sessions; "X slots left to complete the
+  set" drives repeat opens. NO trademarked art/names. Brand-skinned as a collector's
+  field guide of item categories (Carousell = marketplace/collecting context).
+  NEW FAMILY (collection archive meta) — 0 prior files.
+  Surface: in-app Custom HTML / persistent inbox card. Grade C ⚠️
+  *** C-NOTE: cross-session persistence needs user-property writes (profile arrays
+  or a server catalog). Demo holds state in-session only. ***
+  Lifecycle: retention (repeat-open driver). SETS: {{profile.guide_entries}}.
+  PROMOS: reward at set milestones. Brand: Carousell red #FF3B30 (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff3b30"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carousell · Collector's Field Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#ff3b30);--deep:#CC2A20;--gold:#F5A623;--grn:#34C759;--blu:#2F8Fd8;--ink:#1A1012;--paper:#FFF7F6;--soft:#FFE0DD}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1512,#1a0a09);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,7,5,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,5,.5);overflow:hidden;position:relative}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#c28680;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer;z-index:5}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a6a66;margin-top:3px;line-height:1.4}
+.progress{margin:6px 22px 0;background:var(--soft);border-radius:10px;height:10px;overflow:hidden}
+.progfill{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--gold));transition:.5s}
+.progN{text-align:center;font:800 10px Sora;color:var(--deep);padding:4px 0}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 22px 4px}
+.slot{aspect-ratio:1;border-radius:13px;background:#fff;border:2px solid var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:.3s}
+.slot .ic{font-size:24px;filter:grayscale(1) opacity(.25);transition:.4s}
+.slot.found .ic{filter:none}
+.slot.found{border-color:var(--grn);background:#f0fdf3}
+.slot .nm{font:700 6.5px Inter;color:#b0a0a0;margin-top:2px;text-align:center;line-height:1.1}
+.slot.found .nm{color:#5a8a6c}
+.slot .rar{position:absolute;top:3px;right:4px;font-size:7px}
+.slot.newly{animation:pop .6s}
+@keyframes pop{0%{transform:scale(.7)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.body{padding:8px 20px 16px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a6a66;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--red);color:#fff;font:800 14px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.note{font-size:8.5px;color:#c2a0a0;margin-top:6px;line-height:1.4}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#b08884;background:#ffe8e5;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+.reveal{position:absolute;inset:0;background:rgba(20,8,5,.84);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:10;text-align:center}
+.reveal.show{display:flex}
+.reveal .big{font-size:76px;animation:pop .6s}
+.reveal .rn{font-family:Sora;font-size:20px;color:#fff;margin:8px 0 2px}
+.reveal .rt{font:800 11px Inter;letter-spacing:1px;margin-bottom:14px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CAROUSELL</div>
+    <h1>Collector's Field Guide 📔</h1>
+    <p>Every action you take reveals a new find in your guide. Fill all 12 to complete the collection!</p>
+  </div>
+  <div class="progress"><div class="progfill" id="progfill"></div></div>
+  <div class="progN" id="progN">0 / 12 discovered</div>
+  <div class="grid" id="grid"></div>
+  <div class="body">
+    <div class="status" id="status">Tap "Discover" to reveal your first find!</div>
+    <button class="btn" id="discover">🔍 DISCOVER A FIND</button>
+    <div class="note">Demo reveals one per tap. In-app, each real action (listing, sale, daily open) reveals one — your guide fills across days.</div>
+    
+  </div>
+  <div class="reveal" id="reveal">
+    <div class="big" id="revEmo">🎁</div>
+    <div class="rn" id="revName"></div>
+    <div class="rt" id="revTier"></div>
+    <button class="btn" id="revOk" style="max-width:200px">ADD TO GUIDE</button>
+  </div>
+</div></div>
+<script>
+/* Archive-as-reward collection meta (doc-4). 12 entries, silhouettes fill in.
+   Rarity tiers. "X left to complete" drives return. IP-neutral collectible icons.
+   SETS profile.guide_entries (array). Demo: in-session state only. */
+const ENTRIES=[
+ {ic:'📷',nm:'Vintage Camera',tier:'Common',rar:'⚪'},
+ {ic:'🎸',nm:'Retro Guitar',tier:'Common',rar:'⚪'},
+ {ic:'👟',nm:'Rare Sneakers',tier:'Uncommon',rar:'🔵'},
+ {ic:'⌚',nm:'Classic Watch',tier:'Uncommon',rar:'🔵'},
+ {ic:'🎮',nm:'Retro Console',tier:'Uncommon',rar:'🔵'},
+ {ic:'📚',nm:'First Edition',tier:'Rare',rar:'🟡'},
+ {ic:'🪕',nm:'Folk Banjo',tier:'Common',rar:'⚪'},
+ {ic:'🧥',nm:'Designer Jacket',tier:'Rare',rar:'🟡'},
+ {ic:'💎',nm:'Estate Jewel',tier:'Rare',rar:'🟡'},
+ {ic:'🖼️',nm:'Signed Print',tier:'Uncommon',rar:'🔵'},
+ {ic:'🏺',nm:'Antique Vase',tier:'Rare',rar:'🟡'},
+ {ic:'🛼',nm:'Vintage Skates',tier:'Common',rar:'⚪'}];
+let found=new Array(ENTRIES.length).fill(false);
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function render(newIdx){const g=document.getElementById('grid');g.innerHTML='';
+ ENTRIES.forEach((e,i)=>{const d=document.createElement('div');
+  d.className='slot'+(found[i]?' found':'')+(i===newIdx?' newly':'');
+  d.innerHTML='<span class="rar">'+(found[i]?e.rar:'')+'</span>'+
+   '<span class="ic">'+(found[i]?e.ic:'❔')+'</span>'+
+   '<span class="nm">'+(found[i]?e.nm:'? ? ?')+'</span>';
+  g.appendChild(d);});
+ const n=found.filter(Boolean).length;
+ document.getElementById('progfill').style.width=(n/ENTRIES.length*100)+'%';
+ document.getElementById('progN').textContent=n+' / '+ENTRIES.length+' discovered';}
+function discover(){const remaining=ENTRIES.map((e,i)=>i).filter(i=>!found[i]);
+ if(!remaining.length)return;
+ // weight by rarity so commons appear first (satisfying curve)
+ const weights=remaining.map(i=>ENTRIES[i].tier==='Common'?5:(ENTRIES[i].tier==='Uncommon'?3:1));
+ const tot=weights.reduce((a,b)=>a+b,0);let r=Math.random()*tot,pick=remaining[0];
+ for(let k=0;k<remaining.length;k++){if(r<weights[k]){pick=remaining[k];break;}r-=weights[k];}
+ found[pick]=true;const e=ENTRIES[pick];
+ ct('entry_discovered',{name:e.nm,tier:e.tier,guide_entries:found.filter(Boolean).length});
+ document.getElementById('revEmo').textContent=e.ic;
+ document.getElementById('revName').textContent=e.nm;
+ document.getElementById('revTier').textContent=e.tier.toUpperCase()+' FIND';
+ document.getElementById('revTier').style.color=e.tier==='Rare'?'#F5A623':(e.tier==='Uncommon'?'#2F8Fd8':'#999');
+ document.getElementById('reveal').classList.add('show');
+ document.getElementById('revOk').onclick=()=>{document.getElementById('reveal').classList.remove('show');
+  render(pick);afterReveal();};}
+function afterReveal(){const n=found.filter(Boolean).length;const left=ENTRIES.length-n;
+ // milestone rewards at 4, 8, 12
+ if(n===4||n===8){ct('milestone_reached',{discovered:n});status.innerHTML='🎉 Milestone! <b>'+n+'</b> finds — milestone reward unlocked.';}
+ else if(n>=ENTRIES.length){return complete();}
+ else{status.innerHTML='<b>'+left+'</b> find'+(left===1?'':'s')+' left to complete the guide!';}
+ if(left===1)status.innerHTML='👀 Just <b>1</b> more to complete the set!';}
+function complete(){
+ status.innerHTML='🏆 Field Guide complete — all 12 found!';
+ const b=document.getElementById('discover');b.textContent='CLAIM COLLECTOR REWARD 🎁';b.disabled=false;
+ ct('collection_complete',{guide_entries:ENTRIES.length});
+ b.onclick=()=>{ct('reward_won',{reward:'collector_voucher'});b.textContent='REWARD CLAIMED ✓';b.disabled=true;};}
+document.getElementById('discover').onclick=discover;
+render(-1);
+ct('Notification Viewed',{game:'field_guide',mechanic:'collection_archive_meta',grade:'C'});
+</script></body></html>

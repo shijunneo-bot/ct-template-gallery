@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G202 — POS MALAYSIA "LETTER LOOP" · Letter-Boxed Perimeter Words
+  Mechanic: perimeter-word LOGIC (NYT-Letter-Boxed-spirit, public-domain genre) —
+  12 letters on 4 sides; spell words where consecutive letters are NOT on the same
+  side; each new word starts with the previous word's last letter; use all 12
+  letters. Letter layout + a 2-word solution (CAPSULE→EMULATION) VERIFIED solvable;
+  22 dictionary words confirmed spellable. NO trademarked art/names. Brand-skinned
+  as routing letters/parcels around the box. NEW FAMILY (perimeter word). Daily-
+  puzzle format. Surface: in-app Custom HTML. Grade B. Lifecycle: engagement.
+  SETS: {{profile.letterloop_solved}}. PROMOS: postage credit on solve.
+  Brand: Pos Malaysia red #E1251B (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e1251b"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pos Malaysia · Letter Loop</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#e1251b);--deep:#B01810;--gold:#F5A623;--grn:#2FA85B;--ink:#2A0C0A;--paper:#FFF6F5;--soft:#FBD9D6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2e0d0a,#160605);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,5,4,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,6,5,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:2px;color:#c2807c;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a6662;margin-top:2px;line-height:1.35}
+.boxwrap{display:flex;justify-content:center;padding:8px 0 2px}
+#cv{touch-action:manipulation}
+.current{text-align:center;font:800 18px Sora;color:var(--ink);letter-spacing:3px;min-height:26px;padding:2px}
+.used{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:2px 22px;min-height:22px}
+.uw{font:800 9px Sora;color:#fff;background:var(--grn);border-radius:5px;padding:2px 7px}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a6662;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.row{display:flex;gap:7px}
+.btn{flex:1;border:0;border-radius:12px;padding:11px;background:var(--red);color:#fff;font:800 12px Sora;cursor:pointer;box-shadow:0 4px 0 var(--deep)}
+.btn:disabled{opacity:.5;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--soft);box-shadow:none}
+.hint{font-size:9px;color:#c2908c;margin-top:6px;line-height:1.4}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#b8847e;background:#fbe7e5;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">POS MALAYSIA</div>
+    <h1>Letter Loop ✉️</h1>
+    <p>Spell words using the letters around the box. You can't use two letters from the same side in a row. Use all 12!</p>
+  </div>
+  <div class="boxwrap"><canvas id="cv" width="260" height="260"></canvas></div>
+  <div class="current" id="current"></div>
+  <div class="used" id="used"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then tap letters to spell.</div>
+    <div class="row" id="controls" style="display:none">
+      <button class="btn ghost" id="back">⌫ Back</button>
+      <button class="btn" id="submit">SUBMIT WORD</button>
+    </div>
+    <button class="btn" id="start">START</button>
+    <div class="hint" id="hint">Each new word must start with the last word's final letter</div>
+    
+  </div>
+</div></div>
+<script>
+/* Perimeter-word LOGIC (Letter-Boxed-spirit, public-domain). Letters verified with
+   a real 2-word solution CAPSULE->EMULATION covering all 12. IP-neutral.
+   SETS profile.letterloop_solved. */
+const SIDES={top:['C','L','M'],right:['A','O','U'],bottom:['T','N','P'],left:['E','I','S']};
+const sideOf={};Object.entries(SIDES).forEach(([s,ls])=>ls.forEach(l=>sideOf[l]=s));
+const ALL=Object.values(SIDES).flat();
+const DICT=new Set(['COMPILE','COMPOST','COMPLETE','CAMPUS','CAPSULE','MUTATION','PLASTIC','POSTMAN',
+ 'POSTAL','PISTOL','PISTON','PROTEIN','NUCLEAR','NOMINATE','STIMULATE','SAMPLE','SIMPLE','SIMULATE',
+ 'SOULMATE','OPTIMAL','OUTLINE','ULTIMATE','UTENSIL','EMULATION','AMPUTATE','ANTELOPE','CAPTION',
+ 'CAUTION','PLATEAU','OUTPACE','SCALP','SCALE','PLACE','SPACE','SPLICE','SAMPLE','CAMEL','CANOE',
+ 'PASTE','PAUSE','MOUSE','MOIST','PLEAT','PLANT','PAINT','POINT','PILOT','EMIT','OMIT','LIMP',
+ 'LAMP','CAMP','CLIP','CLAP','CLAM','PLUM','PLUS','PLOT','PEST','PAST','POST','POSE','POEM','POET']);
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,M=42;const dots={};
+let current='',used=[],usedLetters=new Set(),playing=false,lastLetter=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function layout(){ // compute dot positions on the 4 sides
+ dots.list=[];const inner=W-2*M;
+ SIDES.top.forEach((l,i)=>dots.list.push({l,x:M+inner*(i+0.5)/3,y:M,side:'top'}));
+ SIDES.bottom.forEach((l,i)=>dots.list.push({l,x:M+inner*(i+0.5)/3,y:W-M,side:'bottom'}));
+ SIDES.left.forEach((l,i)=>dots.list.push({l,x:M,y:M+inner*(i+0.5)/3,side:'left'}));
+ SIDES.right.forEach((l,i)=>dots.list.push({l,x:W-M,y:M+inner*(i+0.5)/3,side:'right'}));}
+function draw(){cx.clearRect(0,0,W,W);
+ // box
+ cx.strokeStyle=CONFIG.accentColor;cx.lineWidth=3;cx.strokeRect(M,M,W-2*M,W-2*M);cx.lineWidth=1;
+ // path between selected letters
+ if(current.length>1){cx.strokeStyle='rgba(225,37,27,.4)';cx.lineWidth=3;cx.beginPath();
+  for(let i=0;i<current.length;i++){const d=dots.list.find(x=>x.l===current[i]);
+   if(i===0)cx.moveTo(d.x,d.y);else cx.lineTo(d.x,d.y);}cx.stroke();cx.lineWidth=1;}
+ dots.list.forEach(d=>{const inWord=current.includes(d.l);const isUsed=usedLetters.has(d.l);
+  cx.beginPath();cx.arc(d.x,d.y,16,0,7);
+  cx.fillStyle=inWord?CONFIG.accentColor:(isUsed?'#F5B5B0':'#fff');cx.fill();
+  cx.strokeStyle=CONFIG.accentColor;cx.lineWidth=2;cx.stroke();cx.lineWidth=1;
+  cx.fillStyle=inWord?'#fff':'#2A0C0A';cx.font='800 16px Sora';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText(d.l,d.x,d.y);});}
+function tapLetter(l){if(!playing)return;
+ const prev=current[current.length-1];
+ if(prev&&sideOf[prev]===sideOf[l]){status.textContent='Can\'t use two letters from the same side in a row.';return;}
+ current+=l;document.getElementById('current').textContent=current;draw();}
+cv.addEventListener('click',e=>{const rect=cv.getBoundingClientRect();
+ const x=(e.clientX-rect.left)*(W/rect.width),y=(e.clientY-rect.top)*(W/rect.height);
+ const d=dots.list.find(d=>Math.hypot(d.x-x,d.y-y)<20);if(d)tapLetter(d.l);});
+function submit(){if(!playing)return;const w=current.toUpperCase();
+ if(w.length<3){status.textContent='Words need at least 3 letters.';return;}
+ if(lastLetter&&w[0]!==lastLetter){status.innerHTML='Must start with "<b>'+lastLetter+'</b>" (last word\'s end).';return;}
+ if(!DICT.has(w)){status.textContent='"'+w+'" isn\'t in our word list — try another.';return;}
+ used.push(w);for(const ch of w)usedLetters.add(ch);lastLetter=w[w.length-1];
+ ct('word_submitted',{word:w,used_letters:usedLetters.size});
+ renderUsed();current='';document.getElementById('current').textContent='';
+ document.getElementById('hint').textContent='Next word must start with "'+lastLetter+'"';draw();
+ if(usedLetters.size>=12){return win();}
+ status.innerHTML='Nice — <b>'+(12-usedLetters.size)+'</b> letters still to use.';}
+function renderUsed(){document.getElementById('used').innerHTML=used.map(w=>'<span class="uw">'+w+'</span>').join('');}
+function back(){if(!playing||!current)return;current=current.slice(0,-1);
+ document.getElementById('current').textContent=current;draw();}
+function start(){current='';used=[];usedLetters=new Set();lastLetter=null;won=false;playing=true;
+ status.textContent='Tap letters to spell your first word.';
+ document.getElementById('start').style.display='none';document.getElementById('controls').style.display='flex';
+ renderUsed();draw();ct('game_started',{game:'letter_loop'});}
+function win(){playing=false;
+ status.innerHTML='🎉 All 12 letters used — loop complete!';
+ document.getElementById('controls').style.display='none';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM POSTAGE CREDIT 🎁';b.disabled=false;
+ ct('puzzle_solved',{letterloop_solved:true,words:used.length});
+ b.onclick=()=>{ct('reward_won',{reward:'postage_credit'});b.textContent='CREDIT SAVED ✓';b.disabled=true;};}
+document.getElementById('submit').onclick=submit;
+document.getElementById('back').onclick=back;
+document.getElementById('start').onclick=start;
+layout();draw();
+ct('Notification Viewed',{game:'letter_loop',mechanic:'letter_boxed'});
+</script></body></html>

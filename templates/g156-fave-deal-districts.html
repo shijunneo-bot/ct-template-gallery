@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G156 — FAVE "DEAL DISTRICTS" · Roll-and-Move Property Board
+  Mechanic: roll-and-move property board LOGIC (Monopoly-spirit, public-domain
+  genre) — roll dice, move round a loop, land on tiles to collect deals/perks.
+  NO trademarked board art/names/character (no Mr Monopoly, no "GO"/"Chance"
+  branded marks). Brand-skinned as one lap of Fave deal districts. Short single
+  lap (~10 tiles) to fit a pop-up.
+  NEW FAMILY (roll-and-move property board). Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement / deal-discovery.
+  SETS: {{profile.districts_visited}}. PROMOS: deal stack collected on the lap.
+  Brand: Fave teal + gold (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#5a8a86"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fave · Deal Districts</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#00B5AD;--deep:#00857F;--gold:#E8B84B;--ink:#0C2422;--paper:#F0FCFB;--soft:#D2F0ED}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0a2e2b,#061816);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,16,15,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(4,20,18,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Nunito;letter-spacing:3px;color:#4a8a86;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:'Baloo 2';font-weight:700;font-size:19px;color:var(--ink)}
+.hd p{font-size:11px;color:var(--cfg-accent,#5a8a86);margin-top:3px;line-height:1.4}
+/* board = ring of 10 tiles in a 4x4 perimeter-ish layout, simplified to a row-wrap loop */
+.board{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:5px;padding:12px 20px 4px;aspect-ratio:1}
+.tile{border-radius:9px;background:#fff;border:2px solid var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;position:relative;padding:2px}
+.tile .lbl{font:800 7px Nunito;color:var(--cfg-accent,#5a8a86);margin-top:1px;text-align:center;line-height:1.1}
+.tile.visited{background:#e6f7f5;border-color:var(--teal)}
+.tile.start{background:linear-gradient(135deg,var(--gold),#f0cd6e);border-color:var(--deep)}
+.tile.here{background:var(--gold);border-color:var(--deep);box-shadow:0 0 0 2px var(--gold)}
+.tile.center{grid-column:2/4;grid-row:2/4;background:linear-gradient(135deg,var(--teal),var(--deep));border:0;color:#fff;align-items:center;justify-content:center}
+.tile.center b{font-family:'Baloo 2';font-size:13px}
+.tile.center span{font-size:9px;opacity:.9}
+.body{padding:6px 20px 16px;text-align:center}
+.dice{font-size:34px;height:42px;transition:.2s}
+.dice.roll{animation:shake .5s}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-18deg) scale(1.1)}75%{transform:rotate(18deg) scale(1.1)}}
+.status{font:700 11px Nunito;color:var(--cfg-accent,#5a8a86);min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--teal);color:#fff;font:700 14px 'Baloo 2';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#6a9c98;background:#e0f5f3;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FAVE</div>
+    <h1>Deal Districts 🎲</h1>
+    <p>Roll your way around the districts. Land on a tile to collect its deal. Complete the lap to bank your stack!</p>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="body">
+    <div class="dice" id="dice">🎲</div>
+    <div class="status" id="status">Roll to start your lap!</div>
+    <button class="btn" id="roll">ROLL THE DICE 🎲</button>
+    
+  </div>
+</div></div>
+<script>
+/* Roll-and-move property board LOGIC (public-domain genre). 12-tile perimeter loop
+   on a 4x4 grid. No IP art/names. SETS profile.districts_visited. */
+// perimeter order of a 4x4 grid (12 tiles), clockwise from top-left
+const PERIM=[0,1,2,3,7,11,15,14,13,12,8,4];
+const TILES=[
+ {emo:'🏁',lbl:'START',deal:null,start:true},
+ {emo:'☕',lbl:'Café',deal:'1-for-1 Coffee'},
+ {emo:'🍜',lbl:'Food St',deal:'15% off Dinner'},
+ {emo:'💆',lbl:'Spa',deal:'Spa RM20 off'},
+ {emo:'🎬',lbl:'Cinema',deal:'Movie BOGO'},
+ {emo:'🛍️',lbl:'Retail',deal:'10% Cashback'},
+ {emo:'💪',lbl:'Fitness',deal:'Free Day Pass'},
+ {emo:'🍰',lbl:'Bakery',deal:'Free Slice'},
+ {emo:'🍣',lbl:'Sushi',deal:'20% off Set'},
+ {emo:'🎮',lbl:'Arcade',deal:'Bonus Credits'},
+ {emo:'🧋',lbl:'Drinks',deal:'Upsize Free'},
+ {emo:'🎁',lbl:'Bonus',deal:'Mystery Perk'}];
+let pos=0,rolling=false,collected=[],done=false,lapStarted=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){board.innerHTML='';
+ // 16 grid cells; perimeter shows tiles, center is the stack counter
+ for(let i=0;i<16;i++){
+  const pIdx=PERIM.indexOf(i);
+  const cell=document.createElement('div');
+  if(i===5){cell.className='tile center';cell.innerHTML='<b id="stackN">0</b><span>deals</span>';board.appendChild(cell);continue;}
+  if(i===6||i===9||i===10){cell.style.visibility='hidden';board.appendChild(cell);continue;}
+  if(pIdx>=0){const t=TILES[pIdx];cell.className='tile'+(t.start?' start':'');cell.dataset.p=pIdx;
+   cell.innerHTML='<span>'+t.emo+'</span><span class="lbl">'+t.lbl+'</span>';}
+  else{cell.style.visibility='hidden';}
+  board.appendChild(cell);}
+ paint();}
+function paint(){document.querySelectorAll('.tile[data-p]').forEach(c=>{
+  const p=+c.dataset.p;c.classList.toggle('here',p===pos);
+  c.classList.toggle('visited',collected.includes(p)&&p!==pos);});
+ const sn=document.getElementById('stackN');if(sn)sn.textContent=collected.length;}
+roll.onclick=()=>{if(rolling||done)return;rolling=true;roll.disabled=true;
+ const d=1+Math.floor(Math.random()*6);
+ dice.classList.add('roll');
+ ct('dice_rolled',{roll:d,from:pos});
+ setTimeout(()=>{dice.classList.remove('roll');dice.textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][d-1];
+  let landed=pos+d;
+  const wrapped=landed>=TILES.length;
+  pos=landed%TILES.length;
+  paint();
+  const t=TILES[pos];
+  if(t.start){status.innerHTML='Back to START — lap complete!';}
+  else if(!collected.includes(pos)){collected.push(pos);
+   status.innerHTML='Landed on <b>'+t.lbl+'</b> — collected <b>'+t.deal+'</b>!';
+   ct('district_visited',{district:t.lbl,deal:t.deal,districts_visited:collected.length});
+   paint();}
+  else{status.innerHTML='Passed through <b>'+t.lbl+'</b> again.';}
+  // win when lapped back past start with deals collected
+  if(wrapped&&collected.length>=1){done=true;
+   status.innerHTML='🎉 Lap done! You banked <b>'+collected.length+'</b> deals.';
+   roll.textContent='CLAIM MY DEAL STACK 🎁';roll.disabled=false;
+   ct('lap_complete',{districts_visited:collected.length});
+   roll.onclick=()=>{ct('reward_won',{reward:collected.length+'_deal_stack'});
+    roll.textContent='STACK SAVED ✓';roll.disabled=true;};}
+  else{rolling=false;roll.disabled=false;}
+ },520);};
+build();
+ct('Notification Viewed',{game:'deal_districts',mechanic:'roll_and_move_property'});
+</script></body></html>

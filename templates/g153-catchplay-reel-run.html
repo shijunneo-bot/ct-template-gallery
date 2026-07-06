@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G153 — CATCHPLAY "REEL RUN" · Maze-Chase Collect
+  Mechanic: maze-chase collect LOGIC (public-domain genre) — navigate a maze,
+  collect pickups, avoid generic chasers. NO trademarked characters/art (no
+  Pac shape, no ghosts — uses a generic player dot + generic chaser blocks +
+  brand "reel" collectibles). Brand-skinned as collecting film reels.
+  NEW FAMILY (maze-chase) — 0 prior files. Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement.
+  SETS: {{profile.reels_collected}}. PROMOS: free-rental at full clear.
+  Brand: CatchPlay dark + orange (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#3d2a1c"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatchPlay · Reel Run</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF7A1A;--deep:#b34f06;--gold:#FFCB45;--ink:#0E0C0A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight',sans-serif;min-height:100vh;background:#070605;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,3,2,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:linear-gradient(178deg,#181410,#0c0a08);border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.66);overflow:hidden;color:#fff;border:1px solid #322217}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px 'Inter Tight';letter-spacing:3px;color:var(--org);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff16;color:#fff;cursor:pointer}
+h1{font-family:'Bebas Neue';font-size:24px;letter-spacing:.5px}
+.hd p{font-size:11px;color:#c9a986;margin-top:2px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 12px 'Inter Tight';color:var(--gold)}
+.stage{display:flex;justify-content:center;padding:6px 0 4px}
+#cv{background:#0c0a08;border:2px solid #322217;border-radius:10px;touch-action:none}
+.ctrls{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,40px);gap:5px;justify-content:center;padding:8px 0 4px}
+.dpad{border:0;border-radius:10px;background:#241a12;border:2px solid var(--cfg-accent,#3d2a1c);font-size:17px;color:var(--gold);cursor:pointer}
+.dpad:active{background:var(--cfg-accent,#3d2a1c)}
+.dpad.up{grid-column:2;grid-row:1}.dpad.left{grid-column:1;grid-row:2}
+.dpad.down{grid-column:2;grid-row:2}.dpad.right{grid-column:3;grid-row:2}
+.body{padding:4px 20px 16px;text-align:center}
+.status{font:700 11px 'Inter Tight';color:#c9a986;min-height:15px;margin-bottom:8px}
+.status b{color:var(--gold)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:linear-gradient(135deg,var(--org),var(--gold));color:#1a0f06;font:800 14px 'Inter Tight';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a8794f;background:#1c130b;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CATCHPLAY+</div>
+    <h1>REEL RUN 🎞️</h1>
+    <p>Collect every film reel in the maze. Dodge the static blocks — clear them all to unlock a free rental!</p>
+  </div>
+  <div class="hud"><span>Reels: <span id="got">0</span>/<span id="total">0</span></span><span>Lives: <span id="lives">3</span></span></div>
+  <div class="stage"><canvas id="cv" width="252" height="252"></canvas></div>
+  <div class="ctrls">
+    <button class="dpad up" onclick="setDir(0,-1)">▲</button>
+    <button class="dpad left" onclick="setDir(-1,0)">◀</button>
+    <button class="dpad down" onclick="setDir(0,1)">▼</button>
+    <button class="dpad right" onclick="setDir(1,0)">▶</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then steer with the arrows!</div>
+    <button class="btn" id="start">START THE RUN</button>
+    
+  </div>
+</div></div>
+<script>
+/* Maze-chase collect LOGIC (public-domain genre). Generic player dot + generic
+   chaser squares + brand reel pickups. No IP shapes. SETS profile.reels_collected. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const N=9,CELL=28; // 9x9 maze
+// 1=wall, 0=path
+const MAZE=[
+ [1,1,1,1,1,1,1,1,1],
+ [1,0,0,0,1,0,0,0,1],
+ [1,0,1,0,1,0,1,0,1],
+ [1,0,1,0,0,0,1,0,1],
+ [1,0,1,1,0,1,1,0,1],
+ [1,0,0,0,0,0,0,0,1],
+ [1,0,1,0,1,0,1,0,1],
+ [1,0,0,0,1,0,0,0,1],
+ [1,1,1,1,1,1,1,1,1]];
+let player,chasers,pellets,got,total,lives,playing=false,dir,nextDir,loopT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){player={c:1,r:1};dir={x:0,y:0};nextDir={x:0,y:0};lives=3;won=false;
+ chasers=[{c:7,r:7,col:'#FF4444'},{c:7,r:1,col:'#44AAFF'}];
+ pellets=[];for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+  if(MAZE[r][c]===0&&!(c===1&&r===1))pellets.push({c,r});}
+ total=pellets.length;got=0;
+ document.getElementById('total').textContent=total;document.getElementById('got').textContent='0';
+ document.getElementById('lives').textContent='3';}
+function canMove(c,r){return c>=0&&c<N&&r>=0&&r<N&&MAZE[r][c]===0;}
+function setDir(x,y){nextDir={x,y};}
+function step(){if(!playing)return;
+ // player turns when possible
+ if(canMove(player.c+nextDir.x,player.r+nextDir.y))dir=nextDir;
+ if(canMove(player.c+dir.x,player.r+dir.y)){player.c+=dir.x;player.r+=dir.y;}
+ // collect
+ const pi=pellets.findIndex(p=>p.c===player.c&&p.r===player.r);
+ if(pi>=0){pellets.splice(pi,1);got++;document.getElementById('got').textContent=got;
+  ct('reel_collected',{reels_collected:got});
+  if(got>=total&&!won){won=true;return winGame();}}
+ // chasers do a simple greedy-ish move
+ chasers.forEach(ch=>{const opts=[[1,0],[-1,0],[0,1],[0,-1]].filter(([x,y])=>canMove(ch.c+x,ch.r+y));
+  if(opts.length){ // 60% chase, 40% random for fairness
+   let pick;if(Math.random()<0.6){opts.sort((a,b)=>
+    (Math.abs(ch.c+a[0]-player.c)+Math.abs(ch.r+a[1]-player.r))-
+    (Math.abs(ch.c+b[0]-player.c)+Math.abs(ch.r+b[1]-player.r)));pick=opts[0];}
+   else pick=opts[Math.floor(Math.random()*opts.length)];
+   ch.c+=pick[0];ch.r+=pick[1];}});
+ // collision
+ for(const ch of chasers){if(ch.c===player.c&&ch.r===player.r){return caught();}}
+ draw();}
+function draw(){cx.clearRect(0,0,cv.width,cv.height);
+ for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+  if(MAZE[r][c]===1){cx.fillStyle='#241a12';cx.fillRect(c*CELL,r*CELL,CELL,CELL);
+   cx.fillStyle=CONFIG.accentColor;cx.fillRect(c*CELL+2,r*CELL+2,CELL-4,CELL-4);}}
+ pellets.forEach(p=>{cx.font='15px serif';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText('🎞️',p.c*CELL+CELL/2,p.r*CELL+CELL/2);});
+ chasers.forEach(ch=>{cx.fillStyle=ch.col;
+  cx.fillRect(ch.c*CELL+5,ch.r*CELL+5,CELL-10,CELL-10);});
+ cx.fillStyle='#FFCB45';cx.beginPath();
+ cx.arc(player.c*CELL+CELL/2,player.r*CELL+CELL/2,CELL/2-5,0,7);cx.fill();}
+function start(){reset();playing=true;dir={x:0,y:0};nextDir={x:0,y:0};
+ status.textContent='Collect every reel — dodge the blocks!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,240);
+ ct('game_started',{game:'reel_run'});}
+function caught(){lives--;document.getElementById('lives').textContent=lives;
+ ct('caught',{lives_left:lives});
+ if(lives<=0){playing=false;clearInterval(loopT);
+  status.innerHTML='Caught! You collected <b>'+got+'/'+total+'</b> reels';
+  const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+  ct('game_over',{reels_collected:got});}
+ else{player={c:1,r:1};dir={x:0,y:0};nextDir={x:0,y:0};
+  chasers[0]={c:7,r:7,col:'#FF4444'};chasers[1]={c:7,r:1,col:'#44AAFF'};
+  status.innerHTML='Caught! <b>'+lives+'</b> lives left.';draw();}}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 All reels collected! Maze cleared.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM FREE RENTAL 🎁';b.disabled=false;
+ ct('maze_cleared',{reels_collected:got});
+ b.onclick=()=>{ct('reward_won',{reward:'free_rental'});b.textContent='RENTAL UNLOCKED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
+ if(m[e.key]){setDir(m[e.key][0],m[e.key][1]);}});
+ct('Notification Viewed',{game:'reel_run',mechanic:'maze_chase'});
+</script></body></html>

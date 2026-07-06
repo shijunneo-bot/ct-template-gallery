@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G143 — TANTAN "CAMPAIGN-CONDITIONAL VARIANT" · Grade-A Context
+  Personalization Addendum Concept #22 · Campaign ID personalization
+  ({{Campaign.campaignId}}) → variant game art/reward
+  Surface: any (Push/Email/in-app) · Grade A–B (A — no external API)
+  Lifecycle: conversion (one mechanic, campaign-skinned reward)
+  CONTEXT-AWARE ARCH: hard-coded CONTEXT (campaign ID) + debug toggle (VALENTINE /
+  NEWYEAR / DEFAULT) + fallback (default variant). No API → default-branch covers all.
+  SETS: fires variant_revealed. PROMOS: campaign-specific reward.
+  Brand: TanTan pink/coral (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff4e78"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TanTan · Today's Surprise</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--pink:var(--cfg-accent,#ff4e78);--deep:#D6285A;--ink:#2A0E18;--paper:#FFF5F8;--soft:#FBDDE6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1020,#1c0810);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(20,6,12,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;border-radius:24px;box-shadow:0 26px 64px rgba(20,8,14,.5);overflow:hidden;position:relative;transition:.4s}
+.debug{display:flex;gap:5px;padding:10px 12px 0;justify-content:center;background:var(--paper)}
+.dbg{border:1.5px dashed #f3c0ce;background:transparent;border-radius:7px;padding:4px 8px;font:800 8.5px Nunito;color:#c27d92;cursor:pointer}
+.dbg.on{background:#fbdde6;border-style:solid;color:var(--deep)}
+.inner{background:var(--paper);transition:.4s}
+.hd{padding:8px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Nunito;letter-spacing:3px;color:#c27d92;margin-bottom:4px}
+.x{position:absolute;top:2px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+.cmpchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font:800 10px Quicksand;background:var(--soft);color:var(--deep);margin:2px 0}
+.theme{font-size:46px;margin:4px 0}
+h1{font-family:Quicksand;font-weight:700;font-size:20px;color:var(--ink)}
+.hd p{font-size:11.5px;color:#9a6a78;margin-top:3px;line-height:1.45}
+.gift{position:relative;margin:10px auto 0;width:110px;height:110px;cursor:pointer}
+.giftbox{font-size:78px;text-align:center;line-height:110px;transition:.3s}
+.gift:active .giftbox{transform:scale(.92)}
+.gift.open .giftbox{animation:pop .5s}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+.reveal{display:none;margin:6px 22px 0;border-radius:16px;padding:15px;text-align:center;color:#fff}
+.reveal .rk{font:800 9px Nunito;letter-spacing:2px;opacity:.9}
+.reveal .rv{font-family:Quicksand;font-weight:700;font-size:20px;margin:5px 0 3px}
+.reveal .rd{font-size:11px;opacity:.95;line-height:1.45}
+.body{padding:12px 20px 16px;text-align:center}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--pink);color:#fff;font:800 14px Quicksand;cursor:pointer;box-shadow:0 5px 0 var(--deep);display:none}
+.body small{font-size:9px;color:#c79aa6;display:block;margin-top:7px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#b08494;background:#f9e4ea;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card" id="card">
+  <div class="debug">
+    <button class="dbg on" onclick="setCtx('valentine',this)">VALENTINE</button>
+    <button class="dbg" onclick="setCtx('newyear',this)">NEW YEAR</button>
+    <button class="dbg" onclick="setCtx('default',this)">DEFAULT</button>
+  </div>
+  <div class="inner" id="inner">
+    <div class="hd">
+      <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+      <div class="brand">TANTAN</div>
+      <div class="cmpchip" id="cmpchip">💘 Valentine's Special</div>
+      <div class="theme" id="theme">💕</div>
+      <h1 id="title">A little love, just for you</h1>
+      <p id="sub">Tap to unwrap today's special surprise.</p>
+    </div>
+    <div class="gift" id="gift" onclick="open_()"><div class="giftbox">🎁</div></div>
+    <div class="reveal" id="reveal">
+      <div class="rk" id="rk">YOUR SURPRISE</div>
+      <div class="rv" id="rv"></div>
+      <div class="rd" id="rd"></div>
+    </div>
+    <div class="body">
+      <button class="btn" id="go">CLAIM MY SURPRISE 💝</button>
+      <small id="fine">Demo: one mechanic, re-skinned by Campaign ID (Grade A). Toggle campaigns above.</small>
+      
+    </div>
+  </div>
+</div></div>
+<script>
+/* GRADE-A CONTEXT (campaign ID). NO external API. Hard-coded CONTEXT mimics Campaign var.
+   // ===== CAMPAIGN-CONDITIONAL VARIANT (Grade A — any channel) =====
+   // {% case Campaign.campaignId %}
+   //   {% when "valentine_2026" %} ...love variant... {% when "newyear_2026" %} ...NY variant...
+   //   {% else %} ...default variant... {% endcase %}
+   // No API → {% else %} default variant covers any campaign. One build, many skins.
+   ============================================================ */
+let CONTEXT={campaign:{campaignId:'valentine_2026'}};
+const VARIANTS={
+ valentine:{cmp:'💘 Valentine\'s Special',theme:'💕',bg:'linear-gradient(165deg,#fff0f4,#ffe0ea)',
+  title:'A little love, just for you',sub:'Tap to unwrap today\'s special surprise.',
+  grad:'linear-gradient(135deg,#FF4E78,#D6285A)',rk:'VALENTINE\'S GIFT',rv:'2× Super Likes',rd:'Spread a little love today. Valid 48 hours.',reward:'VAL_SUPERLIKE',ctx:'valentine_2026'},
+ newyear:{cmp:'🎊 New Year Kickoff',theme:'✨',bg:'linear-gradient(165deg,#f3f0ff,#e6e0fb)',
+  title:'New year, new connections',sub:'Tap to unwrap your fresh-start surprise.',
+  grad:'linear-gradient(135deg,#7C5CFF,#5A38D6)',rk:'NEW YEAR GIFT',rv:'1 Week Boost Free',rd:'Start the year seen. Activate anytime this week.',reward:'NY_BOOST',ctx:'newyear_2026'},
+ default:{cmp:'🎁 Today\'s Surprise',theme:'🌟',bg:'linear-gradient(165deg,#fff5f8,#fbdde6)',
+  title:'A surprise, just for you',sub:'Tap to unwrap today\'s little gift.',
+  grad:'linear-gradient(135deg,#FF4E78,#D6285A)',rk:'YOUR GIFT',rv:'1 Free Super Like',rd:'A little something to brighten your day. Valid 24 hours.',reward:'DEFAULT_LIKE',ctx:'default'}};
+let cur='valentine',opened=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function setCtx(state,btn){document.querySelectorAll('.dbg').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');cur=state;opened=false;
+ const V=VARIANTS[state];
+ inner.style.background=V.bg;cmpchip.textContent=V.cmp;theme.textContent=V.theme;
+ title.textContent=V.title;sub.textContent=V.sub;
+ gift.querySelector('.giftbox').textContent='🎁';gift.classList.remove('open');
+ reveal.style.display='none';go.style.display='none';
+ ct('context_state',{campaign:V.ctx,branch:state==='default'?'default_variant':state});}
+function open_(){if(opened)return;opened=true;
+ const V=VARIANTS[cur];
+ gift.classList.add('open');gift.querySelector('.giftbox').textContent='🎉';
+ setTimeout(()=>{rk.textContent=V.rk;rv.textContent=V.rv;rd.textContent=V.rd;
+  reveal.style.display='block';reveal.style.background=V.grad;go.style.display='block';
+  /* SETS variant_revealed; PROMOS campaign-specific reward */
+  ct('variant_revealed',{game:'campaign_variant',campaign:V.ctx,reward:V.reward});
+  go.onclick=()=>{ct('reward_won',{reward:V.reward,campaign:V.ctx});
+   go.textContent='CLAIMED ✓';go.disabled=true;};},450);}
+setCtx('valentine',document.querySelectorAll('.dbg')[0]);
+ct('Notification Viewed',{game:'campaign_variant',grade:'A'});
+</script></body></html>

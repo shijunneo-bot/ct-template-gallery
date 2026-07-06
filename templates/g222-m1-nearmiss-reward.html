@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--
+PROTOTYPE: G222 — M1 "You're 200MB From Your Reward" Near-Miss (Custom-HTML In-App)
+CONCEPT/MECHANIC: Near-miss + goal-gradient (honest, NOT dark). User is genuinely close to a real reward threshold; shows the small remaining gap with a clear, truthful next action. No fake "almost won" — the gap is real.
+SURFACE: Custom-HTML In-App (banner/card).
+GRADE: B
+IP-NEUTRALITY: original.
+LIFECYCLE: engagement / reward redemption
+SETS PROFILE PROPERTY: reward_progress_mb
+BRAND COLOUR: M1 orange-red #FF6600 / ink #1A1A1A (approximate)
+LIVE-DATA NOTE: usage + threshold app/CleverTap-fed; gap is real, not manufactured.
+TRIGGER (Journeys): reward_progress within 10pct of threshold -> In-App.
+NOTE: honest near-miss only — the remaining amount must be true.
+-->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff6600"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>G222 M1 Near Miss</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Manrope',sans-serif;background:rgba(10,10,15,.5);display:flex;align-items:flex-end;justify-content:center;min-height:100vh;padding:20px}
+.sheet{width:88vw;max-width:358px;background:#fff;border-radius:22px 22px 18px 18px;overflow:hidden;box-shadow:0 -10px 50px rgba(0,0,0,.4)}
+.grab{width:40px;height:4px;background:#ddd;border-radius:2px;margin:10px auto 0}
+.body{padding:8px 20px 20px}
+.k{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--cfg-accent,#ff6600);font-weight:800;text-align:center;margin-top:6px}
+.h{font-size:21px;font-weight:800;color:#1A1A1A;text-align:center;margin-top:6px;line-height:1.25}
+.ring{width:150px;height:150px;margin:18px auto 6px;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ringtxt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.ringtxt .big{font-size:30px;font-weight:800;color:#1A1A1A;line-height:1}
+.ringtxt .sm{font-size:11px;color:#888;font-weight:700;margin-top:2px}
+.msg{font-size:13px;color:#555;text-align:center;font-weight:500;line-height:1.5;margin-top:8px}
+.msg b{color:var(--cfg-accent,#ff6600)}
+.cta{display:block;width:100%;background:var(--cfg-accent,#ff6600);color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:800;font-size:15px;margin-top:16px;cursor:pointer}
+.cta:active{transform:scale(.98)}
+.skip{text-align:center;font-size:12px;color:#999;font-weight:600;margin-top:12px;cursor:pointer}
+.log{margin-top:14px;background:#1A1A1A;color:#6EFF8F;font-family:monospace;font-size:10px;border-radius:10px;padding:10px;max-height:70px;overflow:auto;line-height:1.5}
+</style></head>
+<body>
+<div class="sheet">
+  <div class="grab"></div>
+  <div class="body">
+    <div class="k">So close</div>
+    <div class="h">You're 200MB from<br>a free 5GB bonus</div>
+    <div class="ring">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle cx="75" cy="75" r="66" fill="none" stroke="#f0f0f0" stroke-width="12"/>
+        <circle id="arc" cx="75" cy="75" r="66" fill="none" stroke="#FF6600" stroke-width="12" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"/>
+      </svg>
+      <div class="ringtxt"><div class="big">96%</div><div class="sm">4.8 / 5 GB used</div></div>
+    </div>
+    <div class="msg">Use <b>200MB more</b> this week and we'll drop a free 5GB bonus into your account &mdash; you've basically already earned it.</div>
+    <button class="cta" onclick="act()">See how to finish &rarr;</button>
+    <div class="skip" onclick="dismiss()">Not now</div>
+    
+  </div>
+</div>
+<script>
+function ct(e,p){console.log('CT',e,p||'');}
+ct('Notification Viewed',{campaign:'near_miss_reward',pct:96,remaining_mb:200});
+// animate arc to 96%
+var circ=414.7;var pct=0.96;
+setTimeout(function(){document.getElementById('arc').style.transition='stroke-dashoffset 1s ease';document.getElementById('arc').style.strokeDashoffset=(circ*(1-pct)).toFixed(1);},200);
+function act(){ct('Notification Clicked',{cta:'how_to_finish',deep_link:'m1://rewards/bonus'});}
+function dismiss(){ct('Notification Dismissed',{campaign:'near_miss_reward'});}
+</script>
+</body></html>

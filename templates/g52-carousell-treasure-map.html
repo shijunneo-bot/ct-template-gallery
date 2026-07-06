@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G52 — CAROUSELL "YOUR TREASURE MAP" · Made-For-You Data Reveal
+  Tier-3 Concept #22 · Pattern P-H (Suncorp "Haven" — Spikes Asia 2026
+  GRAND PRIX VERIFIED, Leo Sydney: personal data → unique emotional reveal;
+  "this is about MY life" driver)
+  Surface: Custom HTML In-App · Grade B (key-value fed)
+  Lifecycle: ENGAGEMENT (browse-heavy, low-transaction users)
+  DATA via key-values: top 3 browsed categories + counts + a "hidden gem"
+  category they haven't explored. Debug: DATA OK / FALLBACK.
+  SETS: {{profile.top_category}} → category drop push.
+  Brand: Carousell red (verified family)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#a8854a"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carousell · Your Treasure Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:#FF2636;--deep:#C2121F;--ink:#1E0F11;--paper:#FFF9F1;--gold:#E8B84B}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:linear-gradient(165deg,#4d1016,#1f070a);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(24,4,7,.64);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.55);overflow:hidden}
+.hd{background:linear-gradient(120deg,var(--red),#FF6A4D);color:#fff;padding:16px 20px;position:relative;text-align:center}
+.brand{font:800 11px Karla;letter-spacing:3px;margin-bottom:5px;opacity:.95}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.18);color:#fff;cursor:pointer}
+h1{font-family:'Bowlby One';font-size:19px}
+.hd p{font-size:11.5px;opacity:.93;margin-top:4px;line-height:1.45}
+.map{position:relative;margin:12px 18px 0;height:200px;border-radius:16px;background:#F6E9CF;border:2px solid #e8d4a8;overflow:hidden}
+.map svg{position:absolute;inset:0}
+.spot{position:absolute;width:54px;text-align:center;cursor:pointer;transition:.2s}
+.spot:active{transform:scale(.92)}
+.spot .sx{font-family:'Bowlby One';font-size:22px;color:#b08a3c;display:block;transition:.3s}
+.spot small{font:800 8px Karla;letter-spacing:.5px;color:var(--cfg-accent,#a8854a);display:block;line-height:1.2}
+.spot.dug .sx{transform:scale(1.25)}
+.spot.dug small{color:var(--deep)}
+.legend{margin:8px 18px 0;background:#fff;border:2px solid #f3e3c4;border-radius:13px;padding:10px 13px;min-height:56px}
+.legend b{font-size:12.5px;color:var(--ink);display:block}
+.legend span{font-size:11px;color:#9b7a4e;line-height:1.5}
+.body{padding:10px 18px 16px;text-align:center}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;background:var(--red);color:#fff;font:800 13.5px Karla;cursor:pointer;box-shadow:0 5px 0 var(--deep);display:none}
+.debug{display:flex;gap:6px;justify-content:center;padding:0 0 10px}
+.dbg{border:1.5px dashed #cdb088;background:transparent;border-radius:8px;padding:5px 10px;font:800 9.5px Karla;color:var(--cfg-accent,#a8854a);cursor:pointer}
+.dbg.on{background:#f3e3c4;color:#7a5a1e;border-style:solid}
+.ctlog{margin:0 18px 14px;font:700 10.5px ui-monospace,monospace;color:#a8916b;background:#f4ead2;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CAROUSELL</div>
+    <h1>YOUR TREASURE MAP 🗺️</h1>
+    <p id="sub">Drawn from where YOU actually wander. Tap each ✕ to dig up what your browsing buried.</p>
+  </div>
+  <div class="map" id="map">
+    <svg viewBox="0 0 320 200">
+      <path d="M30 160 Q80 120 110 140 T200 90 T290 50" fill="none" stroke="#c9a85e" stroke-width="2.5" stroke-dasharray="6 7"/>
+      <circle cx="30" cy="160" r="4" fill="#b08a3c"/>
+      <text x="14" y="184" font-size="10" fill="#a8854a" font-weight="800">START</text>
+      <path d="M250 165 q8 -14 16 0 q-8 4 -16 0" fill="#9db98a"/>
+      <path d="M60 50 q6 -10 12 0 q-6 3 -12 0" fill="#9db98a"/>
+    </svg>
+  </div>
+  <div class="legend" id="lg"><b>Four spots, four secrets</b><span>Three are treasures you've been circling for weeks. One… you've never even visited. Dig.</span></div>
+  <div class="body"><button class="btn" id="go">TAKE ME TO MY TREASURE →</button></div>
+  <div class="debug">
+    <button class="dbg on" onclick="setData(true,this)">DEBUG: DATA OK</button>
+    <button class="dbg" onclick="setData(false,this)">FALLBACK</button>
+  </div>
+  
+</div></div>
+<script>
+/* P-H Haven register: THEIR data, revealed. Key-values: top_categories[3] + counts +
+   hidden_gem. FALLBACK (feed fail): generic popular categories, honest copy.
+   SETS profile.top_category → category drop push. */
+const DATA={
+ ok:{spots:[
+  {x:26,y:54,ic:'📷',n:'CAMERAS',d:['You\'ve circled this island 31 times','31 visits this month. The film camera you keep opening? Still there. Still RM280. Just saying.']},
+  {x:52,y:32,ic:'🪑',n:'FURNITURE',d:['The mid-century cove — 18 landings','18 visits. Mostly teak sideboards. Your taste is excellent and your hesitation is noted.']},
+  {x:75,y:58,ic:'👟',n:'SNEAKERS',d:['Sneaker shoals — 12 expeditions','12 visits, size 8 filter always on. Three new drops since you last sailed past.']},
+  {x:88,y:20,ic:'❓',n:'???',d:['UNCHARTED: Vinyl Records','You\'ve never been here — but explorers who love cameras + teak furniture rate this island 9/10. New territory awaits.']}],
+  top:'cameras'},
+ fb:{spots:[
+  {x:26,y:54,ic:'📱',n:'PHONES',d:['A popular island','(Fallback — your map feed is unavailable.) One of Carousell\'s busiest categories right now.']},
+  {x:52,y:32,ic:'🪑',n:'FURNITURE',d:['The furniture cove','Trending finds, refreshed daily.']},
+  {x:75,y:58,ic:'👗',n:'FASHION',d:['Fashion shoals','Fast-moving treasure — new listings hourly.']},
+  {x:88,y:20,ic:'❓',n:'???',d:['UNCHARTED: Hobbies & Toys','A fan-favourite island many explorers miss. Worth a sail.']}],
+  top:'general'}};
+let cur='ok',dug=0;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){[...map.querySelectorAll('.spot')].forEach(s=>s.remove());dug=0;
+ go.style.display='none';
+ lg.innerHTML='<b>Four spots, four secrets</b><span>Three are treasures you\'ve been circling for weeks. One… you\'ve never even visited. Dig.</span>';
+ DATA[cur].spots.forEach((S,i)=>{const d=document.createElement('div');d.className='spot';
+  d.style.left=S.x+'%';d.style.top=S.y+'%';d.style.transform='translate(-50%,-50%)';
+  d.innerHTML=`<span class="sx">✕</span><small>DIG</small>`;
+  d.onclick=()=>dig(i,d);map.appendChild(d);});}
+function dig(i,el){if(el.classList.contains('dug'))return;
+ const S=DATA[cur].spots[i];
+ el.classList.add('dug');el.innerHTML=`<span class="sx">${S.ic}</span><small>${S.n}</small>`;
+ lg.innerHTML=`<b>${S.d[0]}</b><span>${S.d[1]}</span>`;
+ dug++;
+ ct('treasure_dug',{spot:S.n,dug:dug,source:cur==='ok'?'key_value':'liquid_fallback'});
+ if(dug===4){go.style.display='block';
+  /* SETS profile.top_category → category drop push */
+  ct('map_viewed',{top_category:DATA[cur].top,complete:true});
+  go.onclick=()=>{ct('treasure_cta_clicked',{category:DATA[cur].top});
+   go.textContent='SETTING SAIL ✓';go.disabled=true;};}}
+function setData(ok,btn){document.querySelectorAll('.dbg').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');cur=ok?'ok':'fb';build();
+ ct('context_state',{source:ok?'key_value':'liquid_fallback'});}
+build();
+ct('Notification Viewed',{campaign:'treasure_map',pattern:'haven_made_for_you'});
+</script></body></html>

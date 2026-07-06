@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G174 — EASYBOOK "QUICK DRAW" · Reaction-Timer Reflex
+  Mechanic: reaction-timer LOGIC (public-domain genre) — wait for the GO signal,
+  tap as fast as possible; false-start penalty; best-of-N average. NO trademarked
+  art/names. Brand-skinned as "be quick to grab the deal" (Easybook = travel
+  booking, fast-deal context). NEW FAMILY (reaction-timer) — 0 prior files.
+  Surface: in-app interstitial. Grade B. Lifecycle: conversion (flash-deal hook).
+  SETS: {{profile.reaction_ms}}. PROMOS: deal at reaction tier.
+  Brand: Easybook blue #1E63D8 (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#5a7196"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Easybook · Quick Draw</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1E63D8;--deep:#1448a8;--gold:#F5A623;--grn:#2FA85B;--red:#E1251B;--ink:#0C1B33;--paper:#F2F7FE;--soft:#D9E6F8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0c2247,#06121f);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,14,25,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,18,40,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Outfit;letter-spacing:2px;color:#6a8cc2;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Outfit;font-weight:800;font-size:19px;color:var(--ink)}
+.hd p{font-size:10.5px;color:var(--cfg-accent,#5a7196);margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 11px Outfit;color:var(--deep)}
+.pad{margin:14px 22px 6px;height:170px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.1s;user-select:none}
+.pad.wait{background:#33415a;color:#fff}
+.pad.ready{background:var(--grn);color:#fff}
+.pad.early{background:var(--red);color:#fff}
+.pad.idle{background:var(--soft);color:var(--cfg-accent,#5a7196)}
+.pad .big{font-family:Outfit;font-size:26px;font-weight:800}
+.pad .sub{font-size:11px;margin-top:4px;opacity:.92}
+.rounds{display:flex;justify-content:center;gap:6px;padding:4px 0}
+.rdot{width:9px;height:9px;border-radius:50%;background:var(--soft)}
+.rdot.done{background:var(--blue)}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 10.5px Inter;color:var(--cfg-accent,#5a7196);min-height:14px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--blue);color:#fff;font:800 14px Outfit;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#7a90b8;background:#e8f0fb;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">EASYBOOK</div>
+    <h1>Quick Draw ⚡</h1>
+    <p>Deals go fast! Wait for green, then tap as quick as you can. 3 rounds — your average wins the prize.</p>
+  </div>
+  <div class="hud"><span>Round: <span id="round">0</span>/3</span><span>Last: <span id="last">—</span></span></div>
+  <div class="pad idle" id="pad"><div class="big" id="padBig">Tap Start</div><div class="sub" id="padSub">to begin</div></div>
+  <div class="rounds" id="rounds"></div>
+  <div class="body">
+    <div class="status" id="status">3 rounds · tap only on GREEN</div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Reaction-timer LOGIC (public-domain genre). Wait random delay -> GO -> measure
+   tap latency; false-start penalty; average over rounds. SETS profile.reaction_ms. */
+const pad=document.getElementById('pad');
+let round,times,state,goTime,waitT,playing=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function renderRounds(){const r=document.getElementById('rounds');r.innerHTML='';
+ for(let i=0;i<3;i++){const d=document.createElement('div');d.className='rdot'+(i<times.length?' done':'');r.appendChild(d);}}
+function start(){round=0;times=[];playing=true;document.getElementById('start').style.display='none';
+ document.getElementById('last').textContent='—';renderRounds();ct('game_started',{game:'quick_draw'});nextRound();}
+function nextRound(){round++;document.getElementById('round').textContent=round;
+ state='wait';pad.className='pad wait';
+ document.getElementById('padBig').textContent='Wait…';document.getElementById('padSub').textContent='get ready';
+ const delay=1200+Math.random()*2200;
+ waitT=setTimeout(()=>{state='ready';goTime=performance.now();pad.className='pad ready';
+  document.getElementById('padBig').textContent='TAP!';document.getElementById('padSub').textContent='now!';},delay);}
+function tap(){if(!playing)return;
+ if(state==='wait'){clearTimeout(waitT);state='early';pad.className='pad early';
+  document.getElementById('padBig').textContent='Too early!';document.getElementById('padSub').textContent='tap to retry round';
+  ct('false_start',{round:round});state='retry';return;}
+ if(state==='retry'){return nextRoundRetry();}
+ if(state==='ready'){const ms=Math.round(performance.now()-goTime);times.push(ms);
+  document.getElementById('last').textContent=ms+'ms';renderRounds();
+  ct('reaction_recorded',{ms:ms,round:round});
+  state='shown';pad.className='pad idle';
+  document.getElementById('padBig').textContent=ms+' ms';document.getElementById('padSub').textContent=round<3?'tap for next round':'see your result';
+  state='next';return;}
+ if(state==='next'){if(round<3)nextRound();else finish();}}
+function nextRoundRetry(){round--;nextRound();}
+function finish(){playing=false;const avg=Math.round(times.reduce((a,b)=>a+b,0)/times.length);
+ const tier=avg<=350;
+ status.innerHTML='Average: <b>'+avg+'ms</b> over 3 rounds';
+ pad.className='pad idle';document.getElementById('padBig').textContent=avg+' ms';
+ document.getElementById('padSub').textContent=tier?'lightning fast!':'good run!';
+ ct('game_over',{reaction_ms:avg});
+ const b=document.getElementById('start');b.style.display='block';b.disabled=false;
+ if(tier){b.textContent='CLAIM FLASH DEAL 🎁';
+  ct('reaction_tier_reached',{reaction_ms:avg});
+  b.onclick=()=>{ct('reward_won',{reward:'flash_deal'});b.textContent='DEAL SAVED ✓';b.disabled=true;};}
+ else{b.textContent='TRY AGAIN (≤350ms avg to win)';b.onclick=start;}}
+pad.addEventListener('pointerdown',tap);
+document.getElementById('start').onclick=start;
+times=[];renderRounds();
+ct('Notification Viewed',{game:'quick_draw',mechanic:'reaction_timer'});
+</script></body></html>

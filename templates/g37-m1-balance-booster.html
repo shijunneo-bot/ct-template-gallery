@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G37 — M1 "BALANCE BOOSTER" · Data-Balance-Aware Reward Spin
+  Surface: Custom HTML In-App · Grade B (context via key-value)
+  CONTEXT: {data_left_gb, days_to_renewal} via KEY-VALUE PAIRS at send time.
+  Reward pool ADAPTS to balance state: LOW balance → data boosts;
+  HEALTHY → lifestyle perks (no "buy more" pressure when they don't need it).
+  Debug toggles: LOW / HEALTHY / FAIL (fallback pool).
+  Lifecycle: mid-cycle engagement + churn-risk soothing (low-data anxiety)
+  PROMOS: reward → credited to line. Brand: M1 orange→pink (established)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#a87f99"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · Balance Booster</title>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=DM+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF6B35;--pink:#E6007E;--ink:#241222;--paper:#FFF7FB}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;background:linear-gradient(160deg,#3a1535,#1c0b1a);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(20,5,18,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.55);overflow:hidden}
+.ctx{background:var(--ink);color:#fff;padding:9px 16px;font:700 10.5px 'DM Sans';letter-spacing:.6px;display:flex;align-items:center;gap:8px}
+.ctx.low{background:#7a1230}
+.gauge{padding:14px 22px 2px}
+.gtrack{height:14px;background:#f3dcEA;border-radius:8px;overflow:hidden;position:relative}
+.gfill{height:100%;width:12%;background:linear-gradient(90deg,var(--org),var(--pink));border-radius:8px;transition:width .6s}
+.glabel{display:flex;justify-content:space-between;font:700 10px 'DM Sans';color:var(--cfg-accent,#a87f99);margin-top:5px;letter-spacing:.5px}
+.hd{padding:8px 20px 4px;text-align:center;position:relative}
+.brand{font-family:Righteous;font-size:18px;background:linear-gradient(90deg,var(--org),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px}
+.x{position:absolute;top:-46px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
+h1{font-size:18px;font-weight:700;color:var(--ink)}
+.hd p{font-size:11.5px;color:#9b7390;margin-top:4px;line-height:1.5}
+.slots3{display:flex;justify-content:center;gap:9px;padding:12px 20px 4px}
+.slot3{width:90px;height:96px;background:#fff;border:2.5px solid #f0d5e4;border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:.2s}
+.slot3:active{transform:scale(.94)}
+.slot3 i{font-style:normal;font-size:30px}
+.slot3 small{font:700 9px 'DM Sans';color:#b58aa5;letter-spacing:.5px;text-align:center;line-height:1.25;padding:0 4px}
+.slot3.flip{border-color:var(--pink);background:#fdf0f7;animation:fl .45s}
+@keyframes fl{0%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.body{padding:10px 20px 18px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Righteous;font-size:17px;background:linear-gradient(90deg,var(--org),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;display:block}
+.result span{font-size:11.5px;color:#9b7390}
+.btn{width:100%;border:0;border-radius:14px;padding:13px;background:linear-gradient(90deg,var(--org),var(--pink));color:#fff;font:700 14px 'DM Sans';cursor:pointer;box-shadow:0 5px 16px rgba(230,0,126,.3)}
+.btn[disabled]{opacity:.5;box-shadow:none}
+.debug{display:flex;gap:6px;justify-content:center;padding:0 0 10px}
+.dbg{border:1.5px dashed #d3a8c2;background:transparent;border-radius:8px;padding:5px 10px;font:700 9.5px 'DM Sans';color:var(--cfg-accent,#a87f99);cursor:pointer}
+.dbg.on{background:#f6e0ed;color:#8a1d5e;border-style:solid}
+.ctlog{margin:0 18px 14px;font:700 10.5px ui-monospace,monospace;color:#a4869a;background:#f6e6f0;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="ctx low" id="ctx">📉 <span id="ctxT">1.2GB LEFT · 9 DAYS TO RENEWAL — RUNNING HOT</span></div>
+  <div class="gauge"><div class="gtrack"><div class="gfill" id="gf"></div></div>
+   <div class="glabel"><span>DATA LEFT</span><span id="gl">1.2 / 10GB</span></div></div>
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">M1</div>
+    <h1 id="h1">Running low? Pick a booster 🎁</h1>
+    <p id="sub">Your data's stretched thin with 9 days to go — so today's mystery cards are all data. Pick one, keep streaming.</p>
+  </div>
+  <div class="slots3" id="slots3"></div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="claimBtn" style="display:none">ADD TO MY LINE</button>
+  </div>
+  <div class="debug">
+    <button class="dbg on" onclick="setCtx('low',this)">DEBUG: LOW DATA</button>
+    <button class="dbg" onclick="setCtx('healthy',this)">HEALTHY</button>
+    <button class="dbg" onclick="setCtx('fail',this)">FEED FAIL</button>
+  </div>
+  
+</div></div>
+<script>
+/* CONTEXT key-values: {data_left_gb, plan_gb, days_to_renewal}. Pool adapts to state —
+   low balance gets data relief (churn-risk soothing), healthy gets lifestyle perks.
+   FAIL → generic pool + fallback copy. */
+const STATES={
+ low:{bar:'📉 1.2GB LEFT · 9 DAYS TO RENEWAL — RUNNING HOT',cls:'low',fill:'12%',gl:'1.2 / 10GB',
+  h:'Running low? Pick a booster 🎁',
+  s:'Your data\'s stretched thin with 9 days to go — so today\'s mystery cards are all data. Pick one, keep streaming.',
+  pool:[['📶','+2GB','TO MONTH END'],['🚀','+3GB','TO MONTH END'],['🌙','FREE NIGHT DATA','11PM–7AM']]},
+ healthy:{bar:'✅ 7.8GB LEFT · 9 DAYS TO RENEWAL — CRUISING',cls:'',fill:'78%',gl:'7.8 / 10GB',
+  h:'Data\'s healthy — have a treat instead 🍿',
+  s:'You\'re cruising comfortably, so no data upsell from us today. These cards are pure perks.',
+  pool:[['🎬','1 MONTH','STREAMING ON US'],['☕','$5 VOUCHER','PARTNER CAFÉS'],['🎟️','MOVIE TICKET','2-FOR-1']]},
+ fail:{bar:'🎁 TODAY\'S MYSTERY CARDS — M1 REWARDS',cls:'',fill:'50%',gl:'— / —',
+  h:'Pick a mystery card 🎁',
+  s:'(Fallback — balance feed unavailable.) Three cards, one treat. All good, promise.',
+  pool:[['🎁','SURPRISE','REWARD A'],['🎁','SURPRISE','REWARD B'],['🎁','SURPRISE','REWARD C']]}};
+let cur='low',picked=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){const S=STATES[cur];slots3.innerHTML='';
+ S.pool.forEach((c,i)=>{const d=document.createElement('div');d.className='slot3';
+  d.innerHTML=`<i>❓</i><small>MYSTERY<br>CARD ${i+1}</small>`;
+  d.onclick=()=>pick(i,d);slots3.appendChild(d);});}
+function setCtx(k,btn){document.querySelectorAll('.dbg').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');cur=k;picked=false;const S=STATES[k];
+ ctx.className='ctx '+S.cls;ctxT.textContent=S.bar;
+ gf.style.width=S.fill;gl.textContent=S.gl;
+ h1.textContent=S.h;sub.textContent=S.s;
+ result.style.display='none';claimBtn.style.display='none';build();
+ ct('context_state',{balance_state:k,source:k==='fail'?'liquid_fallback':'key_value'});}
+function pick(i,el){if(picked)return;picked=true;
+ const c=STATES[cur].pool[i];
+ el.classList.add('flip');el.innerHTML=`<i>${c[0]}</i><small>${c[1]}<br>${c[2]}</small>`;
+ result.style.display='block';rT.textContent=c[1]+' · '+c[2];
+ rS.textContent=cur==='low'?'Breathe easy — that should cover you to renewal.':'Enjoy! Your data didn\'t even notice.';
+ claimBtn.style.display='block';
+ ct('reward_won',{reward:c[1],balance_state:cur});
+ claimBtn.onclick=()=>{ /* PROMOS: credit reward to line / partner voucher */
+  ct('reward_claimed',{reward:c[1]});
+  claimBtn.textContent='ADDED ✓';claimBtn.disabled=true;};}
+build();
+ct('Notification Viewed',{game:'balance_booster',trigger:'midcycle_balance_check'});
+</script></body></html>

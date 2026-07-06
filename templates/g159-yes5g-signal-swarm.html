@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G159 — YES 5G "SIGNAL SWARM" · Swarm-Shooter + Spin-Wheel Hybrid
+  Spec D (swarm shooter + prize wheel). IP-NEUTRAL swarm logic: speed-scaled
+  grid of units (T_tick = T_base * N_active/N_initial), unified block movement,
+  edge-bounce + step-down. NO trademarked art/names. Brand-skinned as clearing
+  interference to unlock signal. Reward layer = HONEST wheel (true odds shown,
+  no inflated near-miss). Surface: in-app interstitial. Grade B.
+  Lifecycle: conversion (telco). SETS: {{profile.swarm_best}}. PROMOS: wheel reward.
+  NOT for White Hat accounts. Brand: Yes 5G (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ffe600"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yes 5G · Signal Swarm</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ylw:var(--cfg-accent,#ffe600);--blk:#111;--mag:#E6007E;--cyan:#00C2FF;--grn:#2FA85B;--ink:#141414}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#1a1a22,#0a0a0e);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(6,6,10,.66);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:#15151b;border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid #2a2a35;position:relative}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:700 12px 'Chakra Petch';letter-spacing:2px;color:var(--ylw);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff16;color:#fff;cursor:pointer;z-index:5}
+h1{font-family:'Chakra Petch';font-weight:700;font-size:19px}
+.hd p{font-size:11px;color:#b0b0c0;margin-top:3px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:700 12px 'Chakra Petch';color:var(--ylw)}
+.stage{display:flex;justify-content:center;padding:6px 0 4px}
+#cv{background:#0c0c10;border:2px solid #2a2a35;border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 11px Inter;color:#b0b0c0;min-height:15px;margin-bottom:8px}
+.status b{color:var(--ylw)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--ylw);color:#141414;font:700 14px 'Chakra Petch';cursor:pointer;box-shadow:0 5px 0 #b3a200}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9.5px;color:#70708a;margin-top:6px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a0a0b8;background:#1c1c24;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+/* wheel overlay */
+.overlay{position:absolute;inset:0;background:rgba(8,8,12,.82);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:10}
+.overlay.show{display:flex}
+.wheel-wrap{position:relative;width:200px;height:200px;margin-bottom:14px}
+.wheel{width:100%;height:100%;border-radius:50%;border:6px solid var(--ylw);transition:transform 4s cubic-bezier(.15,.7,.2,1);position:relative;overflow:hidden}
+.wseg{position:absolute;width:50%;height:50%;transform-origin:100% 100%;display:flex;align-items:center;justify-content:center}
+.wptr{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:26px;z-index:3}
+.whub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:#fff;border:4px solid var(--blk);z-index:2;display:flex;align-items:center;justify-content:center;font-size:16px}
+.odds{font-size:9px;color:#9090a8;margin-top:8px;text-align:center;line-height:1.5}
+.owin{font-family:'Chakra Petch';font-size:18px;color:var(--ylw);margin-bottom:6px;min-height:22px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">YES 5G</div>
+    <h1>Signal Swarm 📡</h1>
+    <p>Clear the interference blocks to free your signal. Wipe them all to spin the reward wheel!</p>
+  </div>
+  <div class="hud"><span>Cleared: <span id="cleared">0</span>/<span id="total">0</span></span><span>Lives: <span id="lives">3</span></span></div>
+  <div class="stage"><canvas id="cv" width="240" height="280"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap left/right of the ship to move · tap ship to fire</div>
+    <button class="btn" id="start">START CLEARING</button>
+    <div class="hint">Auto-fires upward · dodge the descending blocks · clear all to spin</div>
+    
+  </div>
+  <div class="overlay" id="overlay">
+    <div class="owin" id="owin">Swarm cleared! 🎉</div>
+    <div class="wheel-wrap"><div class="wptr">🔻</div><div class="wheel" id="wheel"></div><div class="whub">📡</div></div>
+    <button class="btn" id="spin" style="max-width:200px">SPIN THE WHEEL</button>
+    <div class="odds" id="odds"></div>
+  </div>
+</div></div>
+<script>
+/* Spec D: speed-scaled swarm + HONEST prize wheel. IP-neutral.
+   Swarm tick scales with N_active/N_initial (doc-accurate). Wheel shows true odds. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const COLS=6,ROWS=3,UW=26,UH=18,GAP=8,TOP=24,LEFT=22;
+let units,ship,bullets,N0,cleared,lives,dir,dropFlag,playing=false,loopT=null,fireT=0,tick=0,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){units=[];
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  units.push({x:LEFT+c*(UW+GAP),y:TOP+r*(UH+GAP),w:UW,h:UH,alive:true,
+   col:['#E6007E','#00C2FF',CONFIG.accentColor][r%3],emo:['📵','📶','🔇'][r%3]});}
+ N0=units.length;cleared=0;lives=3;dir=1;dropFlag=false;won=false;
+ ship={x:W/2-16,y:H-22,w:32,h:12};bullets=[];tick=0;
+ document.getElementById('total').textContent=N0;document.getElementById('cleared').textContent='0';
+ document.getElementById('lives').textContent='3';}
+function alive(){return units.filter(u=>u.alive);}
+function step(){if(!playing)return;tick++;
+ // swarm speed scales with population (doc: T_tick = base * N_active/N_initial)
+ const liveN=alive().length;
+ const moveEvery=Math.max(2,Math.round(14*(liveN/N0)));
+ if(tick%moveEvery===0){let hitEdge=false;
+  alive().forEach(u=>{if(u.x+dir*6<6||u.x+u.w+dir*6>W-6)hitEdge=true;});
+  if(hitEdge){dir*=-1;alive().forEach(u=>u.y+=12);}
+  else alive().forEach(u=>u.x+=dir*6);
+  // reached bottom?
+  if(alive().some(u=>u.y+u.h>=ship.y-4)){return loseLife(true);}}
+ // auto-fire
+ fireT++;if(fireT>14){fireT=0;bullets.push({x:ship.x+ship.w/2,y:ship.y,r:3});}
+ bullets.forEach(b=>b.y-=5);bullets=bullets.filter(b=>b.y>-5);
+ // bullet/unit collisions
+ bullets.forEach(b=>{for(const u of alive()){
+  if(b.x>u.x&&b.x<u.x+u.w&&b.y>u.y&&b.y<u.y+u.h){u.alive=false;b.y=-99;cleared++;
+   document.getElementById('cleared').textContent=cleared;
+   ct('block_cleared',{cleared:cleared});
+   if(cleared>=N0&&!won){won=true;return swarmCleared();}break;}}});
+ draw();}
+function draw(){cx.clearRect(0,0,W,H);
+ alive().forEach(u=>{cx.font='16px serif';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillStyle=u.col;cx.fillRect(u.x,u.y,u.w,u.h);
+  cx.fillText(u.emo,u.x+u.w/2,u.y+u.h/2);});
+ cx.fillStyle=Number.isFinite(0)?CONFIG.accentColor:CONFIG.accentColor;
+ cx.fillText('🚀',ship.x+ship.w/2,ship.y+6);
+ cx.fillStyle='#fff';bullets.forEach(b=>{cx.fillRect(b.x-1,b.y-5,2,7);});}
+function start(){reset();playing=true;status.textContent='Dodge & clear the interference!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,28);
+ ct('game_started',{game:'signal_swarm'});}
+function loseLife(reached){lives--;document.getElementById('lives').textContent=lives;
+ ct('life_lost',{lives_left:lives});
+ if(lives<=0){playing=false;clearInterval(loopT);
+  status.innerHTML='Swarm broke through! Cleared <b>'+cleared+'/'+N0+'</b>';
+  const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+  ct('game_over',{swarm_best:cleared});}
+ else if(reached){alive().forEach(u=>u.y-=40);status.innerHTML='Close one! <b>'+lives+'</b> lives left.';}}
+function swarmCleared(){playing=false;clearInterval(loopT);
+ ct('swarm_cleared',{swarm_best:N0});
+ buildWheel();document.getElementById('overlay').classList.add('show');}
+// ---- honest wheel ----
+const PRIZES=[
+ {label:'+5GB',emo:'📶',weight:10,col:'#E6007E'},
+ {label:'+1GB',emo:'📲',weight:35,col:'#00C2FF'},
+ {label:'+2GB',emo:'📡',weight:25,col:CONFIG.accentColor},
+ {label:'Free Wknd Data',emo:'🎉',weight:8,col:'#2FA85B'},
+ {label:'+500MB',emo:'📱',weight:22,col:'#7C3AED'}];
+function buildWheel(){const wheel=document.getElementById('wheel');wheel.innerHTML='';
+ const totalW=PRIZES.reduce((a,p)=>a+p.weight,0);
+ // equal visual segments (6 here -> pad to even); honest odds shown as text below
+ const segs=PRIZES;const ang=360/segs.length;
+ segs.forEach((p,i)=>{const s=document.createElement('div');s.className='wseg';
+  s.style.transform='rotate('+(i*ang)+'deg) skewY(-'+(90-ang)+'deg)';s.style.background=p.col;
+  const inner=document.createElement('div');inner.style.transform='skewY('+(90-ang)+'deg) rotate('+(ang/2)+'deg)';
+  inner.style.fontSize='16px';inner.textContent=p.emo;s.appendChild(inner);wheel.appendChild(s);});
+ document.getElementById('odds').innerHTML='True odds: '+PRIZES.map(p=>p.label+' '+Math.round(p.weight/totalW*100)+'%').join(' · ');}
+let spun=false;
+document.getElementById('spin').onclick=()=>{if(spun)return;spun=true;
+ const wheel=document.getElementById('wheel');const spinBtn=document.getElementById('spin');spinBtn.disabled=true;
+ // weighted honest pick
+ const totalW=PRIZES.reduce((a,p)=>a+p.weight,0);let r=Math.random()*totalW,idx=0;
+ for(let i=0;i<PRIZES.length;i++){if(r<PRIZES[i].weight){idx=i;break;}r-=PRIZES[i].weight;}
+ const ang=360/PRIZES.length;const target=360*5+(360-(idx*ang)-ang/2);
+ wheel.style.transform='rotate('+target+'deg)';
+ ct('wheel_spun',{prize:PRIZES[idx].label});
+ setTimeout(()=>{document.getElementById('owin').textContent='You won: '+PRIZES[idx].label+'! '+PRIZES[idx].emo;
+  spinBtn.textContent='CLAIM '+PRIZES[idx].label+' 🎁';spinBtn.disabled=false;
+  spinBtn.onclick=()=>{ct('reward_won',{reward:PRIZES[idx].label});spinBtn.textContent='CLAIMED ✓';spinBtn.disabled=true;};},4100);};
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{if(!playing)return;
+ if(e.key==='ArrowLeft')ship.x=Math.max(0,ship.x-16);
+ else if(e.key==='ArrowRight')ship.x=Math.min(W-ship.w,ship.x+16);});
+cv.addEventListener('pointerdown',e=>{if(!playing)return;const rect=cv.getBoundingClientRect();
+ const x=(e.clientX-rect.left)*(W/rect.width);
+ if(x<ship.x)ship.x=Math.max(0,ship.x-22);else ship.x=Math.min(W-ship.w,ship.x+22);});
+ct('Notification Viewed',{game:'signal_swarm',mechanic:'swarm_plus_wheel',spec:'D'});
+</script></body></html>

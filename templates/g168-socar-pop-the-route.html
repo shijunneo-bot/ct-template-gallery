@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G168 — SOCAR "POP THE ROUTE" · Bubble-Shooter Match-3
+  Mechanic: bubble-shooter LOGIC (Puzzle-Bobble-spirit, public-domain genre) —
+  aim & launch a coloured bubble, match 3+ same-colour to pop them. NO trademarked
+  art/names. Brand-skinned as clearing route markers to plan a drive.
+  NEW FAMILY (bubble-shooter) — 0 prior files. Surface: in-app interstitial.
+  Grade B. Lifecycle: engagement (car-share). SETS: {{profile.bubble_score}}.
+  PROMOS: drive credit at clear. NOT for White Hat. Brand: SOCAR green #00B14F (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#00b14f"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOCAR · Pop The Route</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--grn:var(--cfg-accent,#00b14f);--deep:#00833B;--ink:#0C1F14;--paper:#F1FBF5;--soft:#D6F0E0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0d2c1b,#06150d);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,16,10,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,21,13,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#7aab90;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a8a6c;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Sora;color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:#f6fdf9;border:2px solid var(--soft);border-radius:10px;touch-action:none;cursor:crosshair}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a8a6c;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--grn);color:#fff;font:800 13px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#8ab3a0;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#7aab90;background:#e3f3eb;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">SOCAR</div>
+    <h1>Pop The Route 🚗</h1>
+    <p>Aim and launch to match 3+ route markers of the same colour. Clear the board for a drive credit!</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Shots: <span id="shots">12</span></span></div>
+  <div class="stage"><canvas id="cv" width="240" height="280"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap a spot to aim & launch your marker!</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Match 3+ same colour to pop · clear all to win</div>
+    
+  </div>
+</div></div>
+<script>
+/* Bubble-shooter match-3 LOGIC (public-domain genre). Grid of markers; launch to
+   match 3+ same colour. IP-neutral. SETS profile.bubble_score. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const R=14,COLS=8,ROWS=10;
+const COLORS=[CONFIG.accentColor,'#2F8Fd8','#F5A623','#E1251B'];
+let grid,shooter,flying,score,shots,playing=false,loopT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function cellXY(r,c){const offset=(r%2)*R;return {x:R+c*(R*2)+offset,y:R+r*(R*1.8)};}
+function reset(){grid=[];
+ for(let r=0;r<4;r++){grid[r]=[];const cols=r%2?COLS-1:COLS;
+  for(let c=0;c<cols;c++){grid[r][c]=COLORS[Math.floor(Math.random()*COLORS.length)];}}
+ for(let r=4;r<ROWS;r++)grid[r]=[];
+ score=0;shots=12;won=false;flying=null;
+ shooter={color:COLORS[Math.floor(Math.random()*COLORS.length)]};
+ document.getElementById('score').textContent='0';document.getElementById('shots').textContent='12';}
+function draw(){cx.clearRect(0,0,W,H);
+ for(let r=0;r<grid.length;r++){if(!grid[r])continue;for(let c=0;c<grid[r].length;c++){
+  if(grid[r][c]){const p=cellXY(r,c);bubble(p.x,p.y,grid[r][c]);}}}
+ if(flying)bubble(flying.x,flying.y,flying.color);
+ // shooter
+ bubble(W/2,H-18,shooter.color);
+ cx.strokeStyle='#cdebd9';cx.beginPath();cx.moveTo(W/2,H-18);cx.lineTo(W/2,H-44);cx.stroke();}
+function bubble(x,y,col){cx.fillStyle=col;cx.beginPath();cx.arc(x,y,R-1,0,7);cx.fill();
+ cx.fillStyle='rgba(255,255,255,.3)';cx.beginPath();cx.arc(x-4,y-4,4,0,7);cx.fill();}
+function launch(tx,ty){if(!playing||flying||shots<=0)return;
+ const ang=Math.atan2(ty-(H-18),tx-W/2);
+ flying={x:W/2,y:H-18,vx:Math.cos(ang)*6,vy:Math.sin(ang)*6,color:shooter.color};
+ if(loopT)clearInterval(loopT);loopT=setInterval(fly,16);
+ ct('marker_launched',{});}
+function fly(){flying.x+=flying.vx;flying.y+=flying.vy;
+ if(flying.x<R||flying.x>W-R)flying.vx*=-1;
+ // hit top or existing bubble?
+ let hit=flying.y<=R;
+ let hitRC=null;
+ outer:for(let r=0;r<grid.length;r++){if(!grid[r])continue;for(let c=0;c<grid[r].length;c++){
+  if(grid[r][c]){const p=cellXY(r,c);if(Math.hypot(flying.x-p.x,flying.y-p.y)<R*1.8){hit=true;break outer;}}}}
+ if(hit){clearInterval(loopT);snap();}
+ else draw();}
+function snap(){
+ // find nearest empty cell
+ let best=null,bestD=1e9;
+ for(let r=0;r<ROWS;r++){const cols=r%2?COLS-1:COLS;if(!grid[r])grid[r]=[];
+  for(let c=0;c<cols;c++){if(!grid[r][c]){const p=cellXY(r,c);const d=Math.hypot(flying.x-p.x,flying.y-p.y);
+   if(d<bestD){bestD=d;best={r,c};}}}}
+ if(best){grid[best.r][best.c]=flying.color;
+  const popped=checkMatch(best.r,best.c,flying.color);
+  if(popped>=3){score+=popped*10;document.getElementById('score').textContent=score;
+   status.innerHTML='Popped <b>'+popped+'</b>! +'+(popped*10);ct('match_popped',{count:popped,score:score});}
+  else{status.textContent='No match — keep aiming!';}}
+ flying=null;shots--;document.getElementById('shots').textContent=shots;
+ shooter={color:COLORS[Math.floor(Math.random()*COLORS.length)]};
+ draw();
+ // win/lose
+ const remaining=grid.flat().filter(Boolean).length;
+ if(remaining===0&&!won){won=true;return winGame();}
+ if(shots<=0){return gameOver(remaining);}}
+function checkMatch(r,c,col){const seen=new Set(),stack=[[r,c]],group=[];
+ while(stack.length){const[cr,cc]=stack.pop();const k=cr+','+cc;
+  if(seen.has(k))continue;seen.add(k);
+  if(!grid[cr]||grid[cr][cc]!==col)continue;group.push([cr,cc]);
+  // hex-ish neighbours
+  const nbrs=[[cr,cc-1],[cr,cc+1],[cr-1,cc],[cr+1,cc],[cr-1,cc+(cr%2?1:-1)],[cr+1,cc+(cr%2?1:-1)]];
+  nbrs.forEach(([nr,nc])=>{if(nr>=0&&nr<ROWS&&nc>=0&&grid[nr]&&grid[nr][nc]===col)stack.push([nr,nc]);});}
+ if(group.length>=3){group.forEach(([gr,gc])=>{grid[gr][gc]=null;});return group.length;}
+ return 0;}
+function start(){reset();playing=true;status.textContent='Aim & launch — match 3+ to pop!';
+ document.getElementById('start').style.display='none';draw();
+ ct('game_started',{game:'pop_the_route'});}
+function gameOver(remaining){playing=false;
+ status.innerHTML='Out of shots! Score <b>'+score+'</b> ('+remaining+' left)';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{bubble_score:score});}
+function winGame(){playing=false;draw();
+ status.innerHTML='🎉 Route cleared! Score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM DRIVE CREDIT 🎁';b.disabled=false;
+ ct('board_cleared',{bubble_score:score});
+ b.onclick=()=>{ct('reward_won',{reward:'drive_credit'});b.textContent='CREDIT BANKED ✓';b.disabled=true;};}
+cv.addEventListener('pointerdown',e=>{const rect=cv.getBoundingClientRect();
+ launch((e.clientX-rect.left)*(W/rect.width),(e.clientY-rect.top)*(H/rect.height));});
+document.getElementById('start').onclick=start;
+reset();draw();
+ct('Notification Viewed',{game:'pop_the_route',mechanic:'bubble_shooter'});
+</script></body></html>

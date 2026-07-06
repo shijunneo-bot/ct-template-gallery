@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G92 — TUNE TALK "DATA WEATHER" · Context-Aware Usage Forecast
+  Surface: Custom HTML In-App · Grade B (key-value fed)
+  CONTEXT: {data_used_pct, days_left, usage_trend} via key-values; the card
+  gives a playful "forecast" of whether they'll run out before renewal.
+  Debug toggles: SUNNY (plenty) / STORMY (running low) / FEED FAIL (fallback).
+  Behavioral: proactive helpfulness (anti-bill-shock = churn-risk soothing)
+  SETS: {{profile.data_forecast}} → tailored top-up or no-action push.
+  Brand: Tune Talk orange #F36F21 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f36f21"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tune Talk · Data Weather</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@600;800&family=Karla:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#f36f21);--deep:#C2511A;--ink:#221208;--paper:#FFFAF5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:linear-gradient(165deg,#4a2c12,#1f1206);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(22,11,3,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.sky{padding:22px 20px 16px;text-align:center;position:relative;transition:background .5s;background:linear-gradient(170deg,#7EC8E3,#4A9FC4)}
+.sky.stormy{background:linear-gradient(170deg,#5a6470,#3a4250)}
+.sky.fail{background:linear-gradient(170deg,#9b8a6f,#6e5f48)}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.18);color:#fff;cursor:pointer}
+.brand{font:800 11px Karla;letter-spacing:3px;color:rgba(255,255,255,.9);margin-bottom:6px}
+.wicon{font-size:60px;line-height:1}
+.wtitle{font-family:Rubik;font-weight:800;font-size:22px;color:#fff;margin-top:6px}
+.wsub{font-size:12.5px;color:rgba(255,255,255,.92);margin-top:5px;line-height:1.5}
+.gauge{padding:16px 24px 4px}
+.gtrack{height:14px;background:#f0e0d0;border-radius:7px;overflow:hidden}
+.gfill{height:100%;width:50%;background:linear-gradient(90deg,var(--org),#ffa050);border-radius:7px;transition:width .6s}
+.glbl{display:flex;justify-content:space-between;font:800 10px Karla;color:#a8856f;margin-top:5px;letter-spacing:.5px}
+.forecast{margin:8px 22px 0;background:#fff;border:2px solid #f0e0d0;border-radius:13px;padding:12px 14px;font-size:12px;color:#6b4a2e;line-height:1.55}
+.forecast b{color:var(--deep)}
+.body{padding:12px 20px 14px;text-align:center}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--org);color:#fff;font:800 14px Rubik;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn.calm{background:#7da37a;box-shadow:0 5px 0 #5a7d57}
+.debug{display:flex;gap:6px;justify-content:center;padding:0 0 10px}
+.dbg{border:1.5px dashed #d3b89c;background:transparent;border-radius:8px;padding:5px 10px;font:800 9.5px Karla;color:#a8856f;cursor:pointer}
+.dbg.on{background:#f3e3d2;color:var(--deep);border-style:solid}
+.ctlog{margin:0 18px 14px;font:700 10.5px ui-monospace,monospace;color:#a8845f;background:#f6ead9;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="sky" id="sky">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">TUNE TALK · DATA WEATHER</div>
+    <div class="wicon" id="wIcon">⛅</div>
+    <div class="wtitle" id="wTitle">Partly Sunny</div>
+    <div class="wsub" id="wSub">Your data forecast looks steady through renewal.</div>
+  </div>
+  <div class="gauge"><div class="gtrack"><div class="gfill" id="gf"></div></div>
+   <div class="glbl"><span id="glLeft">5.2GB LEFT</span><span id="glRight">8 DAYS TO RENEWAL</span></div></div>
+  <div class="forecast" id="fc"></div>
+  <div class="body">
+    <button class="btn" id="go">VIEW FORECAST DETAILS</button>
+  </div>
+  <div class="debug">
+    <button class="dbg on" onclick="setState('sunny',this)">DEBUG: SUNNY</button>
+    <button class="dbg" onclick="setState('stormy',this)">STORMY</button>
+    <button class="dbg" onclick="setState('fail',this)">FEED FAIL</button>
+  </div>
+  
+</div></div>
+<script>
+/* CONTEXT key-values: data_used_pct, days_left, usage_trend. Playful forecast.
+   FEED FAIL → fallback (Liquid default branch). SETS profile.data_forecast. */
+const STATES={
+ sunny:{cls:'',icon:'☀️',title:'Clear Skies Ahead',
+  sub:'Plenty of data to cruise through renewal. No action needed!',
+  fill:'58%',left:'5.2GB LEFT',right:'8 DAYS TO RENEWAL',
+  fc:'<b>Forecast:</b> at your current pace, you\'ll finish the cycle with ~3GB to spare. Sit back and stream. ☀️',
+  cta:'ALL GOOD — CLOSE',calm:true,fcVal:'surplus'},
+ stormy:{cls:'stormy',icon:'⛈️',title:'Data Storm Incoming',
+  sub:'Heads up — you\'re on track to run dry before renewal.',
+  fill:'14%',left:'1.1GB LEFT',right:'9 DAYS TO RENEWAL',
+  fc:'<b>Forecast:</b> at this pace you\'ll run out in ~4 days. A small top-up now keeps the signal flowing. No pressure — just a friendly heads-up. ⛈️',
+  cta:'SEE TOP-UP OPTIONS →',calm:false,fcVal:'shortfall'},
+ fail:{cls:'fail',icon:'🌫️',title:'Forecast Unavailable',
+  sub:'(Fallback — usage feed is temporarily unavailable.)',
+  fill:'50%',left:'— GB LEFT',right:'— DAYS',
+  fc:'<b>Forecast:</b> we can\'t read your live usage right now. You can always check your balance in the app dashboard. We\'ll have the weather back shortly. 🌫️',
+  cta:'OPEN MY DASHBOARD →',calm:true,fcVal:'unknown'}};
+let cur='sunny';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function setState(k,btn){document.querySelectorAll('.dbg').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');cur=k;const S=STATES[k];
+ sky.className='sky '+S.cls;wIcon.textContent=S.icon;wTitle.textContent=S.title;wSub.textContent=S.sub;
+ gf.style.width=S.fill;glLeft.textContent=S.left;glRight.textContent=S.right;
+ fc.innerHTML=S.fc;
+ go.textContent=S.cta;go.className='btn'+(S.calm?' calm':'');
+ ct('context_state',{forecast:S.fcVal,source:k==='fail'?'liquid_fallback':'key_value'});}
+go.onclick=()=>{const S=STATES[cur];
+ /* SETS profile.data_forecast → top-up or no-action push */
+ ct('forecast_cta',{data_forecast:S.fcVal});
+ if(cur==='stormy'){go.textContent='OPENING TOP-UP ✓';go.disabled=true;}
+ else if(cur==='fail'){go.textContent='OPENING DASHBOARD ✓';go.disabled=true;}
+ else{ct('Notification Dismissed',{reason:'all_good'});go.textContent='STAY SUNNY ✓';go.disabled=true;}};
+setState('sunny',document.querySelector('.dbg.on'));
+ct('Notification Viewed',{card:'data_weather',trigger:'midcycle_forecast'});
+</script></body></html>

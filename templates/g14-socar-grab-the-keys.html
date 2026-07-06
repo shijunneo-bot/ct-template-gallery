@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G14 — SOCAR "GRAB THE KEYS" · Claw-Machine Timing Tap
+  Surface: CleverTap Custom HTML In-App · Grade A → B with Promos
+  Behavioral: skill-feel + near-miss anticipation (timing bar, not chance)
+  Lifecycle: off-peak booking utilization
+  PROMOS: green-zone stop → "reward_won" → off-peak booking voucher.
+  Brand: SOCAR blue (approx #0080FF family — verify vs live app)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#0050a0"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOCAR · Grab the Keys</title>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0073E6;--deep:var(--cfg-accent,#0050a0);--ink:#0B1B2B;--paper:#F5F9FE;--zone:#2f9e6e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight','Segoe UI',sans-serif;min-height:100vh;background:linear-gradient(165deg,#163a5e,#0a1d33);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,15,28,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}
+.hd{background:var(--blue);color:#fff;padding:16px 18px;position:relative}
+.brand{font-family:Chivo;font-weight:900;font-size:17px;letter-spacing:2px;margin-bottom:7px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.18);color:#fff;cursor:pointer}
+h1{font-family:Chivo;font-size:20px;font-weight:900}
+.hd p{font-size:12px;opacity:.92;margin-top:4px}
+.stage{position:relative;height:208px;background:linear-gradient(180deg,#dcebfb,#c4dcf5);overflow:hidden;border-bottom:4px solid var(--deep)}
+.rail{position:absolute;top:10px;left:14px;right:14px;height:6px;background:#9cb8d4;border-radius:3px}
+.claw{position:absolute;top:12px;left:50%;transform:translateX(-50%);transition:top 1s ease-in}
+.claw svg{display:block}
+.keys{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:34px;filter:drop-shadow(0 4px 6px rgba(0,40,80,.3))}
+.keys.grabbed{animation:lift 1s ease forwards}
+@keyframes lift{to{transform:translate(-50%,-118px) scale(.85)}}
+.zonebar{position:absolute;bottom:64px;left:24px;right:24px;height:18px;background:#e8f0f9;border:2px solid #b8cfe6;border-radius:10px;overflow:hidden}
+.zone{position:absolute;top:0;bottom:0;left:38%;width:24%;background:var(--zone);opacity:.85}
+.needle{position:absolute;top:-4px;bottom:-4px;width:4px;background:var(--ink);border-radius:2px;left:0}
+.body{padding:14px 18px 20px;text-align:center}
+.tries{font:700 11px 'Inter Tight';color:#7a93ab;letter-spacing:1px;margin-bottom:10px}
+.result{display:none;margin-bottom:10px}
+.result b{font-family:Chivo;font-size:18px;color:var(--blue);display:block}
+.result span{font-size:12px;color:#6c8299}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;background:var(--blue);color:#fff;font:900 15px Chivo;letter-spacing:.6px;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.btn[disabled]{opacity:.55;box-shadow:none}
+.ctlog{margin-top:11px;font:700 10.5px ui-monospace,monospace;color:#8298ad;background:#e8f0f7;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">SOCAR</div>
+    <h1>Grab the Keys 🔑</h1>
+    <p>Stop the needle in the green zone — the claw grabs your weekend voucher.</p>
+  </div>
+  <div class="stage">
+    <div class="rail"></div>
+    <div class="claw" id="claw">
+      <svg width="46" height="44" viewBox="0 0 46 44"><rect x="21" y="0" width="4" height="12" fill="#5c7d9d"/><path d="M23 12 8 30M23 12l15 18M23 12v22" stroke="#0050A0" stroke-width="5" stroke-linecap="round"/></svg>
+    </div>
+    <div class="zonebar"><div class="zone" id="zone"></div><div class="needle" id="needle"></div></div>
+    <div class="keys" id="keys">🔑</div>
+  </div>
+  <div class="body">
+    <div class="tries" id="tries">3 TRIES LEFT</div>
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go" onclick="stopN()">STOP!</button>
+    
+  </div>
+</div></div>
+<script>
+let pos=0,dir=1,speed=1.6,running=true,tries=3,raf;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+const bar=document.querySelector('.zonebar');
+function loop(){if(running){pos+=dir*speed;const max=bar.clientWidth-4;
+ if(pos<=0||pos>=max)dir*=-1;needle.style.left=pos+'px';}
+ raf=requestAnimationFrame(loop);}
+loop();
+function stopN(){if(!running)return;running=false;tries--;
+ const max=bar.clientWidth-4,p=pos/max,inZone=p>=.38&&p<=.62;
+ ct('claw_attempt',{position:Math.round(p*100)+'%',hit:inZone,tries_left:tries});
+ if(inZone){go.disabled=true;go.textContent='GRABBING…';
+  claw.style.top='118px';
+  setTimeout(()=>{keys.classList.add('grabbed');claw.style.top='12px';},1000);
+  setTimeout(()=>{result.style.display='block';
+   rT.textContent='Keys secured! 🎉';rS.textContent='30% off your next off-peak weekday booking';
+   go.disabled=false;go.textContent='CLAIM VOUCHER';
+   ct('reward_won',{game:'grab_the_keys',reward:'30% off-peak voucher'});
+   go.onclick=()=>{ /* PROMOS: issue off-peak booking voucher */
+    ct('reward_claimed',{reward:'OFFPEAK30'});go.textContent='CLAIMED ✓';go.disabled=true;};
+  },2100);}
+ else if(tries>0){tries==1?speed=1.3:0;document.getElementById('tries').textContent=tries+' '+(tries===1?'TRY':'TRIES')+' LEFT';
+  go.textContent='SO CLOSE — STOP!';setTimeout(()=>{running=true;},450);}
+ else{document.getElementById('tries').textContent='OUT OF TRIES';
+  result.style.display='block';rT.textContent='The claw slipped!';
+  rS.textContent='Come back tomorrow — a fresh claw drops daily.';
+  go.disabled=true;go.textContent='TRY AGAIN TOMORROW';ct('game_failed',{game:'grab_the_keys'});}}
+ct('Notification Viewed',{game:'grab_the_keys',trigger:'offpeak_push'});
+</script></body></html>

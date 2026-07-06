@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G47 — PIZZA HUT SG "THE PIZZA THAT REMEMBERS YOU" · Win-Back Story
+  Tier-3 Concept #30 · Pattern P-C P9 + P-H made-for-you (Suncorp Haven
+  register — Spikes Asia 2026 Grand Prix VERIFIED: personal data → emotional
+  relevance). Story BEFORE the ask.
+  Surface: Custom HTML In-App · Grade B
+  Lifecycle: WIN-BACK (60+ day dormant)
+  LIQUID-FED: {{profile.fav_bundle}}, {{profile.last_order_date}},
+  {{profile.usual_topping}} via key-values (demo values inline).
+  Fallback branch required (5s timeout): generic "your usual" copy.
+  SETS: {{profile.winback_path}}. PROMOS: comeback bundle post-story.
+  Brand: Pizza Hut red #EE3A43 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ee3a43"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pizza Hut · The Pizza That Remembers You</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,500&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#ee3a43);--deep:#B71C24;--ink:#221012}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:#1a0a0b;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,4,5,.7);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:605px;max-height:92vh;border-radius:26px;overflow:hidden;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.7)}
+.scr{position:absolute;inset:0;padding:54px 26px 26px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .6s}
+.scr.on{opacity:1;pointer-events:auto}
+.bg0{background:linear-gradient(170deg,#3a1518,#1d0a0b)}
+.bg1{background:linear-gradient(170deg,#52201f,#280d0d)}
+.bgE{background:linear-gradient(170deg,var(--red),#8e1218)}
+.x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;z-index:6}
+.kick{font:800 10.5px Karla;letter-spacing:3px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:12px}
+.scene{font-size:42px;margin-bottom:10px}
+.story{font-family:Fraunces,Georgia;font-size:20px;color:#fff;line-height:1.55}
+.story i{color:#FFB99A}
+.spacer{flex:1}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.22);border-radius:15px;padding:14px 16px;cursor:pointer;display:flex;gap:11px;align-items:center;transition:.2s}
+.choice:hover{background:rgba(255,255,255,.15)}
+.choice:active{transform:scale(.97)}
+.choice i{font-style:normal;font-size:19px}
+.choice span{font:600 13px Karla;color:#fff;line-height:1.4}
+.tap{font:800 10.5px Karla;letter-spacing:2px;color:rgba(255,255,255,.45);text-align:center;cursor:pointer}
+.offer{background:#fff;border-radius:18px;padding:18px;text-align:center;margin-top:13px}
+.offer .ok{font:800 10px Karla;letter-spacing:2.5px;color:#c2807c}
+.offer .ov{font-family:Fraunces;font-size:22px;color:var(--deep);margin:5px 0 4px}
+.offer .od{font-size:12px;color:#8a5a56;line-height:1.5}
+.btn{width:100%;border:0;border-radius:13px;padding:15px;background:#fff;color:var(--deep);font:800 14px Karla;cursor:pointer;margin-top:12px}
+.debug{position:absolute;top:14px;left:14px;z-index:6;display:flex;gap:5px}
+.dbg{border:1.5px dashed rgba(255,255,255,.35);background:rgba(0,0,0,.25);border-radius:7px;padding:4px 8px;font:800 8.5px Karla;color:rgba(255,255,255,.7);cursor:pointer}
+.dbg.on{background:rgba(255,255,255,.25);border-style:solid;color:#fff}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:rgba(255,255,255,.5);background:rgba(0,0,0,.4);border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <div class="debug">
+    <button class="dbg on" onclick="setData(true,this)">DEBUG: DATA OK</button>
+    <button class="dbg" onclick="setData(false,this)">FALLBACK</button>
+  </div>
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+
+  <div class="scr bg0 on" id="s0">
+    <div class="kick">Pizza Hut · a small story</div>
+    <div class="scene">🛵</div>
+    <div class="story" id="t0">Somewhere in the kitchen, an oven remembers.<br><br>It remembers a <i>Cheesy Classic Bundle</i>, extra mushrooms, every other Friday — until 73 days ago, when the Fridays went quiet.<br><br><i>The oven has questions.</i></div>
+    <div class="spacer"></div>
+    <div class="choices">
+      <div class="choice" onclick="pick('busy')"><i>😮‍💨</i><span>"Life got busy. REALLY busy."</span></div>
+      <div class="choice" onclick="pick('healthy')"><i>🥗</i><span>"I was… seeing other food groups."</span></div>
+      <div class="choice" onclick="pick('forgot')"><i>🫣</i><span>"Honestly? I just forgot how good it was."</span></div>
+    </div>
+  </div>
+
+  <div class="scr bg1" id="s1">
+    <div class="kick">the oven responds</div>
+    <div class="scene" id="e1"></div>
+    <div class="story" id="t1"></div>
+    <div class="spacer"></div>
+    <div class="tap" onclick="finale()">TAP — SOMETHING'S IN THE OVEN →</div>
+  </div>
+
+  <div class="scr bgE" id="s2">
+    <div class="kick">welcome back to friday</div>
+    <div class="story" style="font-size:21px">All is forgiven.<br><i>Dinner is remembered.</i> 🍕</div>
+    <div class="offer">
+      <div class="ok">YOUR USUAL, WAITING</div>
+      <div class="ov" id="offV">CHEESY CLASSIC BUNDLE — 40% OFF</div>
+      <div class="od" id="offD">Extra mushrooms already noted. The oven never forgot. Valid this weekend.</div>
+    </div>
+    <button class="btn" id="claimBtn">BRING BACK FRIDAY 🍕</button>
+    <div class="spacer"></div>
+  </div>
+
+  
+</div></div>
+<script>
+/* LIQUID-FED via key-values: fav_bundle, usual_topping, days_dormant.
+   FALLBACK branch (feed unavailable): generic "your usual" copy — mandatory
+   per Linked Content 5s-timeout rule. SETS profile.winback_path. */
+const DATA={
+ ok:{t0:'Somewhere in the kitchen, an oven remembers.<br><br>It remembers a <i>Cheesy Classic Bundle</i>, extra mushrooms, every other Friday — until 73 days ago, when the Fridays went quiet.<br><br><i>The oven has questions.</i>',
+  offV:'CHEESY CLASSIC BUNDLE — 40% OFF',offD:'Extra mushrooms already noted. The oven never forgot. Valid this weekend.'},
+ fb:{t0:'Somewhere in the kitchen, an oven remembers.<br><br>It remembers <i>your usual</i> — the order that always meant the week was finally over. Then, quietly, the Fridays stopped.<br><br><i>The oven has questions.</i>',
+  offV:'YOUR COMEBACK BUNDLE — 40% OFF',offD:'Pick any bundle — the oven\'s just happy you\'re home. Valid this weekend.'}};
+const PATHS={
+ busy:{e:'📅',t:'The oven understands. Calendars are cruel.<br><br>But it would like the record to show: it preheats in <i>ten minutes</i>, requires zero meetings, and has never once asked you to "circle back."<br><br><i>Some relationships are just easy.</i>'},
+ healthy:{e:'🥗',t:'The oven respects the journey. Balance is important.<br><br>It simply notes, without judgement, that you\'ve been gone <i>73 days</i> — and that nobody has ever smiled at a salad the way you smiled at that first slice.<br><br><i>The heart wants what it wants.</i>'},
+ forgot:{e:'💔',t:'The oven gasps. <i>Forgot?</i><br><br>The stretch of the first slice? The cheese pull that defied physics? The little victory of the last piece nobody claimed?<br><br>The oven believes a reminder is in order. <i>A warm one.</i>'}};
+let path='',dataOk=true;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function setData(ok,btn){document.querySelectorAll('.dbg').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');dataOk=ok;const D=ok?DATA.ok:DATA.fb;
+ t0.innerHTML=D.t0;offV.textContent=D.offV;offD.textContent=D.offD;
+ ct('context_state',{source:ok?'key_value':'liquid_fallback'});}
+function pick(p){path=p;const P=PATHS[p];
+ ct('story_branch',{winback_path:p}); /* SETS profile.winback_path */
+ e1.textContent=P.e;t1.innerHTML=P.t;
+ s0.classList.remove('on');document.getElementById('s1').classList.add('on');}
+function finale(){document.getElementById('s1').classList.remove('on');
+ document.getElementById('s2').classList.add('on');
+ ct('story_completed',{winback_path:path,data:dataOk?'personalised':'fallback'});
+ claimBtn.onclick=()=>{ /* PROMOS: comeback bundle ONLY post-story (P9) */
+  ct('reward_won',{reward:'comeback 40%',path:path});
+  claimBtn.textContent='ORDER OPENING ✓ SEE YOU FRIDAY';claimBtn.disabled=true;};}
+ct('Notification Viewed',{story:'pizza_remembers',segment:'dormant_60d'});
+</script></body></html>

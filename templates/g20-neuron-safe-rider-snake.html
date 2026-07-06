@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G20 — NEURON "SAFE RIDER SNAKE" · Canvas Snake Game
+  Surface: CleverTap Custom HTML In-App · Grade A → B with Promos
+  Behavioral: nostalgia + mastery + safety-message embedding
+  Lifecycle: engagement + safety education (micromobility)
+  Collect 5 helmets → reward. PROMOS: "reward_won" → ride credit.
+  Brand: Neuron safety orange (scooters are orange; verify exact hex)
+  Note: post-merge co-brand with Beam (purple) possible — single-brand demo.
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f05a22"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neuron · Safe Rider Snake</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#f05a22);--deep:#B23C10;--ink:#13100E;--lcd:#1d2b1f}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk','Segoe UI',sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a2418,#170d08);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,8,4,.66);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--ink);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid #3d2a1c}
+.hd{padding:16px 18px 8px;text-align:center;position:relative}
+.brand{font-family:'Press Start 2P';font-size:11px;color:var(--org);margin-bottom:8px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff14;color:#fff;cursor:pointer;z-index:2}
+h1{font-family:'Press Start 2P';font-size:13px;line-height:1.5}
+.hd p{font-size:11px;color:#cfa78e;margin-top:6px}
+.hud{display:flex;justify-content:center;gap:22px;padding:7px 0}
+.hud b{font-family:'Press Start 2P';font-size:13px;color:var(--org)}
+.hud small{font:700 9px 'Space Grotesk';letter-spacing:1.5px;color:#a37c61;display:block;margin-top:3px}
+.screen{display:flex;justify-content:center;padding:0 18px}
+canvas{background:var(--lcd);border-radius:12px;border:3px solid #34291f;image-rendering:pixelated;touch-action:none}
+.pad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,44px);gap:7px;justify-content:center;padding:12px 0 4px}
+.pb{border:0;border-radius:10px;background:#2c2018;color:var(--org);font-size:17px;cursor:pointer;box-shadow:0 3px 0 #1a120c}
+.pb:active{transform:translateY(2px);box-shadow:none}
+.pb.u{grid-column:2}.pb.l{grid-column:1;grid-row:2}.pb.d{grid-column:2;grid-row:2}.pb.r{grid-column:3;grid-row:2}
+.body{padding:4px 20px 20px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:'Press Start 2P';font-size:12px;color:var(--org);display:block;line-height:1.6}
+.result span{font-size:11.5px;color:#cfa78e}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;background:var(--org);color:#fff;font:700 14px 'Space Grotesk';letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.ctlog{margin-top:10px;font:700 10px ui-monospace,monospace;color:#a98a72;background:#241a12;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">NEURON</div>
+    <h1>SAFE RIDER<br>SNAKE</h1>
+    <p>Ride the grid · collect 5 helmets · don't hit the kerb (or yourself)</p>
+  </div>
+  <div class="hud">
+    <div><b id="hel">0</b><small>HELMETS</small></div>
+    <div><b id="len">3</b><small>LENGTH</small></div>
+  </div>
+  <div class="screen"><canvas id="cv" width="280" height="200"></canvas></div>
+  <div class="pad">
+    <button class="pb u" onclick="turn(0,-1)">▲</button>
+    <button class="pb l" onclick="turn(-1,0)">◀</button>
+    <button class="pb d" onclick="turn(0,1)">▼</button>
+    <button class="pb r" onclick="turn(1,0)">▶</button>
+  </div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go" onclick="start()">START RIDING 🛴</button>
+    
+  </div>
+</div></div>
+<script>
+const cv=document.getElementById('cv'),cx=cv.getContext('2d'),CELL=10,W=28,H=20;
+let snake,dir,next,food,helmets,playing=false,loopT;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){snake=[{x:8,y:10},{x:7,y:10},{x:6,y:10}];dir={x:1,y:0};next=dir;helmets=0;
+ hel.textContent=0;len.textContent=3;place();}
+function place(){do{food={x:Math.floor(Math.random()*W),y:Math.floor(Math.random()*H)};}
+ while(snake.some(s=>s.x===food.x&&s.y===food.y));}
+function turn(x,y){if(playing&&(x!==-dir.x||y!==-dir.y))next={x,y};}
+document.addEventListener('keydown',e=>{
+ if(e.key==='ArrowUp')turn(0,-1);if(e.key==='ArrowDown')turn(0,1);
+ if(e.key==='ArrowLeft')turn(-1,0);if(e.key==='ArrowRight')turn(1,0);});
+function draw(){cx.fillStyle='#1d2b1f';cx.fillRect(0,0,280,200);
+ cx.fillStyle='#27392a';
+ for(let i=0;i<W;i+=2)for(let j=0;j<H;j+=2)cx.fillRect(i*CELL,j*CELL,1,1);
+ cx.font='9px monospace';cx.fillText('',0,0);
+ cx.fillStyle='#fff';cx.fillText('⛑',food.x*CELL-1,food.y*CELL+9);
+ snake.forEach((s,i)=>{cx.fillStyle=i===0?CONFIG.accentColor:'#c4886a';
+  cx.fillRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);});}
+function step(){dir=next;
+ const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+ if(h.x<0||h.x>=W||h.y<0||h.y>=H||snake.some(s=>s.x===h.x&&s.y===h.y)){crash();return;}
+ snake.unshift(h);
+ if(h.x===food.x&&h.y===food.y){helmets++;hel.textContent=helmets;len.textContent=snake.length;
+  ct('helmet_collected',{count:helmets});
+  if(helmets>=5){win();return;}place();}
+ else snake.pop();
+ draw();}
+function start(){if(playing)return;playing=true;reset();draw();
+ result.style.display='none';go.textContent='RIDING…';
+ ct('Game Played',{game:'safe_rider_snake'});
+ loopT=setInterval(step,150);}
+function crash(){playing=false;clearInterval(loopT);
+ result.style.display='block';rT.textContent='KERB! 💥';
+ rS.textContent='Even snakes need to ride safe. '+helmets+' helmet'+(helmets===1?'':'s')+' collected — grab 5 to win.';
+ go.textContent='RIDE AGAIN 🛴';ct('game_failed',{game:'safe_rider_snake',helmets:helmets});}
+function win(){playing=false;clearInterval(loopT);draw();
+ result.style.display='block';rT.textContent='5 HELMETS! 🏆';
+ rS.textContent='Safety champion — $3 ride credit unlocked. Helmet on for the real ride too, yes?';
+ go.textContent='CLAIM $3 RIDE CREDIT';
+ ct('reward_won',{game:'safe_rider_snake',reward:'$3 ride credit'});
+ go.onclick=()=>{ /* PROMOS: ride credit to account */
+  ct('reward_claimed',{reward:'$3 credit'});go.textContent='CREDITED ✓';go.disabled=true;};}
+reset();draw();
+ct('Notification Viewed',{game:'safe_rider_snake',trigger:'engagement_push'});
+</script></body></html>

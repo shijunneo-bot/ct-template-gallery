@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G12 — EASYBOOK "GUESS THE GETAWAY" · Wordle-style Destination Puzzle
+  Surface: CleverTap Custom HTML In-App · Grade A → B with Promos
+  Behavioral: curiosity gap + mastery + daily-return potential
+  Lifecycle: engagement deepening / route discovery
+  PROMOS: solve → "word_solved" → issue route discount for the revealed destination.
+  Brand: Easybook blue + orange accent (approx — verify vs live app)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#1b6bb5"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Easybook · Guess the Getaway</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@600;800&family=Karla:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:var(--cfg-accent,#1b6bb5);--org:#F7941D;--ink:#102A43;--paper:#F8FBFE;--tile:#E3EDF6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,'Segoe UI',sans-serif;min-height:100vh;background:linear-gradient(165deg,#2a5d8f,#143a5c);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(6,22,38,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:360px;background:var(--paper);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}
+.hd{background:var(--blue);color:#fff;padding:16px 18px;position:relative}
+.brand{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.brand b{font-family:Rubik;font-size:14px;letter-spacing:1px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+h1{font-family:Rubik;font-size:20px}
+.hd p{font-size:12px;opacity:.9;margin-top:4px}
+.clue{margin:14px 18px 4px;background:#FFF4E2;border:1px solid #F3D9AE;border-radius:10px;padding:9px 12px;font-size:12px;color:#8a6a35;font-weight:700}
+.board{display:grid;grid-template-rows:repeat(4,1fr);gap:6px;padding:12px 38px}
+.row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cell{aspect-ratio:1;border:2px solid #c9d9e8;border-radius:8px;display:flex;align-items:center;justify-content:center;font:800 19px Rubik;color:var(--ink);background:#fff;text-transform:uppercase;transition:.25s}
+.cell.fill{border-color:#9db8d0}
+.cell.hit{background:#2f9e6e;border-color:#2f9e6e;color:#fff;animation:flipc .4s}
+.cell.near{background:var(--org);border-color:var(--org);color:#fff;animation:flipc .4s}
+.cell.miss{background:#9db0c2;border-color:#9db0c2;color:#fff;animation:flipc .4s}
+@keyframes flipc{0%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.bank{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:4px 16px 6px}
+.key{min-width:32px;height:40px;border:0;border-radius:8px;background:var(--tile);color:var(--ink);font:800 14px Rubik;cursor:pointer;padding:0 9px}
+.key.used{opacity:.32;pointer-events:none}
+.key.ctrl{background:var(--blue);color:#fff;font-size:11px;padding:0 12px}
+.body{padding:8px 18px 20px;text-align:center}
+.result{display:none;margin-bottom:10px}
+.result b{font-family:Rubik;font-size:18px;color:var(--blue);display:block}
+.result span{font-size:12px;color:#6c8299}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;background:var(--org);color:#3d2800;font:800 14px Rubik;cursor:pointer;display:none;box-shadow:0 4px 0 #c66f08}
+.ctlog{margin-top:11px;font:700 10.5px ui-monospace,monospace;color:#8298ad;background:#e8f0f7;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#fff"/><path d="M4 14h16M6 14v-3a6 6 0 0 1 12 0v3M7 17.5a1.5 1.5 0 1 0 0-3m10 3a1.5 1.5 0 1 0 0-3" fill="none" stroke="#1B6BB5" stroke-width="2" stroke-linecap="round"/></svg>
+      <b>EASYBOOK</b>
+    </div>
+    <h1>Guess the Getaway 🚌</h1>
+    <p>Crack today's destination in 4 tries — win the route discount.</p>
+  </div>
+  <div class="clue">CLUE: Island beaches, limestone cliffs… ferries from Phuket & buses from Hat Yai.</div>
+  <div class="board" id="board"></div>
+  <div class="bank" id="bank"></div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="claim">CLAIM 20% OFF THIS ROUTE</button>
+    
+  </div>
+</div></div>
+<script>
+const WORD='KRABI',ROWS=4,LETTERS=['K','R','A','B','I','S','T','O','N','E','L','U'];
+let row=0,cur='';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let r=0;r<ROWS;r++){const d=document.createElement('div');d.className='row';
+ for(let c=0;c<5;c++){const x=document.createElement('div');x.className='cell';x.id='c'+r+c;d.appendChild(x);}
+ board.appendChild(d);}
+LETTERS.forEach(L=>{const k=document.createElement('button');k.className='key';k.textContent=L;
+ k.onclick=()=>{if(cur.length<5&&row<ROWS){cur+=L;paint();}};bank.appendChild(k);});
+const back=document.createElement('button');back.className='key ctrl';back.textContent='⌫';
+back.onclick=()=>{cur=cur.slice(0,-1);paint();};bank.appendChild(back);
+const enter=document.createElement('button');enter.className='key ctrl';enter.textContent='ENTER';
+enter.onclick=submit;bank.appendChild(enter);
+function paint(){for(let c=0;c<5;c++){const el=document.getElementById('c'+row+c);
+ el.textContent=cur[c]||'';el.classList.toggle('fill',!!cur[c]);}}
+function submit(){if(cur.length<5)return;
+ const g=cur;ct('guess_made',{guess:g,attempt:row+1});
+ for(let c=0;c<5;c++){const el=document.getElementById('c'+row+c);
+  setTimeout(()=>{el.classList.add(g[c]===WORD[c]?'hit':WORD.includes(g[c])?'near':'miss');},c*120);}
+ setTimeout(()=>{
+  if(g===WORD)win();
+  else{row++;cur='';
+   if(row===ROWS){result.style.display='block';rT.textContent='It was '+WORD+'!';
+    rS.textContent='Come back tomorrow for a new getaway.';ct('word_failed',{word:WORD});}}
+ },700);}
+function win(){result.style.display='block';rT.textContent='KRABI! Solved in '+(row+1)+' 🎉';
+ rS.textContent='Limestone cliffs await — your route discount is unlocked.';
+ claim.style.display='block';bank.style.display='none';
+ ct('word_solved',{word:WORD,attempts:row+1});
+ claim.onclick=()=>{ /* PROMOS: issue 20% route discount voucher (→ Krabi routes) */
+  ct('reward_won',{reward:'20% Krabi route discount'});claim.textContent='VOUCHER IN WALLET ✓';claim.disabled=true;};}
+ct('Notification Viewed',{game:'guess_the_getaway'});
+</script></body></html>

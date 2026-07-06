@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G167 — M1 "SIGNAL SEQUENCE" · Simon / Repeat-the-Pattern
+  Mechanic: Simon LOGIC (public-domain genre) — watch a growing colour/tone
+  sequence, repeat it back; sequence grows each round. NO trademarked art/names.
+  Brand-skinned as repeating a signal pattern. NEW pure-logic family (sequence
+  memory). Surface: in-app interstitial. Grade B. Lifecycle: engagement (telco).
+  SETS: {{profile.sequence_best}}. PROMOS: data reward at round tier.
+  Brand: M1 orange/magenta (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff6b2c"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · Signal Sequence</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Mulish:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#ff6b2c);--mag:#E5007D;--ink:#241019;--paper:#FFF6F1;--soft:#FCE3D8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Mulish,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c1018,#160810);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,5,10,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,14,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Mulish;letter-spacing:3px;color:var(--mag);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Fraunces;font-size:20px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a7080;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 12px Mulish;color:var(--mag)}
+.pad{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 30px 6px;aspect-ratio:1}
+.btn-pad{border:0;border-radius:18px;cursor:pointer;opacity:.55;transition:.12s;font-size:30px;display:flex;align-items:center;justify-content:center}
+.btn-pad.lit{opacity:1;transform:scale(1.04)}
+.btn-pad:active{transform:scale(.97)}
+.p0{background:var(--cfg-accent,#ff6b2c)}.p1{background:#E5007D}.p2{background:#9C27B0}.p3{background:#2F8Fd8}
+.body{padding:8px 20px 16px;text-align:center}
+.status{font:700 11px Mulish;color:#9a7080;min-height:15px;margin-bottom:8px}
+.status b{color:var(--mag)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:linear-gradient(135deg,var(--org),var(--mag));color:#fff;font:800 14px Mulish;cursor:pointer;box-shadow:0 5px 0 #b3145e}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#b88a9a;background:#f8e6ee;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">M1</div>
+    <h1>Signal Sequence 🎵</h1>
+    <p>Watch the signal pattern, then repeat it back. Each round adds one. Reach round 8 for a data reward!</p>
+  </div>
+  <div class="hud"><span>Round: <span id="round">0</span></span><span>Target: 8</span></div>
+  <div class="pad" id="pad">
+    <button class="btn-pad p0" data-i="0" onclick="press(0)"></button>
+    <button class="btn-pad p1" data-i="1" onclick="press(1)"></button>
+    <button class="btn-pad p2" data-i="2" onclick="press(2)"></button>
+    <button class="btn-pad p3" data-i="3" onclick="press(3)"></button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start and watch closely!</div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Simon LOGIC (public-domain genre). Growing sequence; repeat to advance.
+   IP-neutral. SETS profile.sequence_best. */
+let seq,inputIdx,round,playing=false,showing=false,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function pads(){return document.querySelectorAll('.btn-pad');}
+function lite(i){return new Promise(res=>{const el=pads()[i];el.classList.add('lit');
+ setTimeout(()=>{el.classList.remove('lit');setTimeout(res,180);},420);});}
+async function showSeq(){showing=true;status.textContent='Watch the pattern…';
+ await new Promise(r=>setTimeout(r,500));
+ for(const s of seq){await lite(s);}
+ showing=false;inputIdx=0;status.innerHTML='Your turn! Repeat <b>'+seq.length+'</b> step'+(seq.length>1?'s':'');}
+function nextRound(){round++;document.getElementById('round').textContent=round;
+ seq.push(Math.floor(Math.random()*4));ct('round_start',{round:round,seq_len:seq.length});showSeq();}
+function press(i){if(!playing||showing)return;
+ const el=pads()[i];el.classList.add('lit');setTimeout(()=>el.classList.remove('lit'),200);
+ if(seq[inputIdx]===i){inputIdx++;
+  if(inputIdx>=seq.length){ct('round_clear',{round:round});
+   if(round>=8&&!won){won=true;return winGame();}
+   status.textContent='Nice! Next round…';setTimeout(nextRound,700);}}
+ else{return fail();}}
+function start(){seq=[];round=0;won=false;playing=true;
+ document.getElementById('round').textContent='0';document.getElementById('start').style.display='none';
+ ct('game_started',{game:'signal_sequence'});nextRound();}
+function fail(){playing=false;
+ status.innerHTML='❌ Out of sync! You reached round <b>'+round+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{sequence_best:round});}
+function winGame(){playing=false;
+ status.innerHTML='🎉 Perfect memory! Round <b>'+round+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM DATA REWARD 📶';b.disabled=false;
+ ct('target_reached',{sequence_best:round});
+ b.onclick=()=>{ct('reward_won',{reward:'bonus_data'});b.textContent='DATA ADDED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+ct('Notification Viewed',{game:'signal_sequence',mechanic:'simon_sequence'});
+</script></body></html>

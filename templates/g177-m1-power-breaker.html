@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G177 — M1 "POWER BREAKER" · Brick-Breaker + Gacha Paddle Upgrades
+  Mechanic: brick-breaker LOGIC (Breakout-spirit, public-domain) + HONEST gacha
+  upgrade layer — clearing rows of bricks earns a paddle-upgrade pull (wide / multi
+  / sticky) with TRUE odds shown, no inflation. NO trademarked art/names.
+  Brand-skinned as breaking data caps + powering up. Distinct from G154 (pure
+  brick-breaker) by the upgrade-pull layer. Surface: in-app interstitial. Grade B.
+  Lifecycle: conversion (telco). SETS: {{profile.power_score}}. PROMOS at clear.
+  NOT for White Hat accounts. Brand: M1 orange/magenta (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e5007d"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · Power Breaker</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Mulish:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF6B2C;--mag:var(--cfg-accent,#e5007d);--purp:#9C27B0;--gold:#F5C542;--grn:#3FAE6A;--ink:#241019;--paper:#FFF6F1;--soft:#FCE3D8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Mulish,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c1018,#160810);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,5,10,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,14,.5);overflow:hidden;position:relative}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Mulish;letter-spacing:3px;color:var(--mag);margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer;z-index:5}
+h1{font-family:Fraunces;font-size:20px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a7080;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Mulish;color:var(--mag)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:#1a0e14;border:2px solid var(--soft);border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Mulish;color:#9a7080;min-height:14px;margin-bottom:7px}
+.status b{color:var(--mag)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:linear-gradient(135deg,var(--org),var(--mag));color:#fff;font:800 13px Mulish;cursor:pointer;box-shadow:0 5px 0 #b3145e}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#c89aaa;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#b88a9a;background:#f8e6ee;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+.pull{position:absolute;inset:0;background:rgba(20,8,14,.85);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:10;text-align:center}
+.pull.show{display:flex}
+.pull .big{font-size:64px;animation:pop .5s}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.pull .pname{font-family:Fraunces;font-size:20px;color:#fff;margin:6px 0 2px}
+.pull .ptier{font:800 11px Mulish;letter-spacing:1px;margin-bottom:14px}
+.pull .odds{font-size:9px;color:#c89aaa;margin-top:10px;line-height:1.5}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">M1</div>
+    <h1>Power Breaker ⚡</h1>
+    <p>Smash the data caps. Clear a full row to earn a paddle upgrade — odds shown, always fair. Clear the grid to win!</p>
+  </div>
+  <div class="hud"><span>Caps: <span id="broken">0</span>/<span id="total">0</span></span><span>Balls: <span id="balls">3</span></span></div>
+  <div class="stage"><canvas id="cv" width="240" height="300"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Drag to move · tap to launch. Tap Start!</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Clear a row → upgrade pull · current paddle: <span id="curMod">normal</span></div>
+    
+  </div>
+  <div class="pull" id="pullCard">
+    <div class="big" id="pullEmo">🏓</div>
+    <div class="pname" id="pullName"></div>
+    <div class="ptier" id="pullTier"></div>
+    <button class="btn" id="pullOk" style="max-width:180px">EQUIP IT</button>
+    <div class="odds" id="pullOdds"></div>
+  </div>
+</div></div>
+<script>
+/* Brick-breaker + HONEST upgrade gacha. Clearing a full row triggers a paddle
+   upgrade pull (true odds shown). IP-neutral. SETS profile.power_score. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const COLS=6,BRICK_ROWS=4,BW=36,BH=15,BTOP=34,BGAP=4,BLEFT=10;
+const COLORS=[CONFIG.accentColor,'#FF6B2C','#9C27B0','#F5C542'];
+let bricks,paddle,balls_arr,broken,total,balls,playing=false,loopT=null,won=false,launched=false,paddleMod='normal',rowsCleared=0;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){bricks=[];
+ for(let r=0;r<BRICK_ROWS;r++)for(let c=0;c<COLS;c++){
+  bricks.push({x:BLEFT+c*(BW+BGAP),y:BTOP+r*(BH+BGAP),w:BW,h:BH,col:COLORS[r%COLORS.length],alive:true,row:r});}
+ total=bricks.length;broken=0;balls=3;won=false;rowsCleared=0;paddleMod='normal';
+ paddle={x:W/2-30,y:H-18,w:60,h:9};balls_arr=[];resetBall();
+ document.getElementById('total').textContent=total;document.getElementById('broken').textContent='0';
+ document.getElementById('balls').textContent='3';document.getElementById('curMod').textContent='normal';}
+function paddleW(){return paddleMod==='wide'?92:60;}
+function resetBall(){launched=false;balls_arr=[{x:W/2,y:H-30,vx:0,vy:0,r:6,stuck:true}];}
+function draw(){cx.clearRect(0,0,W,H);
+ bricks.forEach(b=>{if(b.alive){cx.fillStyle=b.col;cx.fillRect(b.x,b.y,b.w,b.h);
+  cx.fillStyle='rgba(255,255,255,.25)';cx.fillRect(b.x,b.y,b.w,4);}});
+ paddle.w=paddleW();
+ cx.fillStyle=paddleMod==='sticky'?'#3FAE6A':'#F5C542';cx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
+ balls_arr.forEach(ball=>{cx.fillStyle='#fff';cx.beginPath();cx.arc(ball.x,ball.y,ball.r,0,7);cx.fill();});}
+function step(){if(!playing)return;
+ balls_arr.forEach(ball=>{if(ball.stuck){ball.x=paddle.x+paddle.w/2;return;}
+  ball.x+=ball.vx;ball.y+=ball.vy;
+  if(ball.x<ball.r||ball.x>W-ball.r)ball.vx*=-1;
+  if(ball.y<ball.r)ball.vy*=-1;
+  if(ball.y+ball.r>=paddle.y&&ball.x>paddle.x&&ball.x<paddle.x+paddle.w&&ball.vy>0){
+   ball.vy=-Math.abs(ball.vy);const hit=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2);ball.vx=hit*3.4;
+   if(paddleMod==='sticky'&&Math.random()<0.4)ball.vy*=0.96;}
+  for(const b of bricks){if(b.alive&&ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){
+   b.alive=false;ball.vy*=-1;broken++;document.getElementById('broken').textContent=broken;
+   ct('cap_broken',{broken:broken});checkRowClear(b.row);
+   if(broken>=total&&!won){won=true;return winGame();}break;}}});
+ balls_arr=balls_arr.filter(ball=>ball.y<=H+10);
+ if(balls_arr.length===0){balls--;document.getElementById('balls').textContent=balls;
+  ct('ball_lost',{balls_left:balls});
+  if(balls<=0){return gameOver();}else{resetBall();status.innerHTML='Ball lost! <b>'+balls+'</b> left. Tap to launch.';}}
+ draw();}
+function checkRowClear(row){const rowBricks=bricks.filter(b=>b.row===row);
+ if(rowBricks.every(b=>!b.alive)){rowsCleared++;ct('row_cleared',{row:row});
+  setTimeout(()=>pullUpgrade(),300);}}
+function start(){reset();playing=true;status.textContent='Drag to move · tap to launch!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,16);
+ ct('game_started',{game:'power_breaker'});}
+function launch(){if(!playing)return;balls_arr.forEach(ball=>{if(ball.stuck){ball.stuck=false;ball.vx=2;ball.vy=-3.4;ct('ball_launched',{});}});}
+// ---- HONEST upgrade gacha ----
+const UPGRADES=[
+ {name:'Wide Paddle',emo:'🏓',tier:'Common',tc:'#9a7080',w:55,mod:'wide'},
+ {name:'Sticky Grip',emo:'🍯',tier:'Rare',tc:'#3FAE6A',w:33,mod:'sticky'},
+ {name:'Multi-Ball',emo:'⚡',tier:'Epic',tc:CONFIG.accentColor,w:12,mod:'multi'}];
+function pullUpgrade(){if(!playing)return;
+ const tot=UPGRADES.reduce((a,u)=>a+u.w,0);let r=Math.random()*tot,pick=UPGRADES[0];
+ for(const u of UPGRADES){if(r<u.w){pick=u;break;}r-=u.w;}
+ ct('upgrade_pulled',{name:pick.name,tier:pick.tier});
+ document.getElementById('pullEmo').textContent=pick.emo;
+ document.getElementById('pullName').textContent=pick.name;
+ document.getElementById('pullTier').textContent=pick.tier.toUpperCase();
+ document.getElementById('pullTier').style.color=pick.tc;
+ document.getElementById('pullOdds').innerHTML='True odds: '+UPGRADES.map(u=>u.name+' '+Math.round(u.w/tot*100)+'%').join(' · ');
+ document.getElementById('pullCard').classList.add('show');
+ document.getElementById('pullOk').onclick=()=>{applyUpgrade(pick.mod);
+  document.getElementById('pullCard').classList.remove('show');};}
+function applyUpgrade(mod){
+ if(mod==='multi'){const base=balls_arr[0]||{x:W/2,y:H-40,r:6};
+  balls_arr.push({x:base.x,y:base.y,vx:-2.5,vy:-3,r:6,stuck:false});
+  balls_arr.push({x:base.x,y:base.y,vx:2.5,vy:-3,r:6,stuck:false});
+  status.innerHTML='⚡ Multi-ball!';}
+ else{paddleMod=mod;document.getElementById('curMod').textContent=mod;status.innerHTML='Paddle upgraded: <b>'+mod+'</b>!';}
+ ct('upgrade_equipped',{mod:mod});draw();}
+function gameOver(){playing=false;clearInterval(loopT);
+ status.innerHTML='Out of balls! Broke <b>'+broken+'/'+total+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='PLAY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{power_score:broken});}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 All caps smashed! Speed unlocked.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM BONUS DATA ⚡';b.disabled=false;
+ ct('grid_cleared',{power_score:broken});
+ b.onclick=()=>{ct('reward_won',{reward:'bonus_data'});b.textContent='DATA ADDED ✓';b.disabled=true;};}
+function movePaddle(clientX){const rect=cv.getBoundingClientRect();
+ let x=(clientX-rect.left)*(W/rect.width)-paddle.w/2;paddle.x=Math.max(0,Math.min(W-paddle.w,x));if(!launched)draw();}
+cv.addEventListener('mousemove',e=>movePaddle(e.clientX));
+cv.addEventListener('touchmove',e=>{e.preventDefault();movePaddle(e.touches[0].clientX);});
+cv.addEventListener('mousedown',launch);cv.addEventListener('touchstart',e=>{e.preventDefault();launch();});
+document.getElementById('start').onclick=start;
+reset();draw();
+ct('Notification Viewed',{game:'power_breaker',mechanic:'brick_breaker_plus_gacha'});
+</script></body></html>

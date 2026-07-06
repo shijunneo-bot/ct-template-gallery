@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G84 — MISO "ROOM RESCUE" · Tap-to-Transform Before/After
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: satisfying transformation reveal (the brand outcome, visualised)
+  Lifecycle: engagement → booking (KR/EN bilingual)
+  Mechanic: tap each messy spot to clean it; room transforms to "after".
+  PROMOS: full rescue → first-booking voucher. Brand: MISO coral (verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#9b7f6f"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MISO · Room Rescue</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#FF7E67;--deep:#E2563E;--ink:#3A2A26;--cream:#FFF9F2;--soft:#FBE9DC;--clean:#EAF6F0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Quicksand,sans-serif;min-height:100vh;background:linear-gradient(165deg,#f3ddcd,#caa183);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(60,35,25,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--cream);border-radius:22px;box-shadow:0 24px 60px rgba(70,35,20,.45);overflow:hidden}
+.hd{padding:16px 20px 6px;position:relative;text-align:center}
+.brand{font:700 12px Quicksand;letter-spacing:3px;color:var(--coral);margin-bottom:6px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:'Gowun Dodum',serif;font-size:21px;color:var(--ink)}
+.hd p{font-size:11.5px;color:var(--cfg-accent,#9b7f6f);margin-top:4px;line-height:1.5}
+.prog{text-align:center;font:800 11px Quicksand;color:#a8856f;padding:6px 0 2px;letter-spacing:.5px}
+.room{position:relative;margin:6px 18px 0;height:210px;border-radius:16px;background:#F5E6D5;border:2px solid var(--soft);overflow:hidden;transition:background .6s}
+.room.clean{background:var(--clean)}
+.floor{position:absolute;bottom:0;left:0;right:0;height:42px;background:#E5CBA8;transition:background .6s}
+.room.clean .floor{background:#cfe8da}
+.spot{position:absolute;font-size:26px;cursor:pointer;transition:.3s}
+.spot.cleaned{opacity:0;transform:scale(0)}
+.furn{position:absolute;font-size:30px;opacity:.55;transition:.5s}
+.room.clean .furn{opacity:1}
+.sparkle{position:absolute;font-size:22px;opacity:0;pointer-events:none}
+.sparkle.go{animation:spk .6s}
+@keyframes spk{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.8)}}
+.body{padding:10px 20px 18px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:'Gowun Dodum',serif;font-size:17px;color:var(--coral);display:block}
+.result span{font-size:12px;color:var(--cfg-accent,#9b7f6f)}
+.btn{width:100%;border:0;border-radius:30px;padding:13px;background:var(--coral);color:#fff;font:700 14px Quicksand;cursor:pointer;box-shadow:0 5px 14px rgba(226,86,62,.3);display:none}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#ab8d79;background:#f7e8da;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">미소 · MISO</div>
+    <h1>방 구하기 · Room Rescue ✨</h1>
+    <p>Tap every mess to clear it and watch the room transform. (In real life, this is the part we do for you.)</p>
+  </div>
+  <div class="prog" id="prog">5 messes left · 5개 남음</div>
+  <div class="room" id="room">
+    <div class="furn" style="bottom:42px;left:18px">🛋️</div>
+    <div class="furn" style="bottom:42px;right:20px">🪴</div>
+    <div class="furn" style="top:18px;left:50%;transform:translateX(-50%)">🖼️</div>
+    <div class="floor"></div>
+    <div class="spot" style="top:30px;left:24px" data-i="0">🧦</div>
+    <div class="spot" style="top:60px;right:30px" data-i="1">📚</div>
+    <div class="spot" style="bottom:54px;left:40%" data-i="2">🍕</div>
+    <div class="spot" style="bottom:50px;right:24px" data-i="3">👕</div>
+    <div class="spot" style="top:90px;left:30%" data-i="4">☕</div>
+  </div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go">BOOK MY REAL CLEAN · 예약하기</button>
+    
+  </div>
+</div></div>
+<script>
+/* Tap-to-transform before/after. Full rescue → Promos first-booking voucher. */
+let cleaned=0;const TOTAL=5;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+document.querySelectorAll('.spot').forEach(s=>{
+ s.onclick=()=>{if(s.classList.contains('cleaned'))return;
+  s.classList.add('cleaned');cleaned++;
+  // sparkle
+  const sp=document.createElement('div');sp.className='sparkle go';
+  sp.textContent='✨';sp.style.left=s.style.left||'40%';sp.style.top=s.style.top||'40%';
+  sp.style.bottom=s.style.bottom||'';room.appendChild(sp);
+  setTimeout(()=>sp.remove(),600);
+  prog.textContent=(TOTAL-cleaned)+' messes left · '+(TOTAL-cleaned)+'개 남음';
+  if(cleaned===1)ct('Game Played',{game:'room_rescue'});
+  ct('mess_cleaned',{cleaned:cleaned,total:TOTAL});
+  if(cleaned===TOTAL)done();};});
+function done(){room.classList.add('clean');
+ prog.textContent='완벽해요! Spotless ✨';
+ setTimeout(()=>{result.style.display='block';
+  rT.textContent='깨끗해요! Room rescued ✨';
+  rS.textContent='Satisfying, right? Now imagine never lifting a finger. First booking 20% off — let MISO do this for real.';
+  go.style.display='block';
+  /* SETS first-booking intent → Promos voucher */
+  ct('room_rescued',{first_booking_intent:true});
+  go.onclick=()=>{ct('booking_cta_clicked',{offer:'first20'});
+   go.textContent='열리는 중… OPENING ✓';go.disabled=true;};
+ },700);}
+ct('Notification Viewed',{game:'room_rescue',market:'kr'});
+</script></body></html>

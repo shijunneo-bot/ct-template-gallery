@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G171 — OMOWAY "CHARGE RUN" · Endless-Runner (Auto-Run + Jump)
+  Mechanic: endless-runner LOGIC (Chrome-Dino-spirit, public-domain genre) —
+  auto-scrolling, single-input jump over obstacles, distance score, rising speed.
+  NO trademarked art/names. Brand-skinned product-generically as a rider on an
+  endless route (OMOWAY business-model conflict note: keep copy product-generic,
+  figures illustrative). NEW FAMILY (endless-runner) — 0 prior files.
+  Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.run_distance}}. PROMOS: reward at distance milestone.
+  Brand: OMOWAY (product-generic, approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#0a8276"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OMOWAY · Charge Run</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0FB8A6;--deep:var(--cfg-accent,#0a8276);--gold:#F5C542;--ink:#08211E;--paper:#EFFCFA;--soft:#CFF0EC}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0a2c28,#06161410);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,16,14,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(4,20,18,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:700 11px 'Space Grotesk';letter-spacing:3px;color:#4a9c94;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:'Space Grotesk';font-weight:700;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a8a84;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:700 11px 'Space Grotesk';color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:linear-gradient(180deg,#e6f7f5,#d2efed);border:2px solid var(--soft);border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a8a84;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--teal);color:#fff;font:700 14px 'Space Grotesk';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#8ab8b2;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#4a9c94;background:#e0f5f3;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">OMOWAY</div>
+    <h1>Charge Run ⚡</h1>
+    <p>Tap to hop over obstacles on an endless route. Go the distance — reach 500m to bank a reward!</p>
+  </div>
+  <div class="hud"><span>Distance: <span id="dist">0</span>m</span><span>Best: <span id="best">0</span>m</span></div>
+  <div class="stage"><canvas id="cv" width="280" height="180"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap the track (or Space) to jump!</div>
+    <button class="btn" id="start">START RUN</button>
+    <div class="hint">Tap / Space = jump · obstacles speed up as you go</div>
+    
+  </div>
+</div></div>
+<script>
+/* Endless-runner LOGIC (public-domain genre). Auto-scroll, single-input jump,
+   rising speed, distance score. IP-neutral. SETS profile.run_distance. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height,GROUND=H-30;
+let runner,obstacles,dist,best,speed,playing=false,loopT=null,spawnGap,sinceSpawn,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){runner={x:40,y:GROUND-20,w:20,h:20,vy:0,grounded:true};
+ obstacles=[];dist=0;speed=3;spawnGap=90;sinceSpawn=0;won=false;
+ best=best||0;document.getElementById('dist').textContent='0';document.getElementById('best').textContent=best;}
+function jump(){if(!playing)return;if(runner.grounded){runner.vy=-9;runner.grounded=false;ct('jump',{});}}
+function step(){if(!playing)return;
+ // physics
+ runner.vy+=0.6;runner.y+=runner.vy;
+ if(runner.y>=GROUND-runner.h){runner.y=GROUND-runner.h;runner.vy=0;runner.grounded=true;}
+ // distance + speed
+ dist+=speed*0.18;const m=Math.floor(dist);document.getElementById('dist').textContent=m;
+ speed=3+m*0.012;
+ // spawn obstacles
+ sinceSpawn++;if(sinceSpawn>spawnGap){sinceSpawn=0;spawnGap=70+Math.random()*60;
+  const tall=Math.random()<0.3;obstacles.push({x:W,w:16,h:tall?30:18,emo:tall?'🚧':'🪨'});}
+ obstacles.forEach(o=>o.x-=speed);obstacles=obstacles.filter(o=>o.x>-20);
+ // collision
+ for(const o of obstacles){if(runner.x+runner.w>o.x&&runner.x<o.x+o.w&&runner.y+runner.h>GROUND-o.h){return crash();}}
+ if(m>=500&&!won){won=true;return winGame();}
+ draw();}
+function draw(){cx.clearRect(0,0,W,H);
+ // ground
+ cx.strokeStyle=CONFIG.accentColor;cx.lineWidth=2;cx.beginPath();cx.moveTo(0,GROUND);cx.lineTo(W,GROUND);cx.stroke();
+ // dashes for motion
+ cx.strokeStyle='#9fd0cc';cx.setLineDash([10,10]);cx.lineDashOffset=-(dist*4)%20;
+ cx.beginPath();cx.moveTo(0,GROUND+8);cx.lineTo(W,GROUND+8);cx.stroke();cx.setLineDash([]);
+ // obstacles
+ obstacles.forEach(o=>{cx.font=o.h+'px serif';cx.textAlign='center';cx.textBaseline='bottom';
+  cx.fillText(o.emo,o.x+o.w/2,GROUND);});
+ // runner
+ cx.font='22px serif';cx.textAlign='center';cx.textBaseline='bottom';cx.fillText('🛵',runner.x+runner.w/2,runner.y+runner.h);}
+function start(){reset();playing=true;status.textContent='Jump the obstacles — go the distance!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,20);
+ ct('game_started',{game:'charge_run'});}
+function crash(){playing=false;clearInterval(loopT);const m=Math.floor(dist);
+ if(m>best){best=m;document.getElementById('best').textContent=best;}
+ status.innerHTML='💥 Crashed at <b>'+m+'m</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='RUN AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{run_distance:m});}
+function winGame(){playing=false;clearInterval(loopT);draw();const m=Math.floor(dist);
+ if(m>best){best=m;document.getElementById('best').textContent=best;}
+ status.innerHTML='🎉 500m reached! Great run.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM REWARD 🎁';b.disabled=false;
+ ct('milestone_reached',{run_distance:m});
+ b.onclick=()=>{ct('reward_won',{reward:'route_reward'});b.textContent='REWARD SAVED ✓';b.disabled=true;};}
+cv.addEventListener('pointerdown',jump);
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();jump();}});
+ct('Notification Viewed',{game:'charge_run',mechanic:'endless_runner'});
+</script></body></html>

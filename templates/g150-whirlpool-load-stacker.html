@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G150 — WHIRLPOOL "LOAD STACKER" · Falling-Block Puzzle
+  Mechanic: falling-block stacking LOGIC (Tetris-spirit, public-domain genre) —
+  drop & nest shapes, clear full rows. NO trademarked names/art/colours/specific
+  7-piece set branding. Brand-skinned as packing a washer drum efficiently.
+  NEW puzzle sub-type. Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement (post-purchase nurture, playful).
+  SETS: {{profile.stacker_score}}. PROMOS: care-kit voucher at target.
+  Brand: Whirlpool yellow #EEB111 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#eeb111"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whirlpool · Load Stacker</title>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--yel:var(--cfg-accent,#eeb111);--deep:#B5850A;--grn:#3FAE6A;--ink:#231C0A;--paper:#FFFCF3;--soft:#F6EBC9;--grid:#efe2bd}
+*{margin:0;box-sizing:border-box;padding:0}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c2410,#161104);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,12,3,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,15,3,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:700 11px 'Spline Sans';letter-spacing:3px;color:#c2a766;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:'Spline Sans';font-weight:700;font-size:18px;color:var(--ink)}
+.hd p{font-size:11px;color:#9a8758;margin-top:3px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:700 11px 'Spline Sans';color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 4px}
+#cv{background:#fffdf6;border:2px solid var(--soft);border-radius:10px;touch-action:none}
+.ctrls{display:flex;gap:8px;padding:8px 20px 4px;justify-content:center}
+.cbtn{flex:1;max-width:70px;border:0;border-radius:11px;padding:12px 0;background:#fff;border:2px solid var(--soft);font-size:18px;cursor:pointer;color:var(--deep)}
+.cbtn:active{background:var(--soft)}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 11px Inter;color:#9a8758;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--yel);color:#231C0A;font:700 14px 'Spline Sans';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a8946a;background:#f3e9cd;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">WHIRLPOOL</div>
+    <h1>Load Stacker 🧺</h1>
+    <p>Pack the drum like a pro! Nest the loads, fill a row to clear it. Reach 300 to unlock a care-kit voucher.</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Target: 300</span></div>
+  <div class="stage"><canvas id="cv" width="200" height="320"></canvas></div>
+  <div class="ctrls">
+    <button class="cbtn" onclick="move(-1)">◀</button>
+    <button class="cbtn" onclick="rotate()">⟳</button>
+    <button class="cbtn" onclick="move(1)">▶</button>
+    <button class="cbtn" onclick="drop()">⬇</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to pack the drum!</div>
+    <button class="btn" id="start">START STACKING</button>
+    
+  </div>
+</div></div>
+<script>
+/* Falling-block stacking LOGIC (public-domain genre). Brand-skinned, no IP art/names.
+   Generic shapes (square, line, L, T, S) in brand yellow. SETS profile.stacker_score. */
+const COLS=8,ROWS=16,CELL=25;
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const SHAPES=[
+ [[1,1],[1,1]],            // square
+ [[1,1,1,1]],              // line
+ [[1,0],[1,0],[1,1]],      // L
+ [[0,1,0],[1,1,1]],        // T
+ [[0,1,1],[1,1,0]]         // S
+];
+let grid,cur,curX,curY,score,playing=false,loopT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function newGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(0));}
+function spawn(){cur=SHAPES[Math.floor(Math.random()*SHAPES.length)].map(r=>r.slice());
+ curX=Math.floor((COLS-cur[0].length)/2);curY=0;
+ if(collide(curX,curY,cur)){gameOver();}}
+function collide(x,y,sh){for(let r=0;r<sh.length;r++)for(let c=0;c<sh[r].length;c++){
+  if(sh[r][c]){const nx=x+c,ny=y+r;
+   if(nx<0||nx>=COLS||ny>=ROWS)return true;
+   if(ny>=0&&grid[ny][nx])return true;}}return false;}
+function merge(){for(let r=0;r<cur.length;r++)for(let c=0;c<cur[r].length;c++){
+  if(cur[r][c]&&curY+r>=0)grid[curY+r][curX+c]=1;}}
+function clearRows(){let cleared=0;
+ for(let r=ROWS-1;r>=0;r--){if(grid[r].every(v=>v)){grid.splice(r,1);grid.unshift(Array(COLS).fill(0));cleared++;r++;}}
+ if(cleared){score+=cleared*100;document.getElementById('score').textContent=score;
+  ct('rows_cleared',{rows:cleared,score:score});
+  status.innerHTML=cleared>1?'🔥 '+cleared+' rows at once! <b>+'+(cleared*100)+'</b>':'Row cleared! <b>+100</b>';
+  if(score>=300&&!won){won=true;winGame();}}}
+function draw(){cx.fillStyle='#fffdf6';cx.fillRect(0,0,cv.width,cv.height);
+ cx.strokeStyle='#efe2bd';for(let c=0;c<=COLS;c++){cx.beginPath();cx.moveTo(c*CELL,0);cx.lineTo(c*CELL,ROWS*CELL);cx.stroke();}
+ for(let r=0;r<=ROWS;r++){cx.beginPath();cx.moveTo(0,r*CELL);cx.lineTo(COLS*CELL,r*CELL);cx.stroke();}
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c])cell(c,r,CONFIG.accentColor);}
+ if(cur)for(let r=0;r<cur.length;r++)for(let c=0;c<cur[r].length;c++){
+  if(cur[r][c]&&curY+r>=0)cell(curX+c,curY+r,'#F4C430');}}
+function cell(c,r,col){cx.fillStyle=col;cx.fillRect(c*CELL+2,r*CELL+2,CELL-4,CELL-4);
+ cx.fillStyle='rgba(255,255,255,.35)';cx.fillRect(c*CELL+2,r*CELL+2,CELL-4,5);}
+function tick(){if(!playing)return;
+ if(!collide(curX,curY+1,cur)){curY++;}
+ else{merge();clearRows();if(!won){spawn();}}
+ draw();}
+function move(d){if(!playing)return;if(!collide(curX+d,curY,cur)){curX+=d;draw();}}
+function rotate(){if(!playing)return;const R=cur[0].map((_,i)=>cur.map(row=>row[i]).reverse());
+ if(!collide(curX,curY,R)){cur=R;draw();}}
+function drop(){if(!playing)return;while(!collide(curX,curY+1,cur))curY++;tick();}
+function start(){grid=newGrid();score=0;won=false;playing=true;
+ document.getElementById('score').textContent='0';status.textContent='Nest the loads — fill a row to clear it!';
+ document.getElementById('start').style.display='none';spawn();draw();
+ if(loopT)clearInterval(loopT);loopT=setInterval(tick,640);
+ ct('game_started',{game:'load_stacker'});}
+function gameOver(){playing=false;clearInterval(loopT);
+ status.innerHTML='Drum\'s full! Final score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='STACK AGAIN';b.disabled=false;
+ ct('game_over',{score:score,stacker_score:score});}
+function winGame(){playing=false;clearInterval(loopT);
+ status.innerHTML='🎉 Pro packer! You hit <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM CARE-KIT VOUCHER 🎁';b.disabled=false;
+ ct('target_reached',{stacker_score:score});
+ b.onclick=()=>{ct('reward_won',{reward:'care_kit_voucher'});b.textContent='VOUCHER SAVED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+draw();
+// keyboard for desktop demo
+window.addEventListener('keydown',e=>{if(!playing)return;
+ if(e.key==='ArrowLeft')move(-1);else if(e.key==='ArrowRight')move(1);
+ else if(e.key==='ArrowUp')rotate();else if(e.key==='ArrowDown')drop();});
+ct('Notification Viewed',{game:'load_stacker',mechanic:'falling_block'});
+</script></body></html>

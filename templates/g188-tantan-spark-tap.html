@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G188 — TANTAN "SPARK TAP" · Light-Chase Reaction Grid
+  Mechanic: light-chase reaction LOGIC (whack-the-lit-cell / "Bop-It"-spirit grid,
+  public-domain genre) — a random cell lights up; tap it fast before it fades;
+  speed ramps; misses cost lives. NO trademarked art/names. Brand-skinned as
+  tapping sparks/matches as they light up. Distinct from whack-a-mole(155): grid
+  of fixed cells with a moving light + speed ramp + accuracy. NEW family variant.
+  Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.spark_score}}. PROMOS: boost at score tier.
+  Brand: TanTan pink/coral (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#c97f93"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TanTan · Spark Tap</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#FF4E78;--deep:#D62E58;--blue:#3A8DFF;--gold:#F5A623;--grn:#3FAE6A;--ink:#2A0E18;--paper:#FFF4F7;--soft:#FCDDE6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1020,#1c0810);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,5,10,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,14,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:700 11px Quicksand;letter-spacing:3px;color:var(--cfg-accent,#c97f93);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Quicksand;font-weight:700;font-size:19px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a6a78;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:700 12px Quicksand;color:var(--deep)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:16px 30px 6px}
+.spark{aspect-ratio:1;border-radius:16px;background:#fff;border:2px solid var(--soft);cursor:pointer;font-size:30px;display:flex;align-items:center;justify-content:center;transition:.08s}
+.spark.lit{background:radial-gradient(circle,#ffd98a,var(--gold));border-color:var(--deep);transform:scale(1.05)}
+.spark.hit{background:var(--grn);border-color:var(--grn)}
+.spark.miss{background:var(--pink);border-color:var(--deep)}
+.body{padding:8px 20px 16px;text-align:center}
+.status{font:700 11px Quicksand;color:#9a6a78;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--pink);color:#fff;font:700 14px Quicksand;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:var(--cfg-accent,#c97f93);background:#fce2e9;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">TANTAN</div>
+    <h1>Spark Tap ✨</h1>
+    <p>Tap each spark the instant it lights up — before it fades! It gets faster. Hit 25 to unlock a profile boost.</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Lives: <span id="lives">3</span></span></div>
+  <div class="grid" id="grid"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then catch the sparks!</div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Light-chase reaction LOGIC (public-domain genre). Random cell lights; tap before
+   fade; speed ramps; misses cost lives. IP-neutral. SETS profile.spark_score. */
+const CELLS=9;
+let cells=[],score,lives,litIdx,litTimer,fadeMs,playing=false,won=false,gapTimer;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){const g=document.getElementById('grid');g.innerHTML='';cells=[];
+ for(let i=0;i<CELLS;i++){const d=document.createElement('div');d.className='spark';d.dataset.i=i;
+  d.onclick=()=>tap(i);g.appendChild(d);cells.push(d);}}
+function reset(){score=0;lives=3;litIdx=-1;fadeMs=1100;won=false;
+ document.getElementById('score').textContent='0';document.getElementById('lives').textContent='3';
+ cells.forEach(c=>{c.className='spark';c.textContent='';});}
+function lightNext(){if(!playing)return;
+ litIdx=Math.floor(Math.random()*CELLS);const el=cells[litIdx];
+ el.className='spark lit';el.textContent='✨';
+ litTimer=setTimeout(()=>{if(litIdx>=0){ // faded = miss
+  el.className='spark miss';el.textContent='💨';
+  loseLife();setTimeout(()=>{if(el.classList.contains('miss')){el.className='spark';el.textContent='';}},200);
+  litIdx=-1;if(playing)scheduleNext();}},fadeMs);}
+function scheduleNext(){gapTimer=setTimeout(lightNext,250+Math.random()*350);}
+function tap(i){if(!playing||won)return;
+ if(i===litIdx){clearTimeout(litTimer);const el=cells[i];el.className='spark hit';
+  score++;document.getElementById('score').textContent=score;
+  ct('spark_hit',{score:score});
+  setTimeout(()=>{el.className='spark';el.textContent='';},120);
+  litIdx=-1;fadeMs=Math.max(450,fadeMs-26); // ramp up speed
+  status.innerHTML='✨ Caught! Score <b>'+score+'</b>';
+  if(score>=25&&!won){won=true;return win();}
+  scheduleNext();}
+ else{ // tapped wrong/empty cell
+  const el=cells[i];if(!el.classList.contains('lit')){loseLife();
+   el.className='spark miss';setTimeout(()=>{el.className='spark';},150);
+   status.textContent='Missed — tap only the lit spark!';}}}
+function loseLife(){lives--;document.getElementById('lives').textContent=lives;
+ ct('life_lost',{lives:lives});if(lives<=0)gameOver();}
+function start(){reset();playing=true;status.textContent='Catch the sparks — quick!';
+ document.getElementById('start').style.display='none';
+ ct('game_started',{game:'spark_tap'});scheduleNext();}
+function gameOver(){playing=false;clearTimeout(litTimer);clearTimeout(gapTimer);
+ status.innerHTML='Out of lives! Final score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{spark_score:score});}
+function win(){playing=false;clearTimeout(litTimer);clearTimeout(gapTimer);
+ cells.forEach(c=>{c.className='spark';c.textContent='';});
+ status.innerHTML='🎉 25 sparks caught! Lightning reflexes.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM PROFILE BOOST 🎁';b.disabled=false;
+ ct('score_tier_reached',{spark_score:score});
+ b.onclick=()=>{ct('reward_won',{reward:'profile_boost'});b.textContent='BOOST CLAIMED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+build();reset();
+ct('Notification Viewed',{game:'spark_tap',mechanic:'light_chase_reaction'});
+</script></body></html>

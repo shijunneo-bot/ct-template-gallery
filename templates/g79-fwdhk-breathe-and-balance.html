@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G79 — FWD HK "BREATHE & BALANCE" · White-Hat Calm Mini-Game
+  Surface: Custom HTML In-App · Grade A → B
+  ⚪ WHITE HAT (STRICT): wellbeing only — no chance, no urgency, no loss
+  framing, no pressure. The "game" is a guided breathing + balance hold;
+  reward is a calm streak + wellbeing content, never a discount-by-anxiety.
+  Lifecycle: habit / wellbeing brand register (Celebrate Living)
+  SETS: {{profile.calm_sessions}} → gentle wellbeing content (no offers).
+  Brand: FWD orange #E87722 (verified family) · HK
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#8d6f59"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FWD · Breathe & Balance</title>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600&family=Mulish:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--org:#E87722;--deep:#B55712;--ink:#2B1B10;--paper:#FFFBF6;--calm:#4FA8A0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Mulish,sans-serif;min-height:100vh;background:linear-gradient(165deg,#23423f,#13201e);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(10,20,18,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}
+.hd{padding:16px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Mulish;letter-spacing:3px;color:var(--org);margin-bottom:6px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#FBEBDD;color:var(--ink);cursor:pointer}
+h1{font-family:Bitter,Georgia;font-size:20px;color:var(--ink)}
+.hd p{font-size:11.5px;color:var(--cfg-accent,#8d6f59);margin-top:4px;line-height:1.5}
+.orbwrap{display:flex;justify-content:center;align-items:center;height:230px;position:relative}
+.orb{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#7fd0c8,var(--calm));box-shadow:0 0 50px rgba(79,168,160,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:800 15px Mulish;letter-spacing:1px;transition:transform 4s ease-in-out, box-shadow 4s;text-align:center;cursor:pointer;user-select:none}
+.orb.in{transform:scale(1.5);box-shadow:0 0 80px rgba(79,168,160,.7)}
+.ring{position:absolute;width:200px;height:200px;border:2px dashed rgba(79,168,160,.3);border-radius:50%}
+.cycle{text-align:center;font:800 11px Mulish;letter-spacing:1px;color:var(--cfg-accent,#8d6f59);padding:6px 0 0;min-height:22px}
+.dots{display:flex;justify-content:center;gap:8px;padding:8px 0 0}
+.bd{width:11px;height:11px;border-radius:50%;background:#e9d8c6;transition:.3s}
+.bd.done{background:var(--calm)}
+.body{padding:12px 20px 18px;text-align:center}
+.result{display:none;margin-bottom:10px}
+.result b{font-family:Bitter;font-size:17px;color:var(--calm);display:block}
+.result span{font-size:12px;color:var(--cfg-accent,#8d6f59);line-height:1.5}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;background:var(--org);color:#fff;font:800 13.5px Mulish;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.ctlog{margin-top:11px;font:700 10.5px ui-monospace,monospace;color:#a98e74;background:#f6ead9;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FWD · CELEBRATE LIVING</div>
+    <h1>Breathe & Balance 🌿</h1>
+    <p>Not every game is a race. Follow the orb through 4 calm breaths — that's the whole win. No score, no pressure.</p>
+  </div>
+  <div class="orbwrap">
+    <div class="ring"></div>
+    <div class="orb" id="orb">TAP TO<br>BEGIN</div>
+  </div>
+  <div class="cycle" id="cyc">4 slow breaths · about 30 seconds</div>
+  <div class="dots" id="dots"></div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go" style="display:none">SEE MY CALM CORNER 🌿</button>
+    
+  </div>
+</div></div>
+<script>
+/* WHITE HAT: guided breathing, no score/chance/urgency. SETS calm_sessions. */
+let breath=0,running=false;
+const TOTAL=4;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<TOTAL;i++){const d=document.createElement('div');d.className='bd';dots.appendChild(d);}
+orb.onclick=()=>{if(running)return;running=true;
+ ct('Game Played',{game:'breathe_balance'});cycle();};
+function cycle(){if(breath>=TOTAL){finish();return;}
+ // inhale
+ orb.classList.add('in');orb.textContent='BREATHE IN';cyc.textContent='in… 2… 3… 4…';
+ setTimeout(()=>{ // hold
+  orb.textContent='HOLD';cyc.textContent='hold… 2… 3… 4…';
+  setTimeout(()=>{ // exhale
+   orb.classList.remove('in');orb.textContent='BREATHE OUT';cyc.textContent='out… 2… 3… 4… 5… 6…';
+   setTimeout(()=>{breath++;dots.children[breath-1].classList.add('done');
+    ct('breath_completed',{breath:breath,of:TOTAL});
+    cycle();},4000);
+  },2500);
+ },4000);}
+function finish(){running=false;
+ orb.textContent='✓';orb.style.cursor='default';
+ cyc.textContent='';
+ result.style.display='block';
+ rT.textContent='Four breaths. Well done. 🌿';
+ rS.textContent='That\'s a complete calm session — no winning required. A few of these a week is genuinely good for you.';
+ go.style.display='block';
+ /* SETS calm_sessions → gentle wellbeing content (no offers) */
+ ct('calm_session_done',{calm_sessions:1,wellbeing:true});
+ go.onclick=()=>{ct('calm_corner_opened',{});
+  go.textContent='OPENED ✓ TAKE CARE';go.disabled=true;};}
+ct('Notification Viewed',{game:'breathe_balance',register:'white_hat'});
+</script></body></html>

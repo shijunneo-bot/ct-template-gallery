@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G23 — PIZZA HUT SG "BUILD YOUR PERFECT SLICE" · Builder → Personality Reveal
+  Surface: CleverTap Custom HTML In-App (multi-screen) · Grade B
+  Pattern: P-A BuzzFeed-style "your order says who you are" + builder agency
+  Lifecycle: activation (persona → bundle → push loop, fastest QBR ROI demo)
+  SETS: {{profile.pizza_persona}} + {{profile.fav_bundle}} → 30-min push:
+  "Your {{fav_bundle}} is 30% off right now."
+  Brand: Pizza Hut red #EE3A43 (verified) · SVG simulated assets
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#d8262c"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pizza Hut · Build Your Perfect Slice</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:#EE3A43;--deep:#B71C24;--ink:#2B1212;--paper:#FFF9F5;--crust:#F2C063}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,'Segoe UI',sans-serif;min-height:100vh;background:linear-gradient(165deg,#7e1b21,#3c0c0f);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(30,6,7,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:620px;max-height:92vh;background:var(--paper);border-radius:26px;overflow:hidden;position:relative;box-shadow:0 28px 64px rgba(0,0,0,.55)}
+.dots{position:absolute;top:18px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:5}
+.dot{width:7px;height:7px;border-radius:50%;background:#f1d8cb;transition:.3s}
+.dot.on{background:var(--red);transform:scale(1.3)}
+.x{position:absolute;top:13px;right:13px;width:30px;height:30px;border:0;border-radius:50%;background:#f6e3da;color:var(--ink);cursor:pointer;z-index:6}
+.scr{position:absolute;inset:0;padding:50px 24px 22px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s;background:var(--paper)}
+.scr.on{opacity:1;pointer-events:auto}
+.kick{font:800 10.5px Karla;letter-spacing:3px;color:#c79285;text-transform:uppercase;text-align:center;margin-bottom:8px}
+.h1{font-family:'Lilita One';font-size:27px;color:var(--ink);text-align:center;line-height:1.2}
+.h1 b{color:var(--red)}
+.sub{font-size:12.5px;color:#9b766b;text-align:center;margin-top:9px;line-height:1.55}
+.pizza{display:flex;justify-content:center;margin:8px 0 4px}
+.pz{transition:transform .3s}
+.pz.bounce{animation:bz .4s}
+@keyframes bz{50%{transform:scale(1.12) rotate(-4deg)}}
+.qtext{font-family:'Lilita One';font-size:21px;color:var(--ink);text-align:center;margin-bottom:12px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.opt{background:#fff;border:2px solid #f3ded4;border-radius:14px;padding:13px 9px;cursor:pointer;text-align:center;transition:.16s}
+.opt:active{transform:scale(.95)}
+.opt:hover{border-color:var(--red)}
+.opt i{font-style:normal;font-size:26px;display:block;margin-bottom:5px}
+.opt span{font:800 11.5px Karla;color:var(--ink);line-height:1.3;display:block}
+.opt small{font-size:9.5px;color:#b08a7d}
+.spacer{flex:1}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--red);color:#fff;font:800 14.5px Karla;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.persona{background:linear-gradient(150deg,var(--red),#ff7058);border-radius:20px;padding:20px;text-align:center;color:#fff;margin-bottom:11px;box-shadow:0 14px 30px rgba(238,58,67,.3)}
+.persona .pk{font:800 10px Karla;letter-spacing:3px;opacity:.85}
+.persona .pn{font-family:'Lilita One';font-size:25px;margin-top:5px}
+.persona .pd{font-size:12px;line-height:1.55;margin-top:8px;opacity:.95}
+.bundle{background:#fff;border:2px dashed var(--crust);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:11px;text-align:left}
+.bundle i{font-style:normal;font-size:24px}
+.bundle b{font-size:13px;color:var(--ink);display:block}
+.bundle span{font-size:11px;color:#b08a7d}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:#b08a7d;background:#f7e6ddcc;border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <div class="dots" id="dots"></div>
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+
+  <div class="scr on" id="s0">
+    <div class="kick">Pizza Hut · Slice Psychology</div>
+    <div class="pizza"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="#F2C063"/><circle cx="60" cy="60" r="47" fill="#E8443F"/><circle cx="60" cy="60" r="44" fill="#F7D560"/><circle cx="45" cy="48" r="7" fill="#D8262C"/><circle cx="72" cy="42" r="7" fill="#D8262C"/><circle cx="80" cy="68" r="7" fill="#D8262C"/><circle cx="52" cy="76" r="7" fill="#D8262C"/><circle cx="63" cy="58" r="7" fill="#D8262C"/></svg></div>
+    <div class="h1">Build your<br><b>perfect slice.</b></div>
+    <div class="sub">Four choices. One pizza. And a slightly-too-accurate read on your personality at the end. 🍕</div>
+    <div class="spacer"></div>
+    <button class="btn" onclick="go(0)">START BUILDING</button>
+  </div>
+
+  <div class="scr" id="q0"></div>
+  <div class="scr" id="q1"></div>
+  <div class="scr" id="q2"></div>
+  <div class="scr" id="q3"></div>
+
+  <div class="scr" id="sR">
+    <div class="kick">The verdict is in</div>
+    <div class="persona">
+      <div class="pk">YOUR SLICE SAYS YOU'RE…</div>
+      <div class="pn" id="pN">The Classic Comfort-Seeker</div>
+      <div class="pd" id="pD"></div>
+    </div>
+    <div class="bundle"><i id="bI">🍕</i><div><b id="bN">Cheesy Classic Bundle</b><span id="bS">Your match · 30% off for the next 24h</span></div></div>
+    <div class="spacer"></div>
+    <button class="btn" id="orderBtn">ORDER MY MATCH — 30% OFF →</button>
+  </div>
+
+  
+</div></div>
+<script>
+/* SETS {{profile.pizza_persona}} + {{profile.fav_bundle}} → 30-min follow-up push. */
+const QS=[
+ {q:'Pick your crust',o:[['🥖','Stuffed Crust','go big or go home','bold'],['🫓','Thin & Crispy','clean and classic','classic'],['🧀','Cheesy Bites','chaos, but delicious','adventurous'],['🌾','Hand-Tossed','the dependable one','classic']]},
+ {q:'Sauce situation',o:[['🍅','Classic Tomato','if it works, it works','classic'],['🔥','Spicy Sambal','SG heat, no fear','bold'],['🧄','Garlic White','plot twist energy','adventurous'],['🍯','Sweet BBQ','a little extra, always','adventurous']]},
+ {q:'Hero topping',o:[['🍗','Chicken Supreme','crowd-pleaser','classic'],['🦐','Seafood Deluxe','fancy and you know it','adventurous'],['🌶️','Double Pepperoni','maximum protein, zero notes','bold'],['🍍','Pineapple','yes you are THAT person','bold']]},
+ {q:'The sidekick',o:[['🍗','Wings','no debate needed','bold'],['🥖','Garlic Bread','respect the classics','classic'],['🧀','Cheese Fries','dessert before dessert','adventurous'],['🥤','Just a Pepsi','hydration is self-care','classic']]}];
+const PERSONAS={
+ classic:{n:'The Classic Comfort-Seeker',d:'You know what you like, and what you like is perfection already. Reliability is your love language — and honestly? The kitchen respects it.',b:['🍕','Cheesy Classic Bundle','Your match · 30% off for the next 24h'],prop:'cheesy_classic'},
+ bold:{n:'The Flavour Daredevil',d:'Mild? Never met her. You order like you live — at full volume. The spicier the better, the bigger the better.',b:['🔥','Fiery Feast Bundle','Your match · 30% off for the next 24h'],prop:'fiery_feast'},
+ adventurous:{n:'The Menu Explorer',d:'Same pizza twice? Couldn\'t be you. You treat the menu like a passport and every order is a new stamp.',b:['🧭','Explorer\'s Trio Bundle','Your match · 30% off for the next 24h'],prop:'explorer_trio'}};
+let score={classic:0,bold:0,adventurous:0};
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<6;i++){const d=document.createElement('div');d.className='dot'+(i===0?' on':'');dots.appendChild(d);}
+QS.forEach((Q,qi)=>{const s=document.getElementById('q'+qi);
+ s.innerHTML=`<div class="kick">STEP ${qi+1} OF 4</div>
+  <div class="pizza"><svg width="86" height="86" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="#F2C063"/><circle cx="60" cy="60" r="47" fill="#E8443F"/><circle cx="60" cy="60" r="44" fill="#F7D560"/>${'<circle cx="45" cy="48" r="7" fill=CONFIG.accentColor/><circle cx="72" cy="42" r="7" fill=CONFIG.accentColor/><circle cx="80" cy="68" r="7" fill=CONFIG.accentColor/><circle cx="52" cy="76" r="7" fill=CONFIG.accentColor/>'.slice(0,(qi+1)*46)}</svg></div>
+  <div class="qtext">${Q.q}</div>
+  <div class="opts">${Q.o.map((o,oi)=>`<div class="opt" onclick="pick(${qi},${oi})"><i>${o[0]}</i><span>${o[1]}</span><small>${o[2]}</small></div>`).join('')}</div>`;});
+function show(n){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+ const order=['s0','q0','q1','q2','q3','sR'];
+ document.getElementById(order[n]).classList.add('on');
+ dots.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===n));}
+function go(q){show(q+1);if(q===0)ct('builder_started',{game:'perfect_slice'});}
+function pick(qi,oi){score[QS[qi].o[oi][3]]++;
+ ct('builder_choice',{step:qi+1,choice:QS[qi].o[oi][1]});
+ if(qi<3)go(qi+1);else reveal();}
+function reveal(){const top=Object.keys(score).sort((a,b)=>score[b]-score[a])[0];
+ const P=PERSONAS[top];
+ pN.textContent=P.n;pD.textContent=P.d;
+ bI.textContent=P.b[0];bN.textContent=P.b[1];bS.textContent=P.b[2];
+ show(5);
+ /* SETS profile.pizza_persona + profile.fav_bundle → 30-min push w/ Liquid */
+ ct('quiz_completed',{pizza_persona:P.n,fav_bundle:P.prop});
+ orderBtn.onclick=()=>{ /* PROMOS: 24h bundle voucher (urgency window) */
+  ct('quiz_cta_clicked',{bundle:P.prop,offer:'bundle30'});
+  orderBtn.textContent='OPENING MENU ✓';orderBtn.disabled=true;};}
+ct('Notification Viewed',{game:'perfect_slice',trigger:'activation_d1'});
+</script></body></html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G121 — FAVE "FEED YOUR COMPANION" · Virtual Pet
+  Tier-3 Concept #14 · Pattern P-E (virtual pet nurtured by transacting)
+  Surface: Custom HTML In-App · Grade C ⚠️ (pet state persistence across
+  sessions via key-value/SDK. Demo simulates persisted bond in one view.)
+  Lifecycle: habit (emotional bond → return)
+  SETS: {{profile.pet_level}} → "your companion misses you" push.
+  PROMOS: cashback boost. Brand: Fave teal (approx — verify)
+  *** C-GRADE NOTE: pet_level + last_fed must persist as user properties.
+      Scope SDK/key-value persistence with eng before pitch. ***
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#cdeeeb"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fave · Feed Your Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#00B5AD;--deep:#00857F;--gold:#F5A623;--ink:#0C2422;--paper:#F0FCFB}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0a2e2b,#061816);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,16,15,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(4,20,18,.5);overflow:hidden}
+.hd{background:linear-gradient(120deg,var(--deep),var(--teal));color:#fff;padding:16px 20px;position:relative;text-align:center}
+.brand{font:800 12px Nunito;letter-spacing:2px;margin-bottom:4px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font-family:'Baloo 2';font-weight:700;font-size:19px}
+.hd p{font-size:11.5px;opacity:.92;margin-top:3px;line-height:1.45}
+.pen{position:relative;margin:14px 22px 4px;height:188px;background:radial-gradient(circle at 50% 40%,#d2f5f2,#b5ece8);border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.pet{font-size:78px;transition:.4s;cursor:pointer}
+.pet.happy{animation:bounce 1.4s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.hearts{position:absolute;font-size:22px;opacity:0;pointer-events:none}
+.lvlcap{margin:8px 22px 0;background:#fff;border:2px solid var(--cfg-accent,#cdeeeb);border-radius:13px;padding:12px 15px;text-align:center}
+.lvlcap b{font-family:'Baloo 2';font-size:15px;color:var(--deep);display:block}
+.lvlcap span{font-size:11.5px;color:#5a8a86;line-height:1.5}
+.bond{display:flex;align-items:center;gap:8px;padding:10px 22px 0}
+.bar{flex:1;height:10px;background:var(--cfg-accent,#cdeeeb);border-radius:5px;overflow:hidden}
+.fill{height:100%;width:20%;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:5px;transition:.5s}
+.mcap{font:800 10px Nunito;color:var(--deep)}
+.body{padding:12px 20px 18px;text-align:center}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--teal);color:#fff;font:700 14px 'Baloo 2';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.sim{font-size:9.5px;color:#7aaaa6;margin-top:8px}
+.ctlog{margin-top:9px;font:700 10.5px ui-monospace,monospace;color:#6a9c98;background:#e0f5f3;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FAVE</div>
+    <h1>Feed Your Companion 🐾</h1>
+    <p>Meet Mochi! Every deal you grab feeds your companion. Watch your bond grow.</p>
+  </div>
+  <div class="pen" id="pen">
+    <div class="pet" id="pet" onclick="feed()">🥚</div>
+  </div>
+  <div class="lvlcap" id="lvlcap"><b>A mystery egg</b><span>Tap Mochi or grab a deal to begin your bond.</span></div>
+  <div class="bond"><div class="bar"><div class="fill" id="fill"></div></div><div class="mcap" id="mcap">Lv.1</div></div>
+  <div class="body">
+    <button class="btn" id="go">🍡 GRAB A DEAL — FEED MOCHI</button>
+    <div class="sim">Demo: each tap simulates a transaction feeding your companion.</div>
+    
+  </div>
+</div></div>
+<script>
+/* P-E virtual pet. SETS profile.pet_level. C-GRADE: pet_level + last_fed persist
+   as user properties; "misses you" push fires on inactivity. Demo simulates locally. */
+const STAGES=[
+ {ic:'🥚',b:'A mystery egg',s:'Tap Mochi or grab a deal to begin your bond.'},
+ {ic:'🐣',b:'Just hatched!',s:'Mochi\'s here! Keep the deals coming to help it grow.'},
+ {ic:'🐥',b:'Growing fast',s:'Mochi adores you. Look at that happy little face.'},
+ {ic:'🐤',b:'Best friends',s:'Your bond is strong. Mochi waits for you every day.'},
+ {ic:'🦜',b:'Fully grown!',s:'Mochi\'s all grown up — and unlocked a cashback boost for you both! 🎉'}];
+let lvl=0;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function popHeart(){const h=document.createElement('div');h.className='hearts';h.textContent='💚';
+ h.style.left=(35+Math.random()*30)+'%';h.style.top='40%';pen.appendChild(h);
+ h.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-46px)'}],{duration:900});
+ setTimeout(()=>h.remove(),900);}
+function feed(){if(lvl>=4)return;
+ lvl++;popHeart();
+ const S=STAGES[lvl];
+ pet.textContent=S.ic;pet.classList.add('happy');
+ lvlcap.innerHTML='<b>'+S.b+'</b><span>'+S.s+'</span>';
+ fill.style.width=Math.round((lvl+1)/5*100)+'%';mcap.textContent='Lv.'+(lvl+1);
+ /* SETS profile.pet_level */
+ ct('pet_fed',{pet_level:lvl+1});
+ if(lvl>=4){go.textContent='🎁 CLAIM CASHBACK BOOST';
+  ct('pet_grown',{pet_level:5,complete:true});
+  go.onclick=()=>{ /* PROMOS: cashback boost */
+   ct('reward_won',{reward:'cashback_boost'});
+   go.textContent='BOOST ACTIVE ✓ MOCHI LOVES IT';go.disabled=true;};}}
+go.onclick=feed;
+ct('Notification Viewed',{game:'feed_companion',grade:'C'});
+</script></body></html>

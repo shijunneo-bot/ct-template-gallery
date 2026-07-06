@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G181 — CATCHPLAY "BEAT MATCH" · Rhythm Tap-to-Beat
+  Mechanic: rhythm-tap LOGIC (public-domain genre) — notes fall toward a hit-line;
+  tap when they align; timing window grades hit/miss; combo + accuracy score.
+  NO trademarked art/names/music (silent timing-based, no copyrighted audio).
+  Brand-skinned as tapping to the trailer beat. NEW FAMILY (rhythm) — 0 prior
+  files. Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.rhythm_acc}}. PROMOS: pick at accuracy tier.
+  Brand: CatchPlay dark + orange (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ffcb45"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatchPlay · Beat Match</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF7A1A;--deep:#b34f06;--gold:var(--cfg-accent,#ffcb45);--grn:#3FAE6A;--ink:#0E0C0A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight',sans-serif;min-height:100vh;background:#070605;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,3,2,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:linear-gradient(178deg,#181410,#0c0a08);border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.66);overflow:hidden;color:#fff;border:1px solid #322217}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px 'Inter Tight';letter-spacing:3px;color:var(--org);margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff16;color:#fff;cursor:pointer}
+h1{font-family:'Bebas Neue';font-size:23px;letter-spacing:.5px}
+.hd p{font-size:10.5px;color:#c9a986;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px 'Inter Tight';color:var(--gold)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:linear-gradient(180deg,#1c130b,#0c0a08);border:2px solid #322217;border-radius:10px;touch-action:none}
+.lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:6px 24px 2px}
+.lane{border:0;border-radius:10px;padding:14px 0;background:#241a12;border:2px solid #3d2a1c;font-size:18px;color:var(--gold);cursor:pointer}
+.lane:active{background:var(--org);color:#1a0f06}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px 'Inter Tight';color:#c9a986;min-height:14px;margin-bottom:7px}
+.status b{color:var(--gold)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:linear-gradient(135deg,var(--org),var(--gold));color:#1a0f06;font:800 13px 'Inter Tight';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#8a6238;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#a8794f;background:#1c130b;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CATCHPLAY+</div>
+    <h1>BEAT MATCH 🎵</h1>
+    <p>Tap the lane when the note hits the line. Stay on the beat — hit 85% accuracy to unlock a pick!</p>
+  </div>
+  <div class="hud"><span>Combo: <span id="combo">0</span></span><span>Accuracy: <span id="acc">100</span>%</span></div>
+  <div class="stage"><canvas id="cv" width="220" height="240"></canvas></div>
+  <div class="lanes">
+    <button class="lane" onclick="hit(0)">A</button>
+    <button class="lane" onclick="hit(1)">S</button>
+    <button class="lane" onclick="hit(2)">D</button>
+    <button class="lane" onclick="hit(3)">F</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then tap to the beat!</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Tap the lane button as the note crosses the line · keys A S D F</div>
+    
+  </div>
+</div></div>
+<script>
+/* Rhythm-tap LOGIC (public-domain genre). Notes descend; tap in hit-window;
+   accuracy + combo. No audio/IP. SETS profile.rhythm_acc. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height,LANES=4,LW=W/LANES,HITLINE=H-30,WINDOW=26;
+const COLORS=['#FF7A1A',CONFIG.accentColor,'#3FAE6A','#00C2FF'];
+let notes,combo,hits,total,playing=false,loopT=null,spawnT=0,noteCount,maxNotes=30,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){notes=[];combo=0;hits=0;total=0;spawnT=0;noteCount=0;won=false;
+ document.getElementById('combo').textContent='0';document.getElementById('acc').textContent='100';}
+function step(){if(!playing)return;
+ spawnT++;if(spawnT>26&&noteCount<maxNotes){spawnT=0;noteCount++;
+  notes.push({lane:Math.floor(Math.random()*LANES),y:-16,hit:false});}
+ notes.forEach(n=>n.y+=3.2);
+ // missed notes (passed the line)
+ notes.forEach(n=>{if(!n.hit&&n.y>HITLINE+WINDOW){n.hit='miss';total++;combo=0;
+  document.getElementById('combo').textContent='0';updateAcc();ct('note_missed',{});}});
+ notes=notes.filter(n=>n.y<H+20&&n.hit!=='gone');
+ if(noteCount>=maxNotes&&notes.every(n=>n.hit)){return finish();}
+ draw();}
+function draw(){cx.clearRect(0,0,W,H);
+ // lane dividers
+ cx.strokeStyle='#3d2a1c';for(let i=1;i<LANES;i++){cx.beginPath();cx.moveTo(i*LW,0);cx.lineTo(i*LW,H);cx.stroke();}
+ // hit line
+ cx.strokeStyle=CONFIG.accentColor;cx.lineWidth=2;cx.beginPath();cx.moveTo(0,HITLINE);cx.lineTo(W,HITLINE);cx.stroke();cx.lineWidth=1;
+ // notes
+ notes.forEach(n=>{if(n.hit==='hit'||n.hit==='gone')return;
+  cx.fillStyle=n.hit==='miss'?'#5a4030':COLORS[n.lane];
+  cx.beginPath();cx.roundRect(n.lane*LW+8,n.y,LW-16,14,5);cx.fill();});}
+function hit(lane){if(!playing)return;
+ // find nearest unhit note in this lane within window
+ let best=null,bestD=1e9;
+ notes.forEach(n=>{if(n.lane===lane&&!n.hit){const d=Math.abs(n.y-HITLINE);if(d<bestD){bestD=d;best=n;}}});
+ if(best&&bestD<=WINDOW){best.hit='hit';setTimeout(()=>best.hit='gone',60);
+  hits++;total++;combo++;document.getElementById('combo').textContent=combo;updateAcc();
+  ct('note_hit',{combo:combo,offset:Math.round(bestD)});
+  status.innerHTML=bestD<10?'🎯 Perfect! Combo <b>'+combo+'</b>':'Good! Combo <b>'+combo+'</b>';}
+ else{combo=0;document.getElementById('combo').textContent='0';total++;updateAcc();
+  ct('note_missed',{reason:'off_beat'});status.textContent='Off-beat! Combo reset.';}}
+function updateAcc(){const acc=total?Math.round(hits/total*100):100;
+ document.getElementById('acc').textContent=acc;}
+function start(){reset();playing=true;status.textContent='Tap to the beat!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,20);
+ ct('game_started',{game:'beat_match'});}
+function finish(){playing=false;clearInterval(loopT);
+ const acc=total?Math.round(hits/total*100):0;const tier=acc>=85;
+ status.innerHTML='Final accuracy: <b>'+acc+'%</b> ('+hits+'/'+total+')';
+ const b=document.getElementById('start');b.style.display='block';b.disabled=false;
+ ct('game_over',{rhythm_acc:acc});
+ if(tier){b.textContent='CLAIM A PICK 🎁';ct('accuracy_tier_reached',{rhythm_acc:acc});
+  b.onclick=()=>{ct('reward_won',{reward:'free_pick'});b.textContent='PICK UNLOCKED ✓';b.disabled=true;};}
+ else{b.textContent='TRY AGAIN (85% to win)';b.onclick=start;}}
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{const m={a:0,s:1,d:2,f:3};if(m[e.key]!==undefined)hit(m[e.key]);});
+ct('Notification Viewed',{game:'beat_match',mechanic:'rhythm_tap'});
+</script></body></html>

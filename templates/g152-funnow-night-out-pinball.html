@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G152 — FUNNOW "NIGHT-OUT PINBALL" · Pinball / Bumper-Launch
+  Mechanic: pinball LOGIC (public-domain genre) — launch a ball, bounce off
+  bumpers for points, score thresholds unlock rewards. NO trademarked table art.
+  Brand-skinned as bouncing through a night-out venue map.
+  NEW FAMILY (pinball) — 0 prior files. Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement → booking intent.
+  SETS: {{profile.pinball_best}}. PROMOS: venue deal at score tier.
+  Brand: FunNow coral (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ffc74a"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FunNow · Night-Out Pinball</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#FF5A36;--deep:#D63A18;--gold:var(--cfg-accent,#ffc74a);--purp:#7C3AED;--ink:#1C1024;--paper:#1a1022}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -10%,#43224f,#160b1c);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(10,5,14,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:linear-gradient(178deg,#241433,#160b1c);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,28,.55);overflow:hidden;color:#fff;border:1px solid #3a2450}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Nunito;letter-spacing:3px;color:var(--gold);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff1a;color:#fff;cursor:pointer}
+h1{font-family:Fredoka;font-size:19px}
+.hd p{font-size:11px;color:#c9a9e0;margin-top:3px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 12px Fredoka;color:var(--gold)}
+.stage{display:flex;justify-content:center;padding:6px 0 4px}
+#cv{background:radial-gradient(circle at 50% 30%,#2e1a42,#1a1022);border:2px solid #3a2450;border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 11px Nunito;color:#c9a9e0;min-height:15px;margin-bottom:8px}
+.status b{color:var(--gold)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--coral);color:#fff;font:800 14px Fredoka;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9.5px;color:#8a6ca0;margin-top:6px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a886c0;background:#2a1838;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FUNNOW</div>
+    <h1>Night-Out Pinball 🪩</h1>
+    <p>Pull back and launch! Bounce off the venues to rack up points. Hit 1,000 for a night-out deal.</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Balls: <span id="balls">3</span></span></div>
+  <div class="stage"><canvas id="cv" width="220" height="320"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap & hold the table to charge, release to launch!</div>
+    <button class="btn" id="start">DROP THE FIRST BALL</button>
+    <div class="hint">Tap-hold builds power · release launches · flippers auto-nudge near the bottom</div>
+    
+  </div>
+</div></div>
+<script>
+/* Pinball LOGIC (public-domain genre). Bumpers = venues. No IP table art.
+   SETS profile.pinball_best. PROMOS at 1000-point tier. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const BUMPERS=[
+ {x:60,y:90,r:18,pts:50,emo:'🍸',hit:0},
+ {x:160,y:90,r:18,pts:50,emo:'🍜',hit:0},
+ {x:110,y:150,r:22,pts:100,emo:'🪩',hit:0},
+ {x:55,y:210,r:16,pts:75,emo:'🎤',hit:0},
+ {x:165,y:210,r:16,pts:75,emo:'🍢',hit:0}];
+let ball,score,balls,playing=false,charging=false,power=0,launched=false,loopT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){score=0;balls=3;won=false;
+ document.getElementById('score').textContent='0';document.getElementById('balls').textContent='3';
+ BUMPERS.forEach(b=>b.hit=0);newBall();}
+function newBall(){ball={x:W-16,y:H-40,vx:0,vy:0,r:7};launched=false;power=0;}
+function draw(){cx.clearRect(0,0,W,H);
+ // lane guides
+ cx.strokeStyle='#3a2450';cx.lineWidth=2;
+ cx.beginPath();cx.moveTo(W-26,H);cx.lineTo(W-26,120);cx.stroke();
+ // flippers
+ cx.strokeStyle='#FF5A36';cx.lineWidth=5;cx.lineCap='round';
+ cx.beginPath();cx.moveTo(70,H-18);cx.lineTo(105,H-6);cx.stroke();
+ cx.beginPath();cx.moveTo(W-70,H-18);cx.lineTo(W-105,H-6);cx.stroke();
+ // bumpers
+ BUMPERS.forEach(b=>{cx.fillStyle=b.hit>0?CONFIG.accentColor:'#7C3AED';
+  cx.globalAlpha=b.hit>0?1:.85;cx.beginPath();cx.arc(b.x,b.y,b.r,0,7);cx.fill();cx.globalAlpha=1;
+  cx.font=(b.r)+'px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(b.emo,b.x,b.y);
+  if(b.hit>0)b.hit--;});
+ // ball
+ cx.fillStyle='#fff';cx.beginPath();cx.arc(ball.x,ball.y,ball.r,0,7);cx.fill();
+ // power gauge while charging
+ if(charging){cx.fillStyle=CONFIG.accentColor;cx.fillRect(W-13,H-40-power*1.6,7,power*1.6);}}
+function step(){if(!playing)return;
+ if(launched){
+  ball.vy+=0.16; // gravity
+  ball.x+=ball.vx;ball.y+=ball.vy;
+  // walls
+  if(ball.x<ball.r){ball.x=ball.r;ball.vx*=-.8;}
+  if(ball.x>W-ball.r){ball.x=W-ball.r;ball.vx*=-.8;}
+  if(ball.y<ball.r){ball.y=ball.r;ball.vy*=-.8;}
+  // bumper collisions
+  BUMPERS.forEach(b=>{const dx=ball.x-b.x,dy=ball.y-b.y,d=Math.hypot(dx,dy);
+   if(d<b.r+ball.r){const a=Math.atan2(dy,dx);ball.vx=Math.cos(a)*4.5;ball.vy=Math.sin(a)*4.5;
+    score+=b.pts;b.hit=6;document.getElementById('score').textContent=score;
+    ct('bumper_hit',{venue:b.emo,points:b.pts,score:score});
+    if(score>=1000&&!won){won=true;return winGame();}}});
+  // flipper auto-nudge zone
+  if(ball.y>H-26&&ball.x>60&&ball.x<W-60){ball.vy=-6.5;ball.vx+=(W/2-ball.x)*0.04;
+   status.innerHTML='Flipper bounce! Score <b>'+score+'</b>';}
+  // drain
+  if(ball.y>H+10){balls--;document.getElementById('balls').textContent=balls;
+   ct('ball_drained',{balls_left:balls});
+   if(balls<=0){return gameOver();}else{newBall();status.innerHTML='Ball lost! <b>'+balls+'</b> left. Tap-hold to launch.';}}}
+ draw();}
+function start(){reset();playing=true;status.textContent='Tap & hold the table, release to launch!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,22);
+ ct('game_started',{game:'pinball'});}
+function gameOver(){playing=false;clearInterval(loopT);
+ status.innerHTML='Out of balls! Final score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='PLAY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{score:score,pinball_best:score});}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 1,000 points! You\'re on fire — <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM NIGHT-OUT DEAL 🎁';b.disabled=false;
+ ct('score_tier_reached',{pinball_best:score});
+ b.onclick=()=>{ct('reward_won',{reward:'night_out_deal'});b.textContent='DEAL SAVED ✓';b.disabled=true;};}
+// charge controls
+function chargeStart(){if(!playing||launched)return;charging=true;power=0;
+ chargeInt=setInterval(()=>{power=Math.min(power+2,40);draw();},30);}
+function chargeEnd(){if(!playing||launched||!charging)return;charging=false;clearInterval(chargeInt);
+ launched=true;ball.vy=-(4+power*0.22);ball.vx=-1.5;
+ ct('ball_launched',{power:power});}
+let chargeInt=null;
+cv.addEventListener('mousedown',chargeStart);cv.addEventListener('mouseup',chargeEnd);
+cv.addEventListener('touchstart',e=>{e.preventDefault();chargeStart();});
+cv.addEventListener('touchend',e=>{e.preventDefault();chargeEnd();});
+document.getElementById('start').onclick=start;
+draw();
+ct('Notification Viewed',{game:'pinball',mechanic:'pinball_bumper'});
+</script></body></html>

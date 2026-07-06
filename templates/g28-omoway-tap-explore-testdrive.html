@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G28 — OMOWAY "MEET TOMORROW'S RIDE" · Tap-to-Explore Test Drive
+  Surface: CleverTap Custom HTML In-App · Grade B
+  Pattern: P-F Samsung iTest (Spikes Asia 2022 work) — exploration-as-trial
+  Lifecycle: engagement / consideration → test-ride booking
+  NOTE: business model flagged for verification (e-motorcycle vs ride-hailing)
+  — demo assumes smart e-motorcycle product; copy kept product-generic.
+  SETS: {{profile.features_explored}} + {{profile.intent_score}} → trial push.
+  Brand: OMOWAY dark + electric accent (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#16242b"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OMOWAY · Meet Tomorrow's Ride</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--el:#37E5A4;--ink:#0B1316;--panel:#121E23;--line:#1f3138}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight','Segoe UI',sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -10%,#15262d,#070d10);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(3,8,10,.7);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--ink);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.65);overflow:hidden;color:#fff;border:1px solid var(--line)}
+.hd{padding:18px 20px 8px;text-align:center;position:relative}
+.brand{font-family:Orbitron;font-size:14px;letter-spacing:4px;color:var(--el);margin-bottom:7px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff12;color:#fff;cursor:pointer}
+h1{font-family:Orbitron;font-size:17px;letter-spacing:.5px}
+.hd p{font-size:11.5px;color:#7da294;margin-top:5px}
+.stage{position:relative;padding:6px 0 2px;display:flex;justify-content:center}
+.hot{position:absolute;width:30px;height:30px;border-radius:50%;background:rgba(55,229,164,.16);border:2px solid var(--el);cursor:pointer;animation:ping 1.6s infinite}
+.hot::after{content:'+';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--el);font:800 16px 'Inter Tight'}
+.hot.seen{animation:none;background:var(--el)}
+.hot.seen::after{content:'✓';color:var(--ink)}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(55,229,164,.45)}70%{box-shadow:0 0 0 11px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.info{margin:6px 18px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 14px;min-height:64px}
+.info b{font-family:Orbitron;font-size:12px;color:var(--el);display:block;margin-bottom:4px;letter-spacing:.5px}
+.info span{font-size:11.5px;color:#a8c4b8;line-height:1.55}
+.meter{margin:8px 18px 0;display:flex;align-items:center;gap:9px}
+.meter small{font:700 9px 'Inter Tight';letter-spacing:1.5px;color:#5f8273}
+.mtrack{flex:1;height:7px;background:var(--panel);border-radius:4px;overflow:hidden}
+.mfill{height:100%;width:0;background:linear-gradient(90deg,#1d8f68,var(--el));border-radius:4px;transition:width .5s}
+.body{padding:12px 20px 20px;text-align:center}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;background:var(--el);color:var(--ink);font:800 13px Orbitron;letter-spacing:1px;cursor:pointer;box-shadow:0 0 24px rgba(55,229,164,.25)}
+.btn[disabled]{opacity:.45;box-shadow:none}
+.ctlog{margin-top:11px;font:700 10.5px ui-monospace,monospace;color:#6d8d7f;background:#0f1a1f;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">OMOWAY</div>
+    <h1>MEET TOMORROW'S RIDE</h1>
+    <p>Tap the glowing points — explore every feature before you ever touch the throttle.</p>
+  </div>
+  <div class="stage">
+    <svg width="270" height="170" viewBox="0 0 270 170">
+      <ellipse cx="135" cy="152" rx="110" ry="9" fill="#0f1a1f"/>
+      <circle cx="62" cy="128" r="30" fill="none" stroke="#28424d" stroke-width="9"/>
+      <circle cx="208" cy="128" r="30" fill="none" stroke="#28424d" stroke-width="9"/>
+      <circle cx="62" cy="128" r="11" fill="#16242b"/><circle cx="208" cy="128" r="11" fill="#16242b"/>
+      <path d="M62 128 L105 70 L160 62 L208 128" fill="none" stroke="#37E5A4" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+      <path d="M105 70 L92 128 M160 62 L196 96" stroke="#1f3a44" stroke-width="7" stroke-linecap="round"/>
+      <path d="M150 60 L186 52 L196 64" fill="#16242b" stroke="#2c4854" stroke-width="2"/>
+      <rect x="96" y="86" width="58" height="26" rx="9" fill="#16242b" stroke="#2c4854" stroke-width="2"/>
+      <circle cx="100" cy="66" r="7" fill="#37E5A4" opacity=".85"/>
+    </svg>
+    <div class="hot" style="top:46px;left:24%" data-f="0"></div>
+    <div class="hot" style="top:78px;left:46%" data-f="1"></div>
+    <div class="hot" style="top:34px;right:20%" data-f="2"></div>
+    <div class="hot" style="top:108px;right:8%" data-f="3"></div>
+  </div>
+  <div class="info"><b id="iT">START EXPLORING</b><span id="iS">Four features are glowing. Tap any of them — no order, no rush.</span></div>
+  <div class="meter"><small>CURIOSITY</small><div class="mtrack"><div class="mfill" id="mf"></div></div><small id="mc">0/4</small></div>
+  <div class="body">
+    <button class="btn" id="go" disabled>EXPLORE ALL 4 TO UNLOCK</button>
+    
+  </div>
+</div></div>
+<script>
+/* SETS profile.features_explored + profile.intent_score → test-ride push. */
+const FEATS=[
+ ['SMART HEADLAMP','Adaptive beam that reads the road and oncoming traffic — bright where you need it, polite where you don\'t.'],
+ ['SWAP BATTERY','Pop it out, click a fresh one in. Ninety seconds at a swap station beats any petrol queue.'],
+ ['CO-PILOT DISPLAY','Navigation, range, and ride stats on one glanceable panel. Eyes up, always.'],
+ ['SELF-BALANCING ASSIST','Low-speed stability assist that makes stop-start traffic feel like gliding.']];
+let seen=new Set();
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+document.querySelectorAll('.hot').forEach(h=>{
+ h.onclick=()=>{const f=+h.dataset.f;
+  if(!seen.has(f)){seen.add(f);h.classList.add('seen');
+   mf.style.width=(seen.size/4*100)+'%';mc.textContent=seen.size+'/4';
+   ct('feature_tapped',{feature:FEATS[f][0],explored:seen.size});}
+  iT.textContent=FEATS[f][0];iS.textContent=FEATS[f][1];
+  if(seen.size===4){go.disabled=false;go.textContent='BOOK A FREE TEST RIDE →';
+   /* SETS features_explored=4, intent_score=high */
+   ct('exploration_completed',{features_explored:4,intent_score:'high'});
+   go.onclick=()=>{ct('testride_cta_clicked',{});go.textContent='OPENING BOOKING ✓';go.disabled=true;};}};});
+ct('Notification Viewed',{game:'meet_tomorrows_ride',pattern:'itest_exploration'});
+</script></body></html>

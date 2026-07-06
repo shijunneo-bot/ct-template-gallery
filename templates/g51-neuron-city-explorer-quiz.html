@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G51 — NEURON "WHICH CITY EXPLORER ARE YOU?" · Rider Persona Quiz
+  Tier-3 Concept #20 · Pattern P-A (MBTI wave — reference case)
+  Surface: Custom HTML In-App · Grade B
+  Lifecycle: ENGAGEMENT (persona → route/zone suggestions)
+  SETS: {{profile.rider_persona}} → route push; PROMOS: ride pass offer.
+  Brand: Neuron orange (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f05a22"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neuron · Which City Explorer Are You?</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Archivo:wght@800&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#f05a22);--deep:#B23C10;--ink:#13100E;--paper:#FFFAF6;--soft:#FBE8DC}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a2418,#170d08);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,8,4,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:605px;max-height:92vh;background:var(--paper);border-radius:26px;overflow:hidden;position:relative;box-shadow:0 26px 60px rgba(0,0,0,.55)}
+.dots{position:absolute;top:18px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:5}
+.dot{width:7px;height:7px;border-radius:50%;background:#f3dccd;transition:.3s}
+.dot.on{background:var(--org);transform:scale(1.3)}
+.x{position:absolute;top:13px;right:13px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer;z-index:6}
+.scr{position:absolute;inset:0;padding:50px 24px 22px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s;background:var(--paper)}
+.scr.on{opacity:1;pointer-events:auto}
+.kick{font:800 10.5px 'Space Grotesk';letter-spacing:3px;color:#c79a82;text-transform:uppercase;text-align:center;margin-bottom:8px}
+.emoji{font-size:44px;text-align:center;margin:6px 0 10px}
+.h1{font-family:Archivo;font-size:22px;color:var(--ink);text-align:center;line-height:1.25}
+.h1 b{color:var(--org)}
+.sub{font-size:12.5px;color:#9b7861;text-align:center;margin-top:9px;line-height:1.55}
+.qtext{font-family:Archivo;font-size:18px;color:var(--ink);text-align:center;margin-bottom:13px;line-height:1.3}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{background:#fff;border:2px solid #f1ddcd;border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;gap:10px;align-items:center;transition:.16s;text-align:left}
+.opt:hover{border-color:var(--org)}
+.opt:active{transform:scale(.97)}
+.opt i{font-style:normal;font-size:19px;flex-shrink:0}
+.opt span{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.4}
+.spacer{flex:1}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--org);color:#fff;font:800 14px Archivo;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.persona{background:linear-gradient(150deg,var(--org),#ff8a4d);border-radius:20px;padding:20px;text-align:center;color:#fff;margin-bottom:11px;box-shadow:0 14px 30px rgba(240,90,34,.3)}
+.persona .pk{font:800 10px 'Space Grotesk';letter-spacing:3px;opacity:.85}
+.persona .pe{font-size:38px;margin:6px 0 3px}
+.persona .pn{font-family:Archivo;font-size:21px}
+.persona .pd{font-size:12px;line-height:1.55;margin-top:7px;opacity:.95}
+.route{background:#fff;border:2px dashed #f0cdb4;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:center;text-align:left}
+.route i{font-style:normal;font-size:22px}
+.route b{font-size:12.5px;color:var(--ink);display:block}
+.route span{font-size:11px;color:#b08568}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:#a3866f;background:#f5e8ddcc;border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <div class="dots" id="dots"></div>
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+
+  <div class="scr on" id="s0">
+    <div class="kick">Neuron · Rider Personality</div>
+    <div class="emoji">🛴</div>
+    <div class="h1">Which city explorer<br><b>are you?</b></div>
+    <div class="sub">Four questions about how you move. Your answer unlocks your rider type — and the routes made for it.</div>
+    <div class="spacer"></div>
+    <button class="btn" onclick="go(0)">START ROLLING</button>
+  </div>
+
+  <div class="scr" id="q0"></div>
+  <div class="scr" id="q1"></div>
+  <div class="scr" id="q2"></div>
+  <div class="scr" id="q3"></div>
+
+  <div class="scr" id="sR">
+    <div class="kick">Helmet on. Identity confirmed.</div>
+    <div class="persona">
+      <div class="pk">YOUR RIDER TYPE</div>
+      <div class="pe" id="pE">🌇</div>
+      <div class="pn" id="pN">The Golden-Hour Glider</div>
+      <div class="pd" id="pD"></div>
+    </div>
+    <div class="route"><i id="rI">🗺️</i><div><b id="rN"></b><span id="rS2"></span></div></div>
+    <div class="spacer"></div>
+    <button class="btn" id="passBtn">UNLOCK MY RIDE PASS DEAL →</button>
+  </div>
+
+  
+</div></div>
+<script>
+/* SETS profile.rider_persona → route/zone push; Promos ride-pass offer. */
+const QS=[
+ {q:'When do you ride most?',o:[
+  ['🌅','Morning commute — beat the bus','commuter'],
+  ['🌇','Golden hour — the city looks unreal','sightseer'],
+  ['🌃','After dark — empty paths, cool air','night']]},
+ {q:'Your route philosophy:',o:[
+  ['📍','Fastest A to B. Always.','commuter'],
+  ['🌳','The scenic one. Obviously.','sightseer'],
+  ['🎲','Wherever looks interesting today','night']]},
+ {q:'Mid-ride, you stop for…',o:[
+  ['☕','Nothing. The schedule is sacred.','commuter'],
+  ['📸','That view. And that one. And—','sightseer'],
+  ['🍢','A snack stall I\'ve never tried','night']]},
+ {q:'Why you really ride:',o:[
+  ['⏱️','Time saved = life gained','commuter'],
+  ['🫶','It makes my city feel new again','sightseer'],
+  ['🧘','Head-clearing on two wheels','night']]}];
+const PERSONAS={
+ commuter:{e:'⚡',n:'The Precision Commuter',d:'Every minute mapped, every shortcut memorised. You\'ve turned getting to work into a personal speedrun — and you\'re winning.',
+  route:['🗺️','Your zone: Express CBD corridors','Fastest lanes, best parking bays — mapped for you'],prop:'precision_commuter'},
+ sightseer:{e:'🌇',n:'The Golden-Hour Glider',d:'You ride for the view, not just the destination. The waterfront at sunset basically has your name on it.',
+  route:['🗺️','Your zone: Riverside scenic loop','Golden-hour route with the three best skyline stops'],prop:'golden_glider'},
+ night:{e:'🌙',n:'The Midnight Wanderer',d:'Cool air, quiet paths, city lights on slow shuffle. You discover the version of the city most people sleep through.',
+  route:['🗺️','Your zone: Night-safe discovery loop','Well-lit paths past the best late-night eats'],prop:'midnight_wanderer'}};
+let score={commuter:0,sightseer:0,night:0};
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<6;i++){const d=document.createElement('div');d.className='dot'+(i===0?' on':'');dots.appendChild(d);}
+QS.forEach((Q,qi)=>{const s=document.getElementById('q'+qi);
+ s.innerHTML=`<div class="kick">QUESTION ${qi+1} OF 4</div>
+  <div class="qtext">${Q.q}</div>
+  <div class="opts">${Q.o.map((o,oi)=>`<div class="opt" onclick="pick(${qi},${oi})"><i>${o[0]}</i><span>${o[1]}</span></div>`).join('')}</div>`;});
+function show(n){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+ const order=['s0','q0','q1','q2','q3','sR'];
+ document.getElementById(order[n]).classList.add('on');
+ dots.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===n));}
+function go(q){show(q+1);if(q===0)ct('quiz_started',{quiz:'city_explorer'});}
+function pick(qi,oi){score[QS[qi].o[oi][2]]++;
+ ct('quiz_answer',{q:qi+1,trait:QS[qi].o[oi][2]});
+ if(qi<3)go(qi+1);else reveal();}
+function reveal(){const top=Object.keys(score).sort((a,b)=>score[b]-score[a])[0];
+ const P=PERSONAS[top];
+ pE.textContent=P.e;pN.textContent=P.n;pD.textContent=P.d;
+ rI.textContent=P.route[0];rN.textContent=P.route[1];rS2.textContent=P.route[2];
+ show(5);
+ /* SETS rider_persona → route push; PROMOS ride pass */
+ ct('quiz_completed',{rider_persona:P.prop});
+ passBtn.onclick=()=>{ct('pass_cta_clicked',{persona:P.prop});
+  passBtn.textContent='PASS DEAL UNLOCKED ✓';passBtn.disabled=true;};}
+ct('Notification Viewed',{quiz:'city_explorer',trigger:'engagement'});
+</script></body></html>

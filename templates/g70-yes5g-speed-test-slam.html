@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G70 — YES 5G "SPEED TEST SLAM" · Reaction-Time Game
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: reaction-time bragging rights (speed = the brand promise)
+  Lifecycle: engagement (network-speed brand association)
+  Mechanic: wait for GREEN → slam. 3 rounds, average ms = your "ping."
+  PROMOS: avg under 350ms → speed-boost data pack.
+  Brand: Yes 5G pink/magenta (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#4a1a35"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yes 5G · Speed Test Slam</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#FF1F7D;--deep:#C40057;--ink:#1F0A16;--green:#2DD46E}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Manrope,sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -10%,#4d1033,#1c0512);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(20,3,12,.66);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--ink);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid var(--cfg-accent,#4a1a35)}
+.hd{padding:16px 20px 6px;text-align:center;position:relative}
+.brand{font-family:Bungee;font-size:14px;color:var(--pink);margin-bottom:4px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff14;color:#fff;cursor:pointer}
+h1{font-family:Bungee;font-size:18px}
+.hd p{font-size:11px;color:#d9a3c0;margin-top:4px}
+.pings{display:flex;justify-content:center;gap:8px;padding:9px 0 2px}
+.pg{background:#2e1322;border:1px solid var(--cfg-accent,#4a1a35);border-radius:10px;padding:6px 11px;text-align:center;min-width:62px}
+.pg b{font-family:Bungee;font-size:13px;display:block;color:#7d5a6e}
+.pg.done b{color:var(--pink)}
+.pg small{font:800 7.5px Manrope;letter-spacing:1px;color:#9c5f7e}
+.pad{margin:12px 20px 0;height:170px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;user-select:none;transition:background .15s;background:#2e1322;border:2px solid var(--cfg-accent,#4a1a35)}
+.pad.wait{background:#3d1230;border-color:var(--pink)}
+.pad.go{background:#0e3d24;border-color:var(--green)}
+.pad.early{background:#4a1a1a;border-color:#e35d5d}
+.pad .pe{font-size:44px}
+.pad .pt{font-family:Bungee;font-size:15px;letter-spacing:1px}
+.pad .ps{font:700 10.5px Manrope;color:#d9a3c0}
+.body{padding:10px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Bungee;font-size:17px;color:var(--pink);display:block}
+.result span{font-size:11.5px;color:#d9a3c0;line-height:1.5}
+.btn{width:100%;border:0;border-radius:14px;padding:13px;background:var(--pink);color:#fff;font:800 14px Manrope;cursor:pointer;box-shadow:0 6px 18px rgba(255,31,125,.4);display:none}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#b487a0;background:#2e1322;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">YES 5G</div>
+    <h1>SPEED TEST SLAM ⚡</h1>
+    <p>Wait for green… SLAM! 3 rounds. Are you faster than your network?</p>
+  </div>
+  <div class="pings" id="pgs"></div>
+  <div class="pad" id="pad">
+    <span class="pe" id="pe">⚡</span>
+    <span class="pt" id="pt">TAP TO START</span>
+    <span class="ps" id="ps">round 1 of 3</span>
+  </div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="claimBtn">CLAIM SPEED-BOOST PACK ⚡</button>
+    
+  </div>
+</div></div>
+<script>
+/* Reaction avg <350ms → Promos data pack. Anti-jump: early tap restarts round. */
+let r=0,times=[],state='idle',t0=0,tmr=null;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<3;i++){const d=document.createElement('div');d.className='pg';
+ d.innerHTML='<b>—</b><small>ROUND '+(i+1)+'</small>';pgs.appendChild(d);}
+pad.onclick=()=>{
+ if(state==='idle'){state='wait';
+  pad.className='pad wait';pe.textContent='🔴';
+  pt.textContent='WAIT FOR GREEN…';ps.textContent='steady…';
+  if(r===0&&times.length===0)ct('Game Played',{game:'speed_slam'});
+  tmr=setTimeout(()=>{state='go';t0=performance.now();
+   pad.className='pad go';pe.textContent='🟢';
+   pt.textContent='SLAM NOW!';ps.textContent='';},900+Math.random()*1800);}
+ else if(state==='wait'){clearTimeout(tmr);state='idle';
+  pad.className='pad early';pe.textContent='😬';
+  pt.textContent='TOO EARLY!';ps.textContent='tap to retry round '+(r+1);
+  ct('early_tap',{round:r+1});
+  setTimeout(()=>{pad.className='pad';pe.textContent='⚡';
+   pt.textContent='TAP TO START';},700);}
+ else if(state==='go'){const ms=Math.round(performance.now()-t0);
+  times.push(ms);
+  pgs.children[r].classList.add('done');
+  pgs.children[r].querySelector('b').textContent=ms+'ms';
+  ct('reaction',{round:r+1,ms:ms});
+  r++;state='idle';
+  if(r<3){pad.className='pad';pe.textContent='⚡';
+   pt.textContent='TAP FOR ROUND '+(r+1);ps.textContent=ms<300?'lightning! keep going':'good — next round';}
+  else end();}};
+function end(){const avg=Math.round(times.reduce((a,b)=>a+b)/3);
+ pad.style.pointerEvents='none';
+ pad.className='pad';pe.textContent='📊';
+ pt.textContent='AVG: '+avg+'ms';ps.textContent='';
+ result.style.display='block';
+ const win=avg<350;
+ rT.textContent=win?'HUMAN 5G! '+avg+'ms ⚡':avg+'ms — RESPECTABLE PING';
+ rS.textContent=win?'Faster than most home wifi routers boot. Speed-boost data pack unlocked — match your network to your reflexes.':
+  'Under 350ms average unlocks the boost pack. Shake out those thumbs and rematch!';
+ ct('game_over',{avg_ms:avg,reward:win?'speed_boost':'none'});
+ if(win){claimBtn.style.display='block';
+  claimBtn.onclick=()=>{ /* PROMOS: data boost pack */
+   ct('reward_claimed',{reward:'speed_boost'});
+   claimBtn.textContent='CREDITED ✓ STAY FAST';claimBtn.disabled=true;};}}
+ct('Notification Viewed',{game:'speed_slam',trigger:'engagement'});
+</script></body></html>

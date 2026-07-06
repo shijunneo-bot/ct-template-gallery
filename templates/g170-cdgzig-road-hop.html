@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G170 — CDG ZIG "ROAD HOP" · Lane-Crossing Traversal
+  Mechanic: lane-crossing LOGIC (Frogger-spirit, public-domain genre) — cross
+  lanes of moving traffic timing the gaps, reach the far side. NO trademarked
+  art/names/characters. Brand-skinned as hopping across traffic to the pickup
+  point (CDG Zig = ride-hail / taxi context). NEW FAMILY (lane-crossing) — 0
+  prior files. Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.hop_best}}. PROMOS: ride voucher at safe arrivals.
+  Brand: CDG Zig blue/green (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#6a88c2"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CDG Zig · Road Hop</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1A4FB8;--deep:#123a8a;--grn:#2FA85B;--gold:#F5A623;--ink:#0A1730;--paper:#F1F5FE;--soft:#D6E2F8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0c1f44,#06101f);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,12,25,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,16,35,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:var(--cfg-accent,#6a88c2);margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a6f96;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Sora;color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:#3a4a5a;border:2px solid var(--soft);border-radius:10px;touch-action:none}
+.ctrls{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,38px);gap:5px;justify-content:center;padding:6px 0 2px}
+.dpad{border:0;border-radius:10px;background:#fff;border:2px solid var(--soft);font-size:16px;color:var(--deep);cursor:pointer}
+.dpad:active{background:var(--soft)}
+.dpad.up{grid-column:2;grid-row:1}.dpad.left{grid-column:1;grid-row:2}.dpad.down{grid-column:2;grid-row:2}.dpad.right{grid-column:3;grid-row:2}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a6f96;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--blue);color:#fff;font:800 13px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#8aa0c8;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:var(--cfg-accent,#6a88c2);background:#e6eefb;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CDG ZIG</div>
+    <h1>Road Hop 🚕</h1>
+    <p>Time the gaps and hop across the traffic to reach your ride. Make 3 safe crossings for a voucher!</p>
+  </div>
+  <div class="hud"><span>Crossings: <span id="cross">0</span>/3</span><span>Best: <span id="best">0</span></span></div>
+  <div class="stage"><canvas id="cv" width="252" height="252"></canvas></div>
+  <div class="ctrls">
+    <button class="dpad up" onclick="hop(0,-1)">▲</button>
+    <button class="dpad left" onclick="hop(-1,0)">◀</button>
+    <button class="dpad down" onclick="hop(0,1)">▼</button>
+    <button class="dpad right" onclick="hop(1,0)">▶</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then hop up to cross!</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Hop ▲ to advance · time the gaps · avoid the vehicles</div>
+    
+  </div>
+</div></div>
+<script>
+/* Lane-crossing LOGIC (public-domain genre). Grid hop; lanes of moving vehicles.
+   IP-neutral. SETS profile.hop_best. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height,CELL=28,COLS=9,ROWS=9;
+// rows 1..7 are road lanes; 0 = goal, 8 = start (safe)
+let player,lanes,cross,best,playing=false,loopT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){player={c:4,r:8};cross=0;best=0;won=false;buildLanes();
+ document.getElementById('cross').textContent='0';document.getElementById('best').textContent='0';}
+function buildLanes(){lanes=[];
+ for(let r=1;r<=7;r++){const dir=r%2?1:-1;const speed=0.6+Math.random()*1.0+r*0.05;
+  const cars=[];const count=2+Math.floor(Math.random()*2);
+  for(let i=0;i<count;i++){cars.push({x:Math.random()*W,len:CELL*1.4});}
+  lanes.push({r,dir,speed,cars,emo:dir>0?'🚗':'🚙'});}}
+function step(){if(!playing)return;
+ lanes.forEach(l=>{l.cars.forEach(car=>{car.x+=l.dir*l.speed;
+  if(l.dir>0&&car.x>W+car.len)car.x=-car.len;
+  if(l.dir<0&&car.x<-car.len)car.x=W+car.len;});});
+ // collision if player on a road lane and overlapping a car
+ const lane=lanes.find(l=>l.r===player.r);
+ if(lane){const px=player.c*CELL;
+  for(const car of lane.cars){if(px+CELL>car.x&&px<car.x+car.len){return hit();}}}
+ draw();}
+function draw(){cx.clearRect(0,0,W,H);
+ // zones
+ cx.fillStyle='#3FAE6A';cx.fillRect(0,0,W,CELL); // goal row 0
+ cx.fillStyle='#5a6a4a';cx.fillRect(0,8*CELL,W,CELL); // start row 8 (safe curb)
+ cx.fillStyle='#3a4453';cx.fillRect(0,CELL,W,7*CELL); // road
+ // lane dashes
+ cx.strokeStyle='#7a8494';cx.setLineDash([8,8]);
+ for(let r=2;r<=7;r++){cx.beginPath();cx.moveTo(0,r*CELL);cx.lineTo(W,r*CELL);cx.stroke();}
+ cx.setLineDash([]);
+ cx.font='13px serif';cx.textAlign='center';cx.textBaseline='middle';
+ cx.fillText('🏁',W/2,CELL/2);
+ lanes.forEach(l=>{l.cars.forEach(car=>{cx.font='20px serif';cx.fillText(l.emo,car.x+car.len/2,l.r*CELL+CELL/2);});});
+ // player
+ cx.font='20px serif';cx.fillText('🚶',player.c*CELL+CELL/2,player.r*CELL+CELL/2);}
+function hop(dx,dy){if(!playing)return;
+ const nc=player.c+dx,nr=player.r+dy;
+ if(nc<0||nc>=COLS||nr<0||nr>ROWS-1)return;
+ player.c=nc;player.r=nr;ct('hop',{r:player.r});
+ if(player.r===0){cross++;document.getElementById('cross').textContent=cross;
+  if(cross>best){best=cross;document.getElementById('best').textContent=best;}
+  ct('crossing_made',{crossings:cross,hop_best:best});
+  status.innerHTML='✅ Safe crossing <b>'+cross+'</b>!';
+  if(cross>=3&&!won){won=true;return winGame();}
+  player={c:4,r:8};buildLanes();}
+ draw();}
+function hit(){playing=false;clearInterval(loopT);
+ status.innerHTML='💥 Hit! You made <b>'+cross+'</b> crossing'+(cross===1?'':'s');
+ const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{hop_best:best});}
+function start(){reset();playing=true;status.textContent='Hop up across the traffic!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,30);
+ ct('game_started',{game:'road_hop'});}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 3 safe crossings! Nicely judged.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM RIDE VOUCHER 🎁';b.disabled=false;
+ ct('target_reached',{hop_best:best});
+ b.onclick=()=>{ct('reward_won',{reward:'ride_voucher'});b.textContent='VOUCHER SAVED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
+ if(m[e.key]){e.preventDefault();hop(m[e.key][0],m[e.key][1]);}});
+ct('Notification Viewed',{game:'road_hop',mechanic:'lane_crossing'});
+</script></body></html>

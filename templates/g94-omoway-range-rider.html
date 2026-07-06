@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G94 — OMOWAY "RANGE RIDER" · Interactive Range Estimator
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: playable spec exploration (range anxiety → range confidence)
+  Lifecycle: consideration → test-ride
+  NOTE: business model flagged for verification (e-motorcycle assumed) —
+  copy kept product-generic; figures ILLUSTRATIVE (flagged on-card).
+  Mechanic: sliders (terrain, load, eco-mode) recompute estimated range live.
+  SETS: {{profile.range_explored}} + {{profile.range_band}} → test-ride push.
+  Brand: OMOWAY dark + electric accent (verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#5f8273"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OMOWAY · Range Rider</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--el:#37E5A4;--ink:#0B1316;--panel:#121E23;--line:#1f3138}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight',sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -10%,#15262d,#070d10);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(3,8,10,.7);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--ink);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.65);overflow:hidden;color:#fff;border:1px solid var(--line)}
+.hd{padding:16px 20px 8px;text-align:center;position:relative}
+.brand{font-family:Orbitron;font-size:14px;letter-spacing:4px;color:var(--el);margin-bottom:6px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff12;color:#fff;cursor:pointer}
+h1{font-family:Orbitron;font-size:17px;letter-spacing:.5px}
+.hd p{font-size:11px;color:#7da294;margin-top:4px}
+.meter{text-align:center;padding:12px 0 4px}
+.mval{font-family:Orbitron;font-weight:800;font-size:48px;color:var(--el);transition:.2s;text-shadow:0 0 24px rgba(55,229,164,.4)}
+.mval small{font-size:18px;color:var(--cfg-accent,#5f8273)}
+.mcap{font:700 10px 'Inter Tight';letter-spacing:2px;color:var(--cfg-accent,#5f8273);margin-top:2px}
+.battery{margin:6px 24px 0;height:14px;border:2px solid #2c4854;border-radius:7px;overflow:hidden;background:#0c1a1f}
+.bfill{height:100%;width:70%;background:linear-gradient(90deg,#1d8f68,var(--el));border-radius:5px;transition:width .3s}
+.sliders{padding:12px 22px 4px}
+.sl{margin-bottom:13px}
+.sl-h{display:flex;justify-content:space-between;font:700 11.5px 'Inter Tight';color:#cfe6dd;margin-bottom:6px}
+.sl-h b{color:var(--el)}
+input[type=range]{width:100%;height:7px;-webkit-appearance:none;appearance:none;background:var(--panel);border-radius:4px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--el);cursor:pointer;box-shadow:0 0 12px rgba(55,229,164,.5)}
+.body{padding:10px 20px 14px;text-align:center}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;background:var(--el);color:var(--ink);font:800 13px Orbitron;letter-spacing:1px;cursor:pointer;box-shadow:0 0 24px rgba(55,229,164,.25)}
+.fine{font-size:9px;color:var(--cfg-accent,#5f8273);margin-top:8px;line-height:1.5}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#6d8d7f;background:#0f1a1f;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">OMOWAY</div>
+    <h1>RANGE RIDER</h1>
+    <p>Drag the sliders — see how far tomorrow's ride really goes.</p>
+  </div>
+  <div class="meter">
+    <div class="mval"><span id="range">95</span><small>km</small></div>
+    <div class="mcap">ESTIMATED RANGE PER CHARGE*</div>
+  </div>
+  <div class="battery"><div class="bfill" id="bf"></div></div>
+  <div class="sliders">
+    <div class="sl"><div class="sl-h"><span>Terrain</span><b id="tV">City flat</b></div>
+      <input type="range" min="0" max="2" value="0" id="terrain"></div>
+    <div class="sl"><div class="sl-h"><span>Load</span><b id="lV">Just me</b></div>
+      <input type="range" min="0" max="2" value="0" id="load"></div>
+    <div class="sl"><div class="sl-h"><span>Ride mode</span><b id="mV">Eco</b></div>
+      <input type="range" min="0" max="2" value="0" id="mode"></div>
+  </div>
+  <div class="body">
+    <button class="btn" id="go">BOOK A FREE TEST RIDE →</button>
+    <div class="fine">*Illustrative estimate for demo only — real range varies by model, battery age, weather & road. Confirmed figures shown at test ride.</div>
+    
+  </div>
+</div></div>
+<script>
+/* Playable spec explorer. SETS range_explored + range_band → test-ride push. */
+const BASE=120;
+const TERRAIN=[['City flat',1.0],['Mixed roads',0.85],['Hilly',0.68]];
+const LOAD=[['Just me',1.0],['+ passenger',0.84],['+ cargo',0.74]];
+const MODE=[['Eco',1.0],['Normal',0.88],['Sport',0.72]];
+let touched=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function calc(){const t=TERRAIN[+terrain.value],l=LOAD[+load.value],m=MODE[+mode.value];
+ const r=Math.round(BASE*t[1]*l[1]*m[1]);
+ range.textContent=r;
+ tV.textContent=t[0];lV.textContent=l[0];mV.textContent=m[0];
+ bf.style.width=Math.max(10,Math.round(r/BASE*100))+'%';
+ if(touched)ct('range_adjusted',{terrain:t[0],load:l[0],mode:m[0],range_km:r});
+ return r;}
+[terrain,load,mode].forEach(s=>s.oninput=()=>{touched=true;calc();});
+go.onclick=()=>{const r=calc();
+ const band=r>=100?'long':r>=75?'mid':'short';
+ /* SETS range_explored + range_band → test-ride onboarding journey */
+ ct('testride_cta',{range_explored:true,range_band:band,range_km:r});
+ go.textContent='OPENING BOOKING ✓';go.disabled=true;};
+calc();
+ct('Notification Viewed',{game:'range_rider',segment:'consideration'});
+</script></body></html>

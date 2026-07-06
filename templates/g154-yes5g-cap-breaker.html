@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G154 — YES 5G "CAP BREAKER" · Brick-Breaker Paddle
+  Mechanic: brick-breaker LOGIC (Breakout/Arkanoid-spirit, public-domain genre) —
+  bounce a ball off a paddle to break bricks. NO trademarked art/names.
+  Brand-skinned as breaking through data caps to free up speed.
+  NEW FAMILY (paddle/brick-breaker) — 0 prior files. Surface: in-app Custom HTML.
+  Grade B. Lifecycle: conversion (telco data upsell, playful).
+  SETS: {{profile.caps_broken}}. PROMOS: bonus-data at full clear.
+  Brand: Yes 5G (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ffe600"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yes 5G · Cap Breaker</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ylw:var(--cfg-accent,#ffe600);--blk:#111;--mag:#E6007E;--cyan:#00C2FF;--ink:#141414;--paper:#0f0f12}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#1a1a22,#0a0a0e);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(6,6,10,.66);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:#15151b;border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid #2a2a35}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:700 12px 'Chakra Petch';letter-spacing:2px;color:var(--ylw);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff16;color:#fff;cursor:pointer}
+h1{font-family:'Chakra Petch';font-weight:700;font-size:19px}
+.hd p{font-size:11px;color:#b0b0c0;margin-top:3px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:700 12px 'Chakra Petch';color:var(--ylw)}
+.stage{display:flex;justify-content:center;padding:6px 0 4px}
+#cv{background:#0c0c10;border:2px solid #2a2a35;border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 11px Inter;color:#b0b0c0;min-height:15px;margin-bottom:8px}
+.status b{color:var(--ylw)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--ylw);color:#141414;font:700 14px 'Chakra Petch';cursor:pointer;box-shadow:0 5px 0 #b3a200}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9.5px;color:#70708a;margin-top:6px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a0a0b8;background:#1c1c24;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">YES 5G</div>
+    <h1>Cap Breaker ⚡</h1>
+    <p>Bounce the signal to smash every data cap. Clear the grid to unlock a bonus-data boost!</p>
+  </div>
+  <div class="hud"><span>Caps: <span id="broken">0</span>/<span id="total">0</span></span><span>Balls: <span id="balls">3</span></span></div>
+  <div class="stage"><canvas id="cv" width="240" height="300"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Move your finger/mouse to aim the paddle. Tap Start!</div>
+    <button class="btn" id="start">LAUNCH THE SIGNAL</button>
+    <div class="hint">Drag across the table to move the paddle · keep the ball alive</div>
+    
+  </div>
+</div></div>
+<script>
+/* Brick-breaker LOGIC (public-domain genre). Bricks = data caps. No IP art/names.
+   SETS profile.caps_broken. PROMOS bonus-data at full clear. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const COLS=6,ROWS=4,BW=36,BH=15,BTOP=36,BGAP=4,BLEFT=10;
+const COLORS=['#E6007E','#00C2FF',CONFIG.accentColor,'#7CFF00'];
+let bricks,paddle,ball,broken,total,balls,playing=false,loopT=null,won=false,launched=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){bricks=[];
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  bricks.push({x:BLEFT+c*(BW+BGAP),y:BTOP+r*(BH+BGAP),w:BW,h:BH,col:COLORS[r%COLORS.length],alive:true});}
+ total=bricks.length;broken=0;balls=3;won=false;
+ paddle={x:W/2-30,y:H-18,w:60,h:9};
+ resetBall();
+ document.getElementById('total').textContent=total;document.getElementById('broken').textContent='0';
+ document.getElementById('balls').textContent='3';}
+function resetBall(){ball={x:W/2,y:H-30,vx:0,vy:0,r:6};launched=false;}
+function draw(){cx.clearRect(0,0,W,H);
+ bricks.forEach(b=>{if(b.alive){cx.fillStyle=b.col;cx.fillRect(b.x,b.y,b.w,b.h);
+  cx.fillStyle='rgba(255,255,255,.25)';cx.fillRect(b.x,b.y,b.w,4);}});
+ cx.fillStyle=CONFIG.accentColor;cx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
+ cx.fillStyle='#fff';cx.beginPath();cx.arc(ball.x,ball.y,ball.r,0,7);cx.fill();}
+function step(){if(!playing)return;
+ if(!launched){ball.x=paddle.x+paddle.w/2;draw();return;}
+ ball.x+=ball.vx;ball.y+=ball.vy;
+ if(ball.x<ball.r||ball.x>W-ball.r)ball.vx*=-1;
+ if(ball.y<ball.r)ball.vy*=-1;
+ // paddle
+ if(ball.y+ball.r>=paddle.y&&ball.x>paddle.x&&ball.x<paddle.x+paddle.w&&ball.vy>0){
+  ball.vy=-Math.abs(ball.vy);const hit=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2);ball.vx=hit*3.4;}
+ // bricks
+ for(const b of bricks){if(b.alive&&ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){
+  b.alive=false;ball.vy*=-1;broken++;document.getElementById('broken').textContent=broken;
+  ct('cap_broken',{caps_broken:broken});
+  if(broken>=total&&!won){won=true;return winGame();}break;}}
+ // drain
+ if(ball.y>H+10){balls--;document.getElementById('balls').textContent=balls;
+  ct('ball_lost',{balls_left:balls});
+  if(balls<=0){return gameOver();}else{resetBall();status.innerHTML='Ball lost! <b>'+balls+'</b> left. Tap table to launch.';}}
+ draw();}
+function start(){reset();playing=true;status.textContent='Drag to move · tap table to launch the ball!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,16);
+ ct('game_started',{game:'cap_breaker'});}
+function launch(){if(!playing||launched)return;launched=true;ball.vx=2;ball.vy=-3.4;ct('ball_launched',{});}
+function gameOver(){playing=false;clearInterval(loopT);
+ status.innerHTML='Out of balls! You broke <b>'+broken+'/'+total+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='PLAY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{caps_broken:broken});}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 All caps smashed! Speed unlocked.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM BONUS DATA ⚡';b.disabled=false;
+ ct('grid_cleared',{caps_broken:broken});
+ b.onclick=()=>{ct('reward_won',{reward:'bonus_data'});b.textContent='DATA ADDED ✓';b.disabled=true;};}
+function movePaddle(clientX){const rect=cv.getBoundingClientRect();
+ let x=(clientX-rect.left)*(W/rect.width)-paddle.w/2;
+ paddle.x=Math.max(0,Math.min(W-paddle.w,x));if(!launched)draw();}
+cv.addEventListener('mousemove',e=>movePaddle(e.clientX));
+cv.addEventListener('touchmove',e=>{e.preventDefault();movePaddle(e.touches[0].clientX);});
+cv.addEventListener('mousedown',launch);
+cv.addEventListener('touchstart',e=>{e.preventDefault();launch();});
+document.getElementById('start').onclick=start;
+reset();draw();
+ct('Notification Viewed',{game:'cap_breaker',mechanic:'brick_breaker'});
+</script></body></html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G35 — EASYBOOK "SONGKRAN SPLASH" · Fresh-Start Branching Story
+  Surface: Custom HTML In-App (branching) · Grade B
+  Pattern: P-C playful festival narrative → route recommendation
+  Lifecycle: seasonal engagement · Songkran (April)
+  SETS: {{profile.songkran_path}} → route-deal push themed to choice.
+  Brand: Easybook blue + orange (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#1b6bb5"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Easybook · Songkran Splash</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@600;800&family=Karla:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:var(--cfg-accent,#1b6bb5);--org:#F7941D;--ink:#0E2A42;--aqua:#37C2E5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:#0a2238;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,16,28,.66);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:600px;max-height:92vh;border-radius:26px;overflow:hidden;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.65)}
+.scr{position:absolute;inset:0;padding:54px 26px 26px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .55s}
+.scr.on{opacity:1;pointer-events:auto}
+.bg0{background:linear-gradient(170deg,var(--cfg-accent,#1b6bb5),#0E3A66)}
+.bg1{background:linear-gradient(170deg,#37C2E5,var(--cfg-accent,#1b6bb5))}
+.bgE{background:linear-gradient(170deg,#F7941D,#c96f08)}
+.drop{position:absolute;font-size:15px;opacity:.5;animation:fall 3.2s linear infinite}
+@keyframes fall{from{transform:translateY(-30px)}to{transform:translateY(640px)}}
+.x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;z-index:6}
+.kick{font:800 10.5px Karla;letter-spacing:3px;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:12px}
+.scene{font-size:42px;margin-bottom:10px}
+.story{font-family:Rubik;font-weight:600;font-size:20px;color:#fff;line-height:1.5}
+.story i{color:#FFE08A;font-style:normal;font-weight:800}
+.spacer{flex:1}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:15px;padding:14px 16px;cursor:pointer;display:flex;gap:11px;align-items:center;transition:.2s}
+.choice:hover{background:rgba(255,255,255,.2)}
+.choice:active{transform:scale(.97)}
+.choice i{font-style:normal;font-size:19px}
+.choice span{font:700 13px Karla;color:#fff;line-height:1.4}
+.tap{font:800 10.5px Karla;letter-spacing:2px;color:rgba(255,255,255,.5);text-align:center;cursor:pointer}
+.offer{background:#fff;border-radius:18px;padding:18px;text-align:center;margin-top:13px}
+.offer .ok{font:800 10px Karla;letter-spacing:2.5px;color:#b08a52}
+.offer .ov{font-family:Rubik;font-weight:800;font-size:23px;color:#9c5e06;margin:5px 0 4px}
+.offer .od{font-size:12px;color:#8a6c42;line-height:1.5}
+.btn{width:100%;border:0;border-radius:13px;padding:15px;background:#fff;color:#9c5e06;font:800 14px Rubik;cursor:pointer;margin-top:12px}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:rgba(255,255,255,.55);background:rgba(0,0,0,.4);border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+  <div class="scr bg0 on" id="s0">
+    <div class="kick">Easybook · Songkran story</div>
+    <div class="scene">💦</div>
+    <div class="story">April. The streets of Thailand are about to become the world's friendliest water fight.<br><br>You've got a free long weekend and a fully-charged sense of adventure.<br><br><i>Where does the splash take you?</i></div>
+    <div class="spacer"></div>
+    <div class="choices">
+      <div class="choice" onclick="pick('bkk')"><i>🏙️</i><span>Bangkok — Silom Road, maximum mayhem</span></div>
+      <div class="choice" onclick="pick('cnx')"><i>🛕</i><span>Chiang Mai — old city moat, classic Songkran</span></div>
+      <div class="choice" onclick="pick('escape')"><i>🏝️</i><span>Escape it all — dry towel, island hammock</span></div>
+    </div>
+  </div>
+  <div class="scr bg1" id="s1">
+    <div class="kick">the splash zone</div>
+    <div class="scene" id="e1"></div>
+    <div class="story" id="t1"></div>
+    <div class="spacer"></div>
+    <div class="tap" onclick="finale()">TAP TO DRY OFF →</div>
+  </div>
+  <div class="scr bgE" id="s2">
+    <div class="kick">sawasdee pee mai 🙏</div>
+    <div class="story" style="font-size:22px">Fresh year, fresh start —<br>and a fresh deal for the road.</div>
+    <div class="offer">
+      <div class="ok">YOUR SONGKRAN ROUTE</div>
+      <div class="ov" id="offV">15% OFF BANGKOK ROUTES</div>
+      <div class="od">Buses & ferries for the festival window — book before the water runs out.</div>
+    </div>
+    <button class="btn" id="claimBtn">BOOK MY SONGKRAN TRIP</button>
+    <div class="spacer"></div>
+  </div>
+  
+</div></div>
+<script>
+/* SETS profile.songkran_path → themed route deal. */
+const PATHS={
+ bkk:{e:'🔫',t:'Silom Road. You last four minutes before you\'re soaked to the bone — and grinning like an idiot.<br><br>A grandma with a hose gets you. A kid with a bucket finishes the job. <i>Best. Ambush. Ever.</i>',off:'15% OFF BANGKOK ROUTES'},
+ cnx:{e:'🛕',t:'The old city moat glitters. Pickup trucks circle like friendly sharks, water blessing everyone equally.<br><br>Someone dabs scented powder on your cheek — <i>an old Songkran blessing for the new year.</i>',off:'15% OFF CHIANG MAI ROUTES'},
+ escape:{e:'🏝️',t:'Smart. While the cities turn into splash zones, you\'re horizontal on an island with a coconut and zero chance of a surprise bucket.<br><br><i>New year, new levels of peace.</i>',off:'15% OFF ISLAND FERRY ROUTES'}};
+let path='';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<10;i++){const d=document.createElement('div');d.className='drop';d.textContent='💧';
+ d.style.left=Math.random()*92+'%';d.style.animationDelay=(Math.random()*3)+'s';
+ document.getElementById('s1').appendChild(d);}
+function pick(p){path=p;const P=PATHS[p];
+ ct('story_branch',{songkran_path:p}); /* SETS profile.songkran_path */
+ e1.textContent=P.e;t1.innerHTML=P.t;
+ s0.classList.remove('on');document.getElementById('s1').classList.add('on');}
+function finale(){offV.textContent=PATHS[path].off;
+ document.getElementById('s1').classList.remove('on');
+ document.getElementById('s2').classList.add('on');
+ ct('story_completed',{songkran_path:path});
+ claimBtn.onclick=()=>{ /* PROMOS: festival-window route discount */
+  ct('reward_won',{reward:PATHS[path].off});
+  claimBtn.textContent='OPENING ROUTES ✓';claimBtn.disabled=true;};}
+ct('Notification Viewed',{story:'songkran_splash',season:'songkran'});
+</script></body></html>

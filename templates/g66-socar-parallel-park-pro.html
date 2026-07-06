@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G66 — SOCAR "PARALLEL PARK PRO" · Precision-Stop Driving Game
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: precision mastery + driving-confidence brand glue
+  Lifecycle: engagement (new-license/nervous-driver segment warm-up)
+  Mechanic: car slides toward the bay — tap STOP perfectly inside it. 3 bays.
+  PROMOS: 3 clean parks → weekday booking discount.
+  Brand: SOCAR blue (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#7d96b0"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOCAR · Parallel Park Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;800&family=Fraunces:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0073E6;--deep:#0050A0;--ink:#0B1B2B;--paper:#F5F9FE}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight',sans-serif;min-height:100vh;background:linear-gradient(165deg,#11365c,#081a2e);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,12,22,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.hd{background:var(--blue);color:#fff;padding:15px 18px;position:relative;text-align:center}
+.brand{font:800 12px 'Inter Tight';letter-spacing:3px;margin-bottom:4px}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font:800 19px 'Inter Tight'}
+.hd p{font-size:11px;opacity:.94;margin-top:3px}
+.bays{display:flex;justify-content:center;gap:8px;padding:11px 0 2px}
+.bd{width:34px;height:8px;border-radius:4px;background:#d7e5f3;transition:.3s}
+.bd.hit{background:#2f9e6e}.bd.miss{background:#e35d5d}
+.street{position:relative;margin:10px 20px 0;height:108px;background:#3A4654;border-radius:14px;overflow:hidden}
+.kerb{position:absolute;bottom:0;left:0;right:0;height:16px;background:#8B97A6;border-top:3px dashed #cfd8e2}
+.bay{position:absolute;bottom:16px;height:46px;border:2.5px dashed #FFD23F;border-bottom:0;background:rgba(255,210,63,.12)}
+.parked{position:absolute;bottom:18px;font-size:34px}
+.car{position:absolute;bottom:18px;font-size:34px;transition:none}
+.status{text-align:center;font:800 11px 'Inter Tight';letter-spacing:1px;color:var(--cfg-accent,#7d96b0);padding:8px 0 0;min-height:24px}
+.body{padding:8px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Fraunces;font-size:18px;color:var(--blue);display:block}
+.result span{font-size:12px;color:#6b87a3}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--blue);color:#fff;font:800 14px 'Inter Tight';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:var(--cfg-accent,#7d96b0);background:#e6eef7;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">SOCAR</div>
+    <h1>PARALLEL PARK PRO 🅿️</h1>
+    <p>Tap STOP to slot the car in the bay. 3 parks, shrinking bays.</p>
+  </div>
+  <div class="bays" id="bds"></div>
+  <div class="street" id="street">
+    <div class="kerb"></div>
+    <div class="parked" style="left:6px">🚙</div>
+    <div class="bay" id="bay"></div>
+    <div class="parked" id="p2" style="right:6px">🚐</div>
+    <div class="car" id="car" style="left:-40px">🚗</div>
+  </div>
+  <div class="status" id="st">BAY 1 · GENEROUS SPACE — YOU'VE GOT THIS</div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go">DRIVE</button>
+    
+  </div>
+</div></div>
+<script>
+/* 3 rounds, faster car + tighter bay. 3/3 → Promos weekday discount. */
+const ROUNDS=[{sp:2.0,bx:46,bw:21,n:'GENEROUS SPACE — YOU\'VE GOT THIS'},
+ {sp:2.9,bx:38,bw:16,n:'CITY TIGHT — FOCUS'},
+ {sp:3.8,bx:55,bw:12,n:'KL LUNCH-RUSH TIGHT 😅'}];
+let r=0,hits=0,x=-40,running=false,raf=null,phase='ready';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<3;i++){const d=document.createElement('div');d.className='bd';bds.appendChild(d);}
+function setup(){const R=ROUNDS[r];
+ bay.style.left=R.bx+'%';bay.style.width=R.bw+'%';
+ x=-40;car.style.left='-40px';
+ st.textContent='BAY '+(r+1)+' · '+R.n;}
+function loop(){if(!running)return;
+ x+=ROUNDS[r].sp;
+ const w=street.clientWidth;
+ if(x>w){x=-40;} // loop around for another pass
+ car.style.left=x+'px';
+ raf=requestAnimationFrame(loop);}
+function stopCar(){running=false;cancelAnimationFrame(raf);
+ const R=ROUNDS[r],w=street.clientWidth;
+ const bx=R.bx/100*w,bw=R.bw/100*w;
+ const carMid=x+17;
+ const hit=carMid>=bx+4&&carMid<=bx+bw-4;
+ bds.children[r].classList.add(hit?'hit':'miss');
+ if(hit)hits++;
+ st.textContent=hit?'🅿️ SLOTTED. CHEF\'S KISS.':(carMid<bx?'TOO SHORT — THE BAY MOCKS YOU':'OVERSHOT — MIND THE VAN! 🚐');
+ ct('park_result',{bay:r+1,hit:hit});
+ r++;
+ if(r<3){phase='ready';go.textContent='DRIVE TO BAY '+(r+1);
+  setTimeout(setup,800);}
+ else{phase='done';end();}}
+go.onclick=()=>{
+ if(phase==='ready'){phase='running';running=true;go.textContent='STOP! 🛑';
+  if(r===0)ct('Game Played',{game:'parallel_park'});
+  loop();}
+ else if(phase==='running')stopCar();};
+function end(){result.style.display='block';
+ if(hits===3){rT.textContent='PARK PRO — 3/3 🏆';
+  rS.textContent='Not a single kerb harmed. Drivers like you deserve a weekday deal — 25% off your next booking.';
+  go.textContent='CLAIM WEEKDAY 25% →';
+  ct('game_perfect',{hits:3,reward:'weekday25'});
+  go.onclick=()=>{ /* PROMOS: weekday booking discount */
+   ct('reward_claimed',{reward:'weekday25'});
+   go.textContent='SAVED ✓ DRIVE SAFE';go.disabled=true;};}
+ else{rT.textContent=hits+'/3 CLEAN PARKS';
+  rS.textContent='That last bay is pure villainy. A perfect run unlocks the weekday deal — rematch?';
+  go.textContent='PARK AGAIN';
+  ct('game_over',{hits:hits});
+  go.onclick=()=>location.reload();}}
+setup();
+ct('Notification Viewed',{game:'parallel_park',segment:'driving_confidence'});
+</script></body></html>

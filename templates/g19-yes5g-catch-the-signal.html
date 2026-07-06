@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G19 — YES 5G "CATCH THE SIGNAL" · Whack-a-Mole Reaction Game
+  Surface: CleverTap Custom HTML In-App · Grade A → B with Promos
+  Behavioral: flow state + score mastery (20-second sprint)
+  Lifecycle: engagement / renewal-window activation
+  Score >= 10 → reward. PROMOS: "reward_won" → bonus data on renewal.
+  Brand: Yes 5G bright pink/magenta (approx — verify vs live brand)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#d9a3c0"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yes 5G · Catch the Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#FF1F7D;--deep:#C40057;--ink:#1F0A16;--paper:#FFF6FA}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Manrope,'Segoe UI',sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -10%,#4d1033,#1c0512);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(20,3,12,.66);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--ink);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid #4a1a35}
+.hd{padding:18px 20px 10px;text-align:center;position:relative}
+.brand{font-family:Bungee;font-size:17px;color:var(--pink);margin-bottom:6px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff14;color:#fff;cursor:pointer}
+h1{font-family:Bungee;font-size:19px;line-height:1.2}
+.hd p{font-size:11.5px;color:var(--cfg-accent,#d9a3c0);margin-top:5px}
+.hud{display:flex;justify-content:center;gap:24px;padding:8px 0 10px}
+.hud div{text-align:center}
+.hud b{font-family:Bungee;font-size:22px;color:var(--pink);display:block}
+.hud small{font:800 9px Manrope;letter-spacing:2px;color:#b07a96}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 22px 8px}
+.hole{aspect-ratio:1;background:#33112485;border:2px solid #54213e;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.sig{font-size:32px;transform:translateY(54px);transition:transform .14s ease}
+.hole.up .sig{transform:translateY(0)}
+.hole.bonk{background:var(--pink);border-color:var(--pink)}
+.hole.bonk .sig{transform:scale(1.35)}
+.pop{position:absolute;font:800 13px Manrope;color:#7CFFB2;animation:rise2 .5s forwards;pointer-events:none}
+@keyframes rise2{to{transform:translateY(-22px);opacity:0}}
+.body{padding:8px 20px 20px;text-align:center}
+.result{display:none;margin-bottom:10px}
+.result b{font-family:Bungee;font-size:18px;color:var(--pink);display:block}
+.result span{font-size:12px;color:var(--cfg-accent,#d9a3c0)}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;background:var(--pink);color:#fff;font:800 15px Manrope;letter-spacing:.4px;cursor:pointer;box-shadow:0 6px 18px rgba(255,31,125,.4)}
+.btn[disabled]{opacity:.55;box-shadow:none}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#b487a0;background:#2e1322;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">YES 5G</div>
+    <h1>CATCH THE SIGNAL</h1>
+    <p>Tap the 5G bars before they vanish. 20 seconds. Catch 10+ to win bonus data.</p>
+  </div>
+  <div class="hud">
+    <div><b id="score">0</b><small>CAUGHT</small></div>
+    <div><b id="time">20</b><small>SECONDS</small></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go" onclick="start()">START THE SPRINT ⚡</button>
+    
+  </div>
+</div></div>
+<script>
+let score=0,t=20,playing=false,timer,popper;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<9;i++){const h=document.createElement('div');h.className='hole';
+ h.innerHTML='<span class="sig">📶</span>';
+ h.onclick=()=>{if(!playing||!h.classList.contains('up'))return;
+  score++;document.getElementById('score').textContent=score;
+  h.classList.remove('up');h.classList.add('bonk');
+  const p=document.createElement('span');p.className='pop';p.textContent='+1';h.appendChild(p);
+  setTimeout(()=>{h.classList.remove('bonk');p.remove();},220);};
+ grid.appendChild(h);}
+function popOne(){if(!playing)return;
+ const holes=[...grid.children].filter(h=>!h.classList.contains('up'));
+ if(holes.length){const h=holes[Math.floor(Math.random()*holes.length)];
+  h.classList.add('up');
+  setTimeout(()=>h.classList.remove('up'),520+Math.random()*420);}
+ popper=setTimeout(popOne,300+Math.random()*260);}
+function start(){if(playing)return;playing=true;score=0;t=20;
+ document.getElementById('score').textContent=0;result.style.display='none';
+ go.disabled=true;go.textContent='CATCHING…';
+ ct('Game Played',{game:'catch_the_signal'});
+ popOne();
+ timer=setInterval(()=>{t--;document.getElementById('time').textContent=t;
+  if(t<=0)end();},1000);}
+function end(){playing=false;clearInterval(timer);clearTimeout(popper);
+ [...grid.children].forEach(h=>h.classList.remove('up'));
+ result.style.display='block';
+ if(score>=10){rT.textContent=score+' SIGNALS! 🏆';
+  rS.textContent='Lightning reflexes — 5GB bonus data is yours on renewal.';
+  go.disabled=false;go.textContent='CLAIM 5GB BONUS';
+  ct('reward_won',{game:'catch_the_signal',score:score,reward:'5GB renewal bonus'});
+  go.onclick=()=>{ /* PROMOS: bonus data credited on plan renewal */
+   ct('reward_claimed',{reward:'5GB'});go.textContent='CREDITED ON RENEWAL ✓';go.disabled=true;};}
+ else{rT.textContent=score+' of 10 — so close!';
+  rS.textContent='The signal moves fast. One more sprint?';
+  go.disabled=false;go.textContent='TRY AGAIN ⚡';
+  ct('game_failed',{game:'catch_the_signal',score:score});}}
+ct('Notification Viewed',{game:'catch_the_signal',trigger:'renewal_window'});
+</script></body></html>

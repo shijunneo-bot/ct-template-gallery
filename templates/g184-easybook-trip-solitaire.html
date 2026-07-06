@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G184 — EASYBOOK "TRIP SOLITAIRE" · Klondike-Lite Card Stacking
+  Mechanic: solitaire stacking LOGIC (Klondike-spirit, public-domain card game) —
+  build sequences by alternating colour & descending rank; move to foundations by
+  suit ascending. NO trademarked art (generic suit pips, no branded card faces).
+  Simplified compact tableau for pop-up fit. Brand-skinned as sorting trip cards.
+  NEW FAMILY (solitaire) — 0 prior files. Surface: in-app interstitial. Grade B.
+  Lifecycle: engagement. SETS: {{profile.solitaire_solved}}.
+  PROMOS: voucher on clear. Brand: Easybook blue #1E63D8 (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#1e63d8"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Easybook · Trip Solitaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:var(--cfg-accent,#1e63d8);--deep:#1448a8;--gold:#F5A623;--grn:#2FA85B;--red:#E1251B;--ink:#0C1B33;--paper:#F2F7FE;--soft:#D9E6F8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0c2247,#06121f);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,14,25,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,18,40,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Outfit;letter-spacing:2px;color:#6a8cc2;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Outfit;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a7196;margin-top:2px;line-height:1.35}
+.foundations{display:flex;justify-content:center;gap:6px;padding:8px 20px 4px}
+.found{width:40px;height:54px;border-radius:8px;border:2px dashed #b8cae8;display:flex;align-items:center;justify-content:center;font-size:18px;color:#b8cae8}
+.found.has{border-style:solid;border-color:var(--grn);background:#fff;color:initial;flex-direction:column;font-size:14px}
+.tableau{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 20px 4px;min-height:140px}
+.col{display:flex;flex-direction:column;gap:2px;align-items:center}
+.pcard{width:44px;height:30px;border-radius:6px;background:#fff;border:1.5px solid var(--soft);display:flex;align-items:center;justify-content:center;font:700 13px Inter;cursor:pointer;position:relative;transition:.1s}
+.pcard.red{color:var(--red)}.pcard.black{color:var(--ink)}
+.pcard.sel{border-color:var(--gold);transform:translateX(4px);box-shadow:-3px 0 0 var(--gold)}
+.pcard.facedown{background:linear-gradient(135deg,var(--blue),var(--deep));color:transparent;cursor:default}
+.body{padding:6px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a7196;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--blue);color:#fff;font:800 13px Outfit;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#8aa0c8;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#7a90b8;background:#e8f0fb;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">EASYBOOK</div>
+    <h1>Trip Solitaire 🗺️</h1>
+    <p>Stack cards down in alternating colours, then send them home by suit. Clear all 4 foundations to win!</p>
+  </div>
+  <div class="foundations" id="foundations"></div>
+  <div class="tableau" id="tableau"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to deal!</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Tap a card to select · tap a column/foundation to move it</div>
+    
+  </div>
+</div></div>
+<script>
+/* Klondike-lite solitaire LOGIC (public-domain). Compact: ranks A-7 (28 cards),
+   4 suits, 4 tableau cols, 4 foundations. Build down alt-colour; foundation up by suit.
+   IP-neutral pips. SETS profile.solitaire_solved. */
+const SUITS=[{s:'♥',c:'red'},{s:'♦',c:'red'},{s:'♠',c:'black'},{s:'♣',c:'black'}];
+const RANKS=['A','2','3','4','5','6','7'];const RVAL={A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7};
+let cols,foundations,sel,playing=false,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function makeDeck(){const d=[];SUITS.forEach((su,si)=>RANKS.forEach(r=>d.push({r,rv:RVAL[r],s:su.s,col:su.c,si})));
+ for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]];}return d;}
+function deal(){const d=makeDeck();cols=[[],[],[],[]];
+ // deal 7 cards per column, only last face-up
+ let idx=0;for(let c=0;c<4;c++){for(let k=0;k<7;k++){const card=d[idx++];card.up=(k===6);cols[c].push(card);}}
+ foundations=[null,null,null,null];sel=null;won=false;}
+function render(){const fEl=document.getElementById('foundations');fEl.innerHTML='';
+ foundations.forEach((f,i)=>{const d=document.createElement('div');
+  if(f){d.className='found has '+SUITS[i].c;d.innerHTML='<span>'+f.r+'</span><span>'+SUITS[i].s+'</span>';}
+  else{d.className='found';d.textContent=SUITS[i].s;}
+  d.onclick=()=>toFoundation(i);fEl.appendChild(d);});
+ const tEl=document.getElementById('tableau');tEl.innerHTML='';
+ cols.forEach((col,ci)=>{const cdiv=document.createElement('div');cdiv.className='col';
+  cdiv.onclick=(e)=>{if(e.target===cdiv)toColumn(ci);};
+  col.forEach((card, idx)=>{const cd=document.createElement('div');
+   const isTop=idx===col.length-1;
+   cd.className='pcard '+(card.up?card.col:'facedown')+(sel&&sel.ci===ci&&sel.idx===idx?' sel':'');
+   cd.textContent=card.up?card.r+card.s:'';
+   cd.onclick=(e)=>{e.stopPropagation();if(card.up)tapCard(ci,idx);else toColumn(ci);};
+   cdiv.appendChild(cd);});
+  tEl.appendChild(cdiv);});}
+function tapCard(ci,idx){if(!playing)return;const col=cols[ci];
+ if(idx!==col.length-1)return; // only top card movable in this simplified version
+ sel={ci,idx};render();}
+function toColumn(targetCi){if(!playing||!sel)return;const card=cols[sel.ci][sel.idx];
+ const target=cols[targetCi];const top=target[target.length-1];
+ const ok=target.length===0?card.rv===7: // empty col takes a 7 (highest) in this mini deck
+  (top&&top.up&&top.col!==card.col&&top.rv===card.rv+1);
+ if(ok){cols[sel.ci].pop();target.push(card);flip(sel.ci);sel=null;
+  ct('card_moved',{to:'column'});render();}
+ else{status.textContent='That move isn\'t legal — alternate colour, one lower.';sel=null;render();}}
+function toFoundation(fi){if(!playing||!sel)return;const card=cols[sel.ci][sel.idx];
+ if(card.si!==fi)return;const f=foundations[fi];
+ const ok=f?card.rv===f.rv+1:card.rv===1; // ace first, then ascending
+ if(ok){foundations[fi]=card;cols[sel.ci].pop();flip(sel.ci);sel=null;
+  ct('card_to_foundation',{suit:SUITS[fi].s,rank:card.r});render();checkWin();}
+ else{status.textContent='Foundations go up by suit, starting at A.';sel=null;render();}}
+function flip(ci){const col=cols[ci];if(col.length&&!col[col.length-1].up)col[col.length-1].up=true;}
+function checkWin(){if(foundations.every(f=>f&&f.rv===7)){won=true;win();}
+ else{const done=foundations.filter(Boolean).length;status.innerHTML='Foundations: keep going! Sel a card to move.';}}
+function start(){deal();playing=true;status.textContent='Build down in alternating colours.';
+ document.getElementById('start').style.display='none';render();
+ ct('game_started',{game:'trip_solitaire'});}
+function win(){playing=false;
+ status.innerHTML='🎉 All cards home — solved!';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM TRAVEL VOUCHER 🎁';b.disabled=false;
+ ct('puzzle_solved',{solitaire_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'travel_voucher'});b.textContent='VOUCHER SAVED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+deal();render();
+ct('Notification Viewed',{game:'trip_solitaire',mechanic:'solitaire'});
+</script></body></html>

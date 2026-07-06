@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G201 — TUNE TALK "WORD CLIMB" · Crossclimb-Style Word Ladder
+  Mechanic: word-ladder LOGIC (LinkedIn-Crossclimb-spirit, public-domain genre) —
+  change one letter at a time, each step a valid word, to climb from START to END.
+  Ladder + dictionary VERIFIED (each step one letter off + in word list). NO
+  trademarked art/names. Brand-skinned as climbing the signal/data ladder. NEW
+  FAMILY (word ladder). Daily-puzzle format. Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement (daily-return). SETS: {{profile.ladder_solved}}.
+  PROMOS: data bonus on solve. Brand: Tune Talk orange #F36F21 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f36f21"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tune Talk · Word Climb</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#f36f21);--deep:#C2530F;--gold:#FFC74A;--grn:#3FAE6A;--ink:#241208;--paper:#FFF7F0;--soft:#FCE2CE}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2e1709,#160a03);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,8,3,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,10,4,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Archivo;letter-spacing:3px;color:#c89a6a;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Archivo;font-weight:800;font-size:19px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a7250;margin-top:2px;line-height:1.4}
+.ladder{padding:8px 26px 4px}
+.rung{display:flex;gap:5px;justify-content:center;margin-bottom:6px;align-items:center}
+.rung .tag{font:800 8px Archivo;color:#c89a6a;width:34px;text-align:right;letter-spacing:.5px}
+.tile{width:38px;height:42px;border-radius:8px;background:#fff;border:2px solid var(--soft);display:flex;align-items:center;justify-content:center;font:800 18px Archivo;text-transform:uppercase;color:var(--ink)}
+.rung.fixed .tile{background:#fbeede;color:var(--org)}
+.rung.solved .tile{background:#eafaf0;border-color:var(--grn);color:var(--grn)}
+.rung input{width:38px;height:42px;border-radius:8px;background:#fff;border:2px solid var(--soft);text-align:center;font:800 18px Archivo;text-transform:uppercase;color:var(--ink);caret-color:var(--org)}
+.rung input:focus{outline:none;border-color:var(--org);background:#fff8f2}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a7250;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--org);color:#fff;font:800 14px Archivo;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#c2a078;margin-top:5px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#b8946a;background:#f7e6d6;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">TUNE TALK</div>
+    <h1>Word Climb 🪜</h1>
+    <p>Climb from the top word to the bottom — change just one letter each step, and every rung must be a real word.</p>
+  </div>
+  <div class="ladder" id="ladder"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to see today's ladder.</div>
+    <button class="btn" id="check" style="display:none">CHECK CLIMB</button>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Each middle rung: change exactly one letter from the rung above</div>
+    
+  </div>
+</div></div>
+<script>
+/* Word-ladder LOGIC (public-domain). COLD->CORD->CARD->WARD->WARM, verified:
+   each step one letter off + in DICT. Player fills the 3 middle rungs. IP-neutral.
+   SETS profile.ladder_solved. */
+const LADDER=['COLD','CORD','CARD','WARD','WARM'];
+const DICT=new Set(['COLD','CORD','CARD','WARD','WARM','WORD','LORD','LARD','HARD','HERD','CARE',
+ 'CART','CORE','BORE','WORE','WARE','WAR','CAR','COD','COW','CROW','CARP','CARS','BARD','YARD']);
+let inputs=[],playing=false,solved=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){const L=document.getElementById('ladder');L.innerHTML='';inputs=[];
+ LADDER.forEach((word,ri)=>{const rung=document.createElement('div');
+  const isFixed=(ri===0||ri===LADDER.length-1);
+  rung.className='rung'+(isFixed?' fixed':'');
+  const tag=document.createElement('span');tag.className='tag';tag.textContent=ri===0?'START':(ri===LADDER.length-1?'END':'');
+  rung.appendChild(tag);
+  for(let ci=0;ci<4;ci++){
+   if(isFixed){const t=document.createElement('div');t.className='tile';t.textContent=word[ci];rung.appendChild(t);}
+   else{const inp=document.createElement('input');inp.maxLength=1;inp.dataset.ri=ri;inp.dataset.ci=ci;
+    inp.oninput=()=>{inp.value=inp.value.toUpperCase();const next=rung.children[ci+2];if(inp.value&&next&&next.tagName==='INPUT')next.focus();};
+    inputs.push(inp);rung.appendChild(inp);}}
+  L.appendChild(rung);});}
+function getRung(ri){if(ri===0)return LADDER[0];if(ri===LADDER.length-1)return LADDER[LADDER.length-1];
+ let w='';inputs.filter(i=>+i.dataset.ri===ri).sort((a,b)=>a.dataset.ci-b.dataset.ci).forEach(i=>w+=(i.value||'_'));return w;}
+function oneOff(a,b){if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])d++;return d===1;}
+function check(){if(!playing)return;
+ const rungs=LADDER.map((_,ri)=>getRung(ri).toUpperCase());
+ if(rungs.some(w=>w.includes('_'))){status.textContent='Fill every rung first!';return;}
+ let allValid=true,allStep=true,firstBad=-1;
+ for(let i=0;i<rungs.length;i++){if(!DICT.has(rungs[i])){allValid=false;if(firstBad<0)firstBad=i;}}
+ for(let i=1;i<rungs.length;i++){if(!oneOff(rungs[i],rungs[i-1])){allStep=false;}}
+ ct('climb_checked',{valid:allValid,stepwise:allStep});
+ if(allValid&&allStep){solved=true;playing=false;win();}
+ else if(!allValid)status.innerHTML='"'+rungs[firstBad]+'" isn\'t in our word list — try another.';
+ else status.innerHTML='Each rung must change just <b>one</b> letter from the one above.';}
+function start(){build();playing=true;solved=false;status.textContent='Fill the middle rungs to climb down.';
+ document.getElementById('start').style.display='none';document.getElementById('check').style.display='block';
+ if(inputs[0])inputs[0].focus();
+ ct('game_started',{game:'word_climb'});}
+function win(){
+ // mark solved styling
+ document.querySelectorAll('.rung').forEach(r=>r.classList.add('solved'));
+ status.innerHTML='🎉 Climbed it — every rung a real word!';
+ document.getElementById('check').style.display='none';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM DATA BONUS 📶';b.disabled=false;
+ ct('puzzle_solved',{ladder_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'data_bonus'});b.textContent='DATA ADDED ✓';b.disabled=true;};}
+document.getElementById('check').onclick=check;
+document.getElementById('start').onclick=start;
+build();
+ct('Notification Viewed',{game:'word_climb',mechanic:'word_ladder'});
+</script></body></html>

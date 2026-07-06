@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G123 — TREVO "TEST-DRIVE THE TREVO WAY" · Guided Exploration
+  Tier-3 Concept #16 (Trevo variant) · Pattern P-F (Samsung iTest exploration)
+  Surface: Custom HTML In-App · Grade B
+  Lifecycle: engagement → first-booking activation (P2P car-sharing)
+  SETS: {{profile.explored_features}} → trial push. PROMOS: trial credit.
+  Brand: Trevo purple #6C3CE9 (verified family from G43)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#6c3ce9"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trevo · Test-Drive the Trevo Way</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Sora:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--pur:var(--cfg-accent,#6c3ce9);--deep:#4A22B0;--ink:#1B1230;--paper:#FAF8FF;--soft:#EFE9FD}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Sora,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c1a5e,#150c30);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(13,7,30,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.hd{background:var(--pur);color:#fff;padding:16px 20px;position:relative;text-align:center}
+.brand{font-family:Outfit;font-weight:800;font-size:14px;letter-spacing:1px;margin-bottom:5px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font-family:Outfit;font-weight:800;font-size:19px}
+.hd p{font-size:11.5px;opacity:.92;margin-top:4px;line-height:1.45}
+.prog{display:flex;align-items:center;gap:8px;padding:13px 20px 4px}
+.bar{flex:1;height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--pur);border-radius:4px;transition:.5s}
+.pct{font:800 11px Outfit;color:var(--pur)}
+.car{position:relative;margin:6px 18px 0;height:188px;background:linear-gradient(160deg,#efeaff,#ddd2fb);border-radius:16px;border:2px solid var(--soft);overflow:hidden}
+.hot{position:absolute;width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid var(--pur);display:flex;align-items:center;justify-content:center;font-size:21px;cursor:pointer;transition:.2s;box-shadow:0 4px 12px rgba(108,60,233,.25)}
+.hot:active{transform:scale(.9)}
+.hot.done{background:var(--pur);border-color:var(--deep);color:#fff}
+.hot.pulse{animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(108,60,233,.4)}50%{box-shadow:0 0 0 9px rgba(108,60,233,0)}}
+.carbase{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);font-size:72px;filter:drop-shadow(0 8px 10px rgba(60,30,140,.2))}
+.info{margin:10px 18px 0;background:#fff;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;min-height:58px}
+.info b{font-size:13px;color:var(--ink);display:block;margin-bottom:2px}
+.info span{font-size:11.5px;color:#5a4a85;line-height:1.5}
+.body{padding:12px 20px 18px;text-align:center}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--pur);color:#fff;font:800 14px Outfit;cursor:pointer;box-shadow:0 5px 0 var(--deep);opacity:.45;pointer-events:none;transition:.3s}
+.btn.ready{opacity:1;pointer-events:auto}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#9286b5;background:#ece6fa;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">TREVO</div>
+    <h1>Test-drive the Trevo way 🔑</h1>
+    <p>P2P car-sharing, explained by tapping. See how borrowing a neighbour's car actually works.</p>
+  </div>
+  <div class="prog"><div class="bar"><div class="fill" id="fill"></div></div><div class="pct" id="pct">0%</div></div>
+  <div class="car" id="car">
+    <div class="carbase">🚗</div>
+    <div class="hot pulse" style="left:8%;top:18%" onclick="explore('browse',this)">🔍</div>
+    <div class="hot pulse" style="left:78%;top:16%" onclick="explore('host',this)">🤝</div>
+    <div class="hot pulse" style="left:10%;top:66%" onclick="explore('insure',this)">🛡️</div>
+    <div class="hot pulse" style="left:80%;top:66%" onclick="explore('drive',this)">🚀</div>
+  </div>
+  <div class="info" id="info"><b>Four things to discover</b><span>Tap each glowing point. Explore everything to unlock your trial drive.</span></div>
+  <div class="body">
+    <button class="btn" id="go">FIND MY FIRST TREVO →</button>
+    
+  </div>
+</div></div>
+<script>
+/* P-F iTest-style exploration (P2P car-sharing). SETS profile.explored_features. */
+const FEATURES={
+ browse:{b:'🔍 Browse nearby cars',s:'Hundreds of cars from real owners, parked near you. Pick the one that fits the trip.'},
+ host:{b:'🤝 Borrow from hosts',s:'Every car belongs to a verified local host. Message, book, and you\'re set.'},
+ insure:{b:'🛡️ Covered & protected',s:'Every trip includes insurance coverage. Drive with peace of mind.'},
+ drive:{b:'🚀 Unlock and go',s:'Meet the host, grab the keys, and the road is yours — by the hour or the day.'}};
+let explored=0,seen={};
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function explore(key,el){if(seen[key])return;seen[key]=true;explored++;
+ el.classList.remove('pulse');el.classList.add('done');el.textContent='✓';
+ const F=FEATURES[key];
+ info.innerHTML='<b>'+F.b+'</b><span>'+F.s+'</span>';
+ const pc=Math.round(explored/4*100);fill.style.width=pc+'%';pct.textContent=pc+'%';
+ ct('feature_tapped',{feature:key,explored:explored});
+ if(explored===4){go.classList.add('ready');
+  info.innerHTML='<b>That\'s the Trevo way! 🎉</b><span>Local, insured, effortless. Ready to find your first one?</span>';
+  /* SETS profile.explored_features */
+  ct('exploration_complete',{explored_features:4});
+  go.onclick=()=>{ /* PROMOS: trial credit */
+   ct('trial_cta',{intent:'high'});
+   go.textContent='OPENING SEARCH ✓';go.disabled=true;};}}
+ct('Notification Viewed',{experience:'test_drive_trevo',audience:'prospective'});
+</script></body></html>

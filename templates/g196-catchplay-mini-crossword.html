@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G196 — CATCHPLAY "MINI CROSSWORD" · Small Fill-In Word Grid
+  Mechanic: crossword LOGIC (public-domain genre) — fill a 3x3 mini from across/
+  down clues; check answers. Grid VERIFIED by solver: all 6 words valid & distinct
+  (across RAT/ICE/PEN, down RIP/ACE/TEN). NO trademarked art/names; clues themed
+  loosely around film/general vocab. NEW FAMILY (crossword). Daily-puzzle format.
+  Surface: in-app Custom HTML. Grade B. Lifecycle: engagement (daily-return).
+  SETS: {{profile.crossword_solved}}. PROMOS: rental on solve.
+  Brand: CatchPlay dark + orange (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#c9a986"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatchPlay · Mini Crossword</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF7A1A;--deep:#b34f06;--gold:#FFCB45;--grn:#3FAE6A;--ink:#0E0C0A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight',sans-serif;min-height:100vh;background:#070605;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,3,2,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:linear-gradient(178deg,#181410,#0c0a08);border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.66);overflow:hidden;color:#fff;border:1px solid #322217}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px 'Inter Tight';letter-spacing:3px;color:var(--org);margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff16;color:#fff;cursor:pointer}
+h1{font-family:'Bebas Neue';font-size:23px;letter-spacing:.5px}
+.hd p{font-size:10.5px;color:var(--cfg-accent,#c9a986);margin-top:2px;line-height:1.35}
+.gridwrap{display:flex;justify-content:center;padding:12px 0 6px}
+.grid{display:grid;gap:3px}
+.cell{width:54px;height:54px;position:relative}
+.cell input{width:100%;height:100%;border:2px solid #3d2a1c;border-radius:7px;background:#1c130b;color:#fff;text-align:center;font:800 24px 'Inter Tight';text-transform:uppercase;caret-color:var(--gold)}
+.cell input:focus{outline:none;border-color:var(--gold);background:#241a12}
+.cell input.correct{border-color:var(--grn);background:#1a2a18}
+.cell input.wrong{border-color:var(--org)}
+.cell .num{position:absolute;top:2px;left:4px;font:700 9px 'Inter Tight';color:#8a7258;z-index:2;pointer-events:none}
+.clues{padding:6px 24px 2px;font-size:11px;display:flex;gap:16px;justify-content:center}
+.clue-sec b{font-family:'Bebas Neue';font-size:14px;color:var(--gold);letter-spacing:.5px;display:block;margin-bottom:2px}
+.clue-sec div{color:var(--cfg-accent,#c9a986);margin:2px 0;line-height:1.3}
+.body{padding:6px 20px 14px;text-align:center}
+.status{font:700 10.5px 'Inter Tight';color:var(--cfg-accent,#c9a986);min-height:14px;margin-bottom:7px}
+.status b{color:var(--gold)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:linear-gradient(135deg,var(--org),var(--gold));color:#1a0f06;font:800 13px 'Inter Tight';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#a8794f;background:#1c130b;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CATCHPLAY+</div>
+    <h1>MINI CROSSWORD 🎬</h1>
+    <p>A quick 3×3. Fill it from the clues, then check. Solve it for a free rental!</p>
+  </div>
+  <div class="gridwrap"><div class="grid" id="grid"></div></div>
+  <div class="clues" id="clues"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to load the grid!</div>
+    <button class="btn" id="check" style="display:none">CHECK ANSWERS</button>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Crossword LOGIC (public-domain). 3x3, solver-verified: across RAT/ICE/PEN,
+   down RIP/ACE/TEN — all 6 distinct valid words. IP-neutral. SETS profile.crossword_solved. */
+const SOL=[['R','A','T'],['I','C','E'],['P','E','N']];
+const ACROSS=[
+ {num:1,clue:'Cinema pest in a horror B-movie'},
+ {num:4,clue:'Cold treat at the concession stand'},
+ {num:5,clue:'What a screenwriter puts to paper'}];
+const DOWN=[
+ {num:1,clue:'Tear, as a ticket stub'},
+ {num:2,clue:'Top "___" — a card up the sleeve'},
+ {num:3,clue:'Number after nine (closing credits countdown)'}];
+let inputs={},playing=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){const nums={'0,0':1,'0,1':2,'0,2':3,'1,0':4,'2,0':5};
+ const g=document.getElementById('grid');g.style.gridTemplateColumns='repeat(3,54px)';g.innerHTML='';inputs={};
+ for(let r=0;r<3;r++)for(let c=0;c<3;c++){const cell=document.createElement('div');cell.className='cell';
+  const key=r+','+c;const num=nums[key];
+  const inp=document.createElement('input');inp.maxLength=1;inp.dataset.r=r;inp.dataset.c=c;
+  inp.oninput=()=>{inp.value=inp.value.toUpperCase();inp.classList.remove('wrong');advance(r,c);};
+  inputs[key]=inp;
+  if(num)cell.innerHTML='<span class="num">'+num+'</span>';
+  cell.appendChild(inp);g.appendChild(cell);}}
+function advance(r,c){if(c<2&&inputs[r+','+(c+1)]){inputs[r+','+(c+1)].focus();}
+ else if(r<2&&inputs[(r+1)+',0']){inputs[(r+1)+',0'].focus();}}
+function renderClues(){const el=document.getElementById('clues');
+ const a=ACROSS.map(c=>'<div>'+c.num+'. '+c.clue+'</div>').join('');
+ const d=DOWN.map(c=>'<div>'+c.num+'. '+c.clue+'</div>').join('');
+ el.innerHTML='<div class="clue-sec"><b>ACROSS</b>'+a+'</div><div class="clue-sec"><b>DOWN</b>'+d+'</div>';}
+function start(){build();renderClues();playing=true;status.textContent='Fill the grid, then Check.';
+ document.getElementById('start').style.display='none';document.getElementById('check').style.display='block';
+ if(inputs['0,0'])inputs['0,0'].focus();
+ ct('game_started',{game:'mini_crossword'});}
+function check(){if(!playing)return;let correct=0,allRight=true;
+ for(let r=0;r<3;r++)for(let c=0;c<3;c++){const inp=inputs[r+','+c];const val=(inp.value||'').toUpperCase();
+  if(val===SOL[r][c]){correct++;inp.classList.add('correct');inp.classList.remove('wrong');}
+  else{allRight=false;inp.classList.add('wrong');inp.classList.remove('correct');}}
+ ct('crossword_checked',{correct:correct,total:9});
+ if(allRight){playing=false;win();}else{status.innerHTML='<b>'+correct+'/9</b> correct — keep at it!';}}
+function win(){status.innerHTML='🎉 Solved — nice work!';
+ document.getElementById('check').style.display='none';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM FREE RENTAL 🎁';b.disabled=false;
+ ct('puzzle_solved',{crossword_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'free_rental'});b.textContent='RENTAL UNLOCKED ✓';b.disabled=true;};}
+document.getElementById('check').onclick=check;
+document.getElementById('start').onclick=start;
+build();renderClues();
+ct('Notification Viewed',{game:'mini_crossword',mechanic:'crossword'});
+</script></body></html>

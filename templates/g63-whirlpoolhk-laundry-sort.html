@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G63 — WHIRLPOOL HK "LAUNDRY SORT MASTER" · Tap-Sorting Game
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: sorting satisfaction + product education (care literacy)
+  Lifecycle: engagement → care-tips funnel
+  Mechanic: item appears, tap correct basket (whites/colours/delicates).
+  PROMOS: 10-streak → detergent partner voucher / care-kit.
+  Brand: Whirlpool gold #EEB111 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#eeb111"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whirlpool · Laundry Sort Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Work+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--gold:var(--cfg-accent,#eeb111);--deep:#B8870B;--ink:#201A0E;--paper:#FFFCF4;--soft:#FBF0D8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Work Sans',sans-serif;min-height:100vh;background:linear-gradient(165deg,#3d3322,#1a1509);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(22,17,6,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.hd{padding:16px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px 'Work Sans';letter-spacing:4px;color:var(--deep);margin-bottom:6px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Bitter,Georgia;font-size:20px;color:var(--ink)}
+.hd p{font-size:11.5px;color:#8d7a52;margin-top:4px}
+.bar{display:flex;justify-content:space-between;padding:8px 24px 0;font:800 11.5px 'Work Sans';color:#a08c5e}
+.bar b{color:var(--deep)}
+.itemzone{display:flex;justify-content:center;align-items:center;padding:12px 0 6px;min-height:96px}
+.item{text-align:center;animation:drop .35s}
+@keyframes drop{from{transform:translateY(-22px);opacity:0}}
+.item .ie{font-size:48px;display:block}
+.item .in{font:800 11.5px 'Work Sans';color:var(--ink);margin-top:4px}
+.verd{text-align:center;font:800 11px 'Work Sans';min-height:22px;padding-top:2px}
+.verd.ok{color:#2f9e6e}.verd.no{color:#e35d5d}
+.baskets{display:flex;gap:9px;padding:8px 18px 4px}
+.bk{flex:1;border:0;border-radius:14px;padding:12px 6px;cursor:pointer;text-align:center;transition:.15s}
+.bk:active{transform:scale(.94)}
+.bk i{font-style:normal;font-size:24px;display:block}
+.bk span{font:800 10px 'Work Sans';letter-spacing:.5px;display:block;margin-top:3px}
+.bk.w{background:#F4F6F8;color:#5a6a78;border:2px solid #dfe5ea}
+.bk.c{background:#FCE8EC;color:#a8385a;border:2px solid #f3c6d1}
+.bk.d{background:#EDF3FB;color:#3a5a8c;border:2px solid #cfdcef}
+.body{padding:8px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Bitter;font-size:17px;color:var(--deep);display:block}
+.result span{font-size:12px;color:#8d7a52}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;background:var(--gold);color:var(--ink);font:800 13.5px 'Work Sans';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#a08c5e;background:#f6edd6;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">WHIRLPOOL</div>
+    <h1>Laundry Sort Master 🧺</h1>
+    <p>10 items, 3 baskets, zero ruined sweaters. Sort fast!</p>
+  </div>
+  <div class="bar"><span>ITEM <b id="it">1</b>/10</span><span>STREAK <b id="sk">0</b></span></div>
+  <div class="itemzone"><div class="item" id="item"><span class="ie" id="ie">👕</span><span class="in" id="in">White cotton tee</span></div></div>
+  <div class="verd" id="vd"></div>
+  <div class="baskets" id="bks">
+    <button class="bk w" onclick="sort('w')"><i>🤍</i><span>WHITES<br>60°</span></button>
+    <button class="bk c" onclick="sort('c')"><i>🌈</i><span>COLOURS<br>40°</span></button>
+    <button class="bk d" onclick="sort('d')"><i>🪶</i><span>DELICATES<br>30°</span></button>
+  </div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go" style="display:none">CLAIM MY CARE KIT 🧴</button>
+    
+  </div>
+</div></div>
+<script>
+/* Care literacy as play. 10/10 → Promos care-kit/partner voucher. */
+const ITEMS=[
+ ['👕','White cotton tee','w','Hot wash territory — whites love 60°.'],
+ ['🧣','Wool scarf','d','Wool = delicate, 30° or it becomes doll-sized.'],
+ ['👖','Blue jeans','c','Colours at 40° — keeps the indigo where it belongs.'],
+ ['🥻','Silk blouse','d','Silk is royalty — delicates, always.'],
+ ['🧦','White sports socks','w','Whites pile — they can take the heat.'],
+ ['👗','Red summer dress','c','Red runs! Colours pile, away from anything white.'],
+ ['🩲','Lace lingerie','d','Lace = delicates bag, gentle cycle.'],
+ ['🛏️','White bed sheets','w','Sheets love a hot wash — 60° freshness.'],
+ ['🧥','Green hoodie','c','Sturdy colours — 40° keeps it bright.'],
+ ['🧤','Cashmere gloves','d','Cashmere weeps at high heat. Delicates!']];
+let i=0,streak=0,correct=0,lock=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function show(){const I=ITEMS[i];
+ ie.textContent=I[0];document.getElementById('in').textContent=I[1];
+ it.textContent=i+1;vd.className='verd';vd.textContent='';
+ item.style.animation='none';void item.offsetWidth;item.style.animation='';lock=false;}
+function sort(b){if(lock)return;lock=true;
+ const I=ITEMS[i],ok=b===I[2];
+ if(ok){correct++;streak++;}else streak=0;
+ sk.textContent=streak;
+ vd.className='verd '+(ok?'ok':'no');
+ vd.textContent=(ok?'✓ ':'✗ ')+I[3];
+ if(i===0)ct('Game Played',{game:'laundry_sort'});
+ ct('item_sorted',{item:I[1],correct:ok,streak:streak});
+ setTimeout(()=>{i++;
+  if(i<ITEMS.length)show();else end();},1300);}
+function end(){bks.style.display='none';item.style.display='none';
+ result.style.display='block';
+ const perfect=correct===10;
+ rT.textContent=perfect?'SORT MASTER — 10/10 🏆':correct+'/10 SORTED RIGHT';
+ rS.textContent=perfect?'Not a single casualty. Your laundry care kit voucher awaits — your clothes thank you.':
+  'Good sorting! A perfect 10 unlocks the care kit. The cashmere believes in you.';
+ ct('game_over',{correct:correct,perfect:perfect});
+ if(perfect){go.style.display='block';
+  go.onclick=()=>{ /* PROMOS: care-kit / partner detergent voucher */
+   ct('reward_claimed',{reward:'care_kit'});
+   go.textContent='SAVED ✓';go.disabled=true;};}}
+show();
+ct('Notification Viewed',{game:'laundry_sort',register:'care_education'});
+</script></body></html>

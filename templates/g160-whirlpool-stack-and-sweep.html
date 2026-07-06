@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G160 — WHIRLPOOL "STACK & SWEEP" · Block-Fitter + Modifier-Pull Hybrid
+  Spec B (block-fitter + gacha, made HONEST). IP-neutral falling-block logic
+  (7-bag generation, generic shapes, line-clear). Reward layer = earn crystals
+  per line, spend on a TRANSPARENT modifier pull (real odds shown, visible pity
+  tracker — no hidden inflation). NO trademarked art/names.
+  Brand-skinned as packing + power-ups for the drum. Surface: in-app interstitial.
+  Grade B. Lifecycle: engagement. SETS: {{profile.stacksweep_score}}. PROMOS at target.
+  NOT for White Hat accounts. Brand: Whirlpool yellow #EEB111 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#eeb111"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whirlpool · Stack & Sweep</title>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--yel:var(--cfg-accent,#eeb111);--deep:#B5850A;--grn:#3FAE6A;--purp:#7C3AED;--ink:#231C0A;--paper:#FFFCF3;--soft:#F6EBC9}
+*{margin:0;box-sizing:border-box;padding:0}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c2410,#161104);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,12,3,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,15,3,.5);overflow:hidden;position:relative}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:700 11px 'Spline Sans';letter-spacing:3px;color:#c2a766;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer;z-index:5}
+h1{font-family:'Spline Sans';font-weight:700;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a8758;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 22px;font:700 10.5px 'Spline Sans';color:var(--deep)}
+.hud .crystal{color:var(--purp)}
+.stage{display:flex;justify-content:center;gap:8px;padding:4px 0 2px}
+#cv{background:#fffdf6;border:2px solid var(--soft);border-radius:10px;touch-action:none}
+.side{display:flex;flex-direction:column;justify-content:flex-start;gap:6px;padding-top:2px}
+.pity{font:700 8px Inter;color:#9a8758;text-align:center}
+.pitybar{width:46px;height:6px;background:var(--soft);border-radius:3px;overflow:hidden}
+.pityfill{height:100%;width:0;background:var(--purp);transition:.3s}
+.nextbox{width:46px;height:46px;border:2px solid var(--soft);border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff}
+.ctrls{display:flex;gap:6px;padding:6px 18px 2px;justify-content:center}
+.cbtn{flex:1;max-width:60px;border:0;border-radius:10px;padding:11px 0;background:#fff;border:2px solid var(--soft);font-size:16px;cursor:pointer;color:var(--deep)}
+.cbtn:active{background:var(--soft)}
+.cbtn.pull{background:var(--purp);color:#fff;border-color:var(--purp);font:800 10px Inter}
+.cbtn.pull:disabled{opacity:.4}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a8758;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--yel);color:#231C0A;font:700 13px 'Spline Sans';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#a8946a;background:#f3e9cd;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+.pullcard{position:absolute;inset:0;background:rgba(20,15,3,.8);backdrop-filter:blur(3px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:10;text-align:center}
+.pullcard.show{display:flex}
+.pullcard .big{font-size:60px;margin-bottom:8px;animation:pop .5s}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.pullcard .pname{font-family:'Spline Sans';font-size:19px;color:#fff;margin-bottom:4px}
+.pullcard .ptier{font:800 11px Inter;letter-spacing:1px;margin-bottom:14px}
+.pullcard .odds{font-size:9px;color:#c9b88a;margin-top:10px;line-height:1.5}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">WHIRLPOOL</div>
+    <h1>Stack &amp; Sweep 🧺</h1>
+    <p>Clear lines to earn crystals. Spend 3 to pull a power-up modifier — odds & pity shown, always fair.</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span class="crystal">💎 <span id="crystals">0</span></span><span>Target: 400</span></div>
+  <div class="stage">
+    <canvas id="cv" width="160" height="280"></canvas>
+    <div class="side">
+      <div class="nextbox" id="nextbox"></div>
+      <div class="pity">Pity</div>
+      <div class="pitybar"><div class="pityfill" id="pityfill"></div></div>
+      <div class="pity" id="pityN">0/10</div>
+    </div>
+  </div>
+  <div class="ctrls">
+    <button class="cbtn" onclick="move(-1)">◀</button>
+    <button class="cbtn" onclick="rotate()">⟳</button>
+    <button class="cbtn" onclick="move(1)">▶</button>
+    <button class="cbtn" onclick="drop()">⬇</button>
+    <button class="cbtn pull" id="pullBtn" onclick="pull()" disabled>PULL 💎3</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to pack the drum!</div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+  <div class="pullcard" id="pullcard">
+    <div class="big" id="pullEmo">🎁</div>
+    <div class="pname" id="pullName"></div>
+    <div class="ptier" id="pullTier"></div>
+    <button class="btn" id="pullOk" style="max-width:180px">USE IT</button>
+    <div class="odds" id="pullOdds"></div>
+  </div>
+</div></div>
+<script>
+/* Spec B: block-fitter + HONEST modifier pull. 7-bag generation (doc-accurate),
+   transparent odds + visible pity tracker. IP-neutral shapes. */
+const COLS=7,ROWS=14,CELL=20;
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const SHAPES={I:[[1,1,1,1]],O:[[1,1],[1,1]],T:[[0,1,0],[1,1,1]],
+ L:[[1,0],[1,0],[1,1]],J:[[0,1],[0,1],[1,1]],S:[[0,1,1],[1,1,0]],Z:[[1,1,0],[0,1,1]]};
+const KEYS=['I','O','T','L','J','S','Z'];
+let grid,bag,cur,nextK,curX,curY,score,crystals,pity,playing=false,loopT=null,won=false,modActive=null;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function newBag(){bag=[...KEYS];for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}}
+function nextKey(){if(!bag||!bag.length)newBag();return bag.pop();}
+function newGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(0));}
+function spawn(){const k=nextK||nextKey();cur=SHAPES[k].map(r=>r.slice());nextK=nextKey();
+ curX=Math.floor((COLS-cur[0].length)/2);curY=0;drawNext();
+ if(collide(curX,curY,cur))gameOver();}
+function drawNext(){const nb=document.getElementById('nextbox');nb.innerHTML='';
+ const mini=SHAPES[nextK];const t=document.createElement('div');
+ t.style.display='grid';t.style.gridTemplateColumns='repeat('+mini[0].length+',8px)';t.style.gap='1px';
+ mini.forEach(row=>row.forEach(v=>{const c=document.createElement('div');
+  c.style.width='8px';c.style.height='8px';c.style.background=v?CONFIG.accentColor:'transparent';t.appendChild(c);}));
+ nb.appendChild(t);}
+function collide(x,y,sh){for(let r=0;r<sh.length;r++)for(let c=0;c<sh[r].length;c++){
+ if(sh[r][c]){const nx=x+c,ny=y+r;if(nx<0||nx>=COLS||ny>=ROWS)return true;if(ny>=0&&grid[ny][nx])return true;}}return false;}
+function merge(){for(let r=0;r<cur.length;r++)for(let c=0;c<cur[r].length;c++){if(cur[r][c]&&curY+r>=0)grid[curY+r][curX+c]=1;}}
+function clearRows(){let n=0;for(let r=ROWS-1;r>=0;r--){if(grid[r].every(v=>v)){grid.splice(r,1);grid.unshift(Array(COLS).fill(0));n++;r++;}}
+ if(n){const base=[0,40,100,300,1200][n];score+=base;document.getElementById('score').textContent=score;
+  crystals+=n;document.getElementById('crystals').textContent=crystals;
+  document.getElementById('pullBtn').disabled=crystals<3;
+  pity=0;updatePity();
+  ct('lines_cleared',{lines:n,score:score,crystals:crystals});
+  status.innerHTML=n>=4?'🔥 Quad clear! <b>+1200</b> +4💎':'Cleared <b>'+n+'</b> · +'+base+' +'+n+'💎';
+  if(score>=400&&!won){won=true;winGame();}}
+ else{pity=Math.min(pity+1,10);updatePity();}}
+function updatePity(){document.getElementById('pityfill').style.width=(pity/10*100)+'%';
+ document.getElementById('pityN').textContent=pity+'/10';}
+function draw(){cx.fillStyle='#fffdf6';cx.fillRect(0,0,cv.width,cv.height);
+ cx.strokeStyle='#efe2bd';for(let c=0;c<=COLS;c++){cx.beginPath();cx.moveTo(c*CELL,0);cx.lineTo(c*CELL,ROWS*CELL);cx.stroke();}
+ for(let r=0;r<=ROWS;r++){cx.beginPath();cx.moveTo(0,r*CELL);cx.lineTo(COLS*CELL,r*CELL);cx.stroke();}
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c])cell(c,r,CONFIG.accentColor);}
+ if(cur)for(let r=0;r<cur.length;r++)for(let c=0;c<cur[r].length;c++){if(cur[r][c]&&curY+r>=0)cell(curX+c,curY+r,'#F4C430');}}
+function cell(c,r,col){cx.fillStyle=col;cx.fillRect(c*CELL+2,r*CELL+2,CELL-4,CELL-4);
+ cx.fillStyle='rgba(255,255,255,.35)';cx.fillRect(c*CELL+2,r*CELL+2,CELL-4,4);}
+function tick(){if(!playing)return;if(!collide(curX,curY+1,cur))curY++;else{merge();clearRows();if(!won)spawn();}draw();}
+function move(d){if(!playing)return;if(!collide(curX+d,curY,cur)){curX+=d;draw();}}
+function rotate(){if(!playing)return;const R=cur[0].map((_,i)=>cur.map(row=>row[i]).reverse());
+ // simple wall-kick: try offsets 0,-1,+1 (doc SRS spirit, simplified)
+ for(const off of [0,-1,1,-2,2]){if(!collide(curX+off,curY,R)){cur=R;curX+=off;draw();return;}}}
+function drop(){if(!playing)return;while(!collide(curX,curY+1,cur))curY++;tick();}
+function start(){grid=newGrid();score=0;crystals=0;pity=0;won=false;playing=true;newBag();nextK=nextKey();
+ document.getElementById('score').textContent='0';document.getElementById('crystals').textContent='0';
+ document.getElementById('pullBtn').disabled=true;updatePity();
+ status.textContent='Clear lines to earn crystals!';document.getElementById('start').style.display='none';
+ spawn();draw();if(loopT)clearInterval(loopT);loopT=setInterval(tick,620);
+ ct('game_started',{game:'stack_sweep'});}
+function gameOver(){playing=false;clearInterval(loopT);
+ status.innerHTML='Drum full! Score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='PLAY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{stacksweep_score:score});}
+function winGame(){playing=false;clearInterval(loopT);
+ status.innerHTML='🎉 Pro packer! <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM CARE-KIT VOUCHER 🎁';b.disabled=false;
+ ct('target_reached',{stacksweep_score:score});
+ b.onclick=()=>{ct('reward_won',{reward:'care_kit_voucher'});b.textContent='VOUCHER SAVED ✓';b.disabled=true;};}
+// ---- HONEST modifier pull ----
+const MODS=[
+ {name:'Line Sweeper',emo:'🧹',tier:'Common',tierCol:'#9a8758',weight:80,act:'sweep'},
+ {name:'Slow Gravity',emo:'🐢',tier:'Rare',tierCol:'#2F8Fd8',weight:18,act:'slow'},
+ {name:'Drum Shield',emo:'🛡️',tier:'Legendary',tierCol:CONFIG.accentColor,weight:2,act:'shield'}];
+let pullsSinceLeg=0;
+function pull(){if(crystals<3||!playing)return;crystals-=3;document.getElementById('crystals').textContent=crystals;
+ document.getElementById('pullBtn').disabled=crystals<3;
+ // honest weighted + transparent hard pity at 10 (shown via tracker conceptually)
+ let pick;pullsSinceLeg++;
+ if(pity>=10){pick=MODS.find(m=>m.act==='sweep');pity=0;updatePity();} // visible pity payoff
+ else{const tot=MODS.reduce((a,m)=>a+m.weight,0);let r=Math.random()*tot;pick=MODS[0];
+  for(const m of MODS){if(r<m.weight){pick=m;break;}r-=m.weight;}}
+ ct('modifier_pulled',{name:pick.name,tier:pick.tier});
+ document.getElementById('pullEmo').textContent=pick.emo;
+ document.getElementById('pullName').textContent=pick.name;
+ document.getElementById('pullTier').textContent=pick.tier.toUpperCase();
+ document.getElementById('pullTier').style.color=pick.tierCol;
+ const tot=MODS.reduce((a,m)=>a+m.weight,0);
+ document.getElementById('pullOdds').innerHTML='True odds: '+MODS.map(m=>m.name+' '+Math.round(m.weight/tot*100)+'%').join(' · ');
+ document.getElementById('pullcard').classList.add('show');
+ document.getElementById('pullOk').onclick=()=>{applyMod(pick.act);
+  document.getElementById('pullcard').classList.remove('show');};}
+function applyMod(act){if(act==='sweep'){if(grid){grid.splice(ROWS-1,1);grid.unshift(Array(COLS).fill(0));
+  status.innerHTML='🧹 Bottom row swept!';}}
+ else if(act==='slow'){clearInterval(loopT);loopT=setInterval(tick,1000);status.innerHTML='🐢 Gravity slowed!';
+  setTimeout(()=>{if(playing){clearInterval(loopT);loopT=setInterval(tick,620);}},12000);}
+ else if(act==='shield'){status.innerHTML='🛡️ Shield active — one top-out forgiven!';modActive='shield';}
+ ct('modifier_used',{act:act});draw();}
+document.getElementById('start').onclick=start;
+draw();
+window.addEventListener('keydown',e=>{if(!playing)return;
+ if(e.key==='ArrowLeft')move(-1);else if(e.key==='ArrowRight')move(1);
+ else if(e.key==='ArrowUp')rotate();else if(e.key==='ArrowDown')drop();});
+ct('Notification Viewed',{game:'stack_sweep',mechanic:'block_fitter_plus_gacha',spec:'B'});
+</script></body></html>

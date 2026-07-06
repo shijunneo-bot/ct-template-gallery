@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G185 — SOCAR "ROUTE FLOW" · Dot-Connect / Flow Puzzle
+  Mechanic: flow-connect LOGIC (Flow-Free-spirit, public-domain genre) — connect
+  matching coloured dots with non-crossing paths that fill the grid. NO trademarked
+  art/names. Brand-skinned as connecting pickup/dropoff pairs (car-share routes).
+  NEW FAMILY (flow-connect) — distinct from pipe-rotate(172); this is path-drawing.
+  Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.flow_solved}}. PROMOS: drive credit on solve.
+  Brand: SOCAR green #00B14F (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#00b14f"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOCAR · Route Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--grn:var(--cfg-accent,#00b14f);--deep:#00833B;--ink:#0C1F14;--paper:#F1FBF5;--soft:#D6F0E0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0d2c1b,#06150d);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,16,10,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,21,13,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#7aab90;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a8a6c;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Sora;color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:8px 0 4px}
+#cv{background:#e6f7ec;border:2px solid var(--soft);border-radius:12px;touch-action:none;cursor:pointer}
+.body{padding:6px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a8a6c;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--grn);color:#fff;font:800 13px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--soft);box-shadow:none;margin-top:7px;font-size:12px;padding:10px}
+.hint{font-size:9px;color:#8ab3a0;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#7aab90;background:#e3f3eb;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">SOCAR</div>
+    <h1>Route Flow 🚗</h1>
+    <p>Connect each pair of matching dots with a path. Fill the whole grid without crossing to win a drive credit!</p>
+  </div>
+  <div class="hud"><span>Pairs: <span id="pairs">0</span>/<span id="totalPairs">4</span></span><span>Filled: <span id="filled">0</span>%</span></div>
+  <div class="stage"><canvas id="cv" width="250" height="250"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then drag between matching dots!</div>
+    <button class="btn" id="start">START</button>
+    <button class="btn ghost" id="clear" style="display:none">↩ Clear paths</button>
+    <div class="hint">Drag from one dot to its twin · paths can't cross · fill every cell</div>
+    
+  </div>
+</div></div>
+<script>
+/* Flow-connect LOGIC (public-domain genre). 5x5, connect matching dot pairs with
+   non-crossing paths filling the grid. IP-neutral. SETS profile.flow_solved. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const N=5,CELL=50;
+// hand-designed solvable 5x5 puzzle: endpoints for 4 colours
+const COLORS=[CONFIG.accentColor,'#E6007E','#F5A623','#2F8Fd8'];
+// endpoints[color]=[[r,c],[r,c]]
+const PUZZLE=[
+ [[0,0],[4,1]], // green
+ [[0,1],[2,4]], // pink
+ [[1,1],[2,1]], // amber
+ [[3,1],[4,2]]  // blue
+];
+let paths,drawing,curColor,playing=false,won=false,grid;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){paths=PUZZLE.map(()=>[]);drawing=null;curColor=null;won=false;
+ grid=Array.from({length:N},()=>Array(N).fill(-1));
+ document.getElementById('pairs').textContent='0';document.getElementById('totalPairs').textContent=PUZZLE.length;
+ document.getElementById('filled').textContent='0';draw();}
+function cellAt(px,py){const rect=cv.getBoundingClientRect();
+ const x=(px-rect.left)*(cv.width/rect.width),y=(py-rect.top)*(cv.height/rect.height);
+ return {r:Math.floor(y/CELL),c:Math.floor(x/CELL)};}
+function endpointColor(r,c){for(let i=0;i<PUZZLE.length;i++){if(PUZZLE[i].some(([er,ec])=>er===r&&ec===c))return i;}return -1;}
+function pointerDown(e){if(!playing)return;const {r,c}=cellAt(e.clientX,e.clientY);
+ if(r<0||r>=N||c<0||c>=N)return;
+ const col=endpointColor(r,c);
+ if(col>=0){curColor=col;paths[col]=[{r,c}];drawing=true;rebuildGrid();draw();}
+ else if(grid[r][c]>=0){ // start from an existing path cell: truncate to here
+  curColor=grid[r][c];const idx=paths[curColor].findIndex(p=>p.r===r&&p.c===c);
+  if(idx>=0){paths[curColor]=paths[curColor].slice(0,idx+1);drawing=true;rebuildGrid();draw();}}}
+function pointerMove(e){if(!playing||!drawing||curColor==null)return;
+ const {r,c}=cellAt(e.clientX,e.clientY);if(r<0||r>=N||c<0||c>=N)return;
+ const path=paths[curColor];const last=path[path.length-1];
+ if(!last||(Math.abs(last.r-r)+Math.abs(last.c-c))!==1)return; // must be adjacent
+ // don't enter another colour's endpoint (unless it's this colour's twin) or own path
+ const epc=endpointColor(r,c);
+ if(epc>=0&&epc!==curColor)return;
+ if(grid[r][c]>=0&&grid[r][c]!==curColor)return; // can't cross other path
+ if(path.some(p=>p.r===r&&p.c===c))return; // no self-overlap
+ path.push({r,c});rebuildGrid();draw();
+ // reaching twin endpoint completes
+ if(epc===curColor&&path.length>1){drawing=false;checkSolved();}}
+function pointerUp(){drawing=false;}
+function rebuildGrid(){grid=Array.from({length:N},()=>Array(N).fill(-1));
+ paths.forEach((path,ci)=>path.forEach(p=>{grid[p.r][p.c]=ci;}));}
+function draw(){cx.clearRect(0,0,cv.width,cv.height);
+ // grid lines
+ cx.strokeStyle='#cdebd9';for(let i=0;i<=N;i++){cx.beginPath();cx.moveTo(i*CELL,0);cx.lineTo(i*CELL,N*CELL);cx.stroke();
+  cx.beginPath();cx.moveTo(0,i*CELL);cx.lineTo(N*CELL,i*CELL);cx.stroke();}
+ // paths
+ paths.forEach((path,ci)=>{if(path.length<2)return;cx.strokeStyle=COLORS[ci];cx.lineWidth=14;cx.lineCap='round';cx.lineJoin='round';
+  cx.beginPath();path.forEach((p,i)=>{const x=p.c*CELL+CELL/2,y=p.r*CELL+CELL/2;
+   if(i===0)cx.moveTo(x,y);else cx.lineTo(x,y);});cx.stroke();});
+ cx.lineWidth=1;
+ // endpoints
+ PUZZLE.forEach((pair,ci)=>pair.forEach(([r,c])=>{cx.fillStyle=COLORS[ci];
+  cx.beginPath();cx.arc(c*CELL+CELL/2,r*CELL+CELL/2,15,0,7);cx.fill();}));}
+function checkSolved(){const done=paths.filter((p,ci)=>{
+  if(p.length<2)return false;const a=p[0],b=p[p.length-1];
+  const eps=PUZZLE[ci];return eps.some(e=>e[0]===a.r&&e[1]===a.c)&&eps.some(e=>e[0]===b.r&&e[1]===b.c);}).length;
+ document.getElementById('pairs').textContent=done;
+ const filled=grid.flat().filter(v=>v>=0).length;const pct=Math.round(filled/(N*N)*100);
+ document.getElementById('filled').textContent=pct;
+ ct('pair_connected',{pairs_done:done,filled_pct:pct});
+ if(done===PUZZLE.length&&filled===N*N&&!won){won=true;win();}
+ else status.innerHTML='<b>'+done+'/'+PUZZLE.length+'</b> connected · '+pct+'% filled';}
+function start(){reset();playing=true;status.textContent='Drag between matching dots to connect!';
+ document.getElementById('start').style.display='none';document.getElementById('clear').style.display='block';
+ ct('game_started',{game:'route_flow'});}
+function win(){playing=false;
+ status.innerHTML='🎉 All routes connected & grid filled!';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM DRIVE CREDIT 🎁';b.disabled=false;
+ document.getElementById('clear').style.display='none';
+ ct('puzzle_solved',{flow_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'drive_credit'});b.textContent='CREDIT BANKED ✓';b.disabled=true;};}
+document.getElementById('clear').onclick=()=>{if(playing){reset();status.textContent='Paths cleared — try again!';
+ document.getElementById('start').style.display='none';document.getElementById('clear').style.display='block';}};
+cv.addEventListener('pointerdown',pointerDown);
+cv.addEventListener('pointermove',pointerMove);
+window.addEventListener('pointerup',pointerUp);
+document.getElementById('start').onclick=start;
+reset();
+ct('Notification Viewed',{game:'route_flow',mechanic:'flow_connect'});
+</script></body></html>

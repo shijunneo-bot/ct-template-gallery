@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G164 — NOMAD eSIM "DESTINATION CATCH" · Spawn + Flip-Card Capture Hybrid
+  Spec G (algorithmic spawn + flip-card capture, made HONEST). IP-neutral
+  collection logic: biome spawn → encounter → 3x3 flip-card capture grid
+  (success/flee/bonus distribution shown), persistent catalog. NO trademarked
+  creatures (generic "destination spirits" = landmarks/foods, not Pokémon).
+  Brand-skinned as catching destination spirits to fill a travel catalog.
+  Surface: in-app interstitial. Grade B. Lifecycle: engagement (pre-trip collect).
+  SETS: {{profile.catalog_count}}. PROMOS: eSIM reward on catalog milestone.
+  NOT for White Hat accounts. Brand: Nomad blue #0C94F2 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#0c94f2"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nomad · Destination Catch</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:var(--cfg-accent,#0c94f2);--deep:#0A6FB8;--gold:#F5A623;--grn:#2FA85B;--red:#E1251B;--ink:#08203A;--paper:#F2F9FF;--soft:#D6EBFB}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0a2c4a,#06151f);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,14,25,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,20,40,.5);overflow:hidden;position:relative}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#6aa8d8;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer;z-index:5}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a7a96;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 11px Sora;color:var(--deep)}
+.encounter{margin:8px 22px 0;background:#fff;border:2px solid var(--soft);border-radius:16px;padding:14px;text-align:center}
+.spirit{font-size:52px;margin-bottom:4px}
+.spirit.wobble{animation:wob 1s infinite}
+@keyframes wob{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+.sname{font:800 13px Sora;color:var(--ink)}
+.srarity{font:800 9px Inter;letter-spacing:1px;margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:12px 24px 4px}
+.fcard{aspect-ratio:1;border-radius:11px;background:linear-gradient(150deg,var(--blue),var(--deep));border:0;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;transition:.18s;color:transparent;position:relative}
+.fcard::before{content:'?';color:#fff;font-family:Sora;font-weight:800;font-size:20px;position:absolute}
+.fcard.flipped{background:#fff;border:2px solid var(--soft);color:initial}
+.fcard.flipped::before{content:''}
+.fcard:active:not(.flipped){transform:scale(.95)}
+.fcard.disabled{pointer-events:none;opacity:.85}
+.body{padding:8px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a7a96;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--blue);color:#fff;font:800 13px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.odds{font-size:8.5px;color:#8ab8d8;margin-top:5px}
+.catalog{display:flex;gap:4px;justify-content:center;padding:6px 0 0;flex-wrap:wrap;min-height:20px}
+.catdot{font-size:15px;opacity:.3}
+.catdot.caught{opacity:1}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#6aa8d8;background:#e6f2fc;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">NOMAD</div>
+    <h1>Destination Catch 🌏</h1>
+    <p>Explore destinations & catch their spirits. Flip cards to capture — 4 catch, 2 flee, 3 bonus. Fill your catalog!</p>
+  </div>
+  <div class="hud"><span>Caught: <span id="caught">0</span>/6</span><span>Encounters: <span id="enc">0</span></span></div>
+  <div class="encounter" id="encounter">
+    <div class="spirit wobble" id="spirit">🗼</div>
+    <div class="sname" id="sname">Tower Spirit</div>
+    <div class="srarity" id="srarity" style="color:#2FA85B">COMMON</div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to begin exploring!</div>
+    <div class="odds" id="odds">Capture grid: 4 catch · 2 flee · 3 bonus (honest distribution)</div>
+    <div class="catalog" id="catalog"></div>
+    <button class="btn" id="start">START EXPLORING</button>
+    
+  </div>
+</div></div>
+<script>
+/* Spec G: spawn + flip-card capture. IP-neutral "destination spirits".
+   3x3 grid: 4 catch / 2 flee / 3 bonus (honest, shuffled). Persistent catalog. */
+const SPIRITS=[
+ {n:'Tower Spirit',e:'🗼',r:'COMMON',rc:'#2FA85B'},
+ {n:'Temple Spirit',e:'⛩️',r:'COMMON',rc:'#2FA85B'},
+ {n:'Beach Spirit',e:'🏖️',r:'UNCOMMON',rc:CONFIG.accentColor},
+ {n:'Mountain Spirit',e:'⛰️',r:'UNCOMMON',rc:CONFIG.accentColor},
+ {n:'Aurora Spirit',e:'🌌',r:'RARE',rc:'#F5A623'},
+ {n:'Lantern Spirit',e:'🏮',r:'RARE',rc:'#F5A623'}];
+let caught,encounters,current,grid3,resolving,playing=false,won=false;
+let catalogState=new Array(SPIRITS.length).fill(false);
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function renderCatalog(){const cat=document.getElementById('catalog');
+ cat.innerHTML=SPIRITS.map((s,i)=>'<span class="catdot'+(catalogState[i]?' caught':'')+'">'+s.e+'</span>').join('');}
+function nextEncounter(){if(caught>=6){return winGame();}
+ // spawn an uncaught spirit (or any if pity needed)
+ const uncaught=SPIRITS.map((s,i)=>({s,i})).filter(o=>!catalogState[o.i]);
+ const pickPool=uncaught.length?uncaught:SPIRITS.map((s,i)=>({s,i}));
+ current=pickPool[Math.floor(Math.random()*pickPool.length)];
+ encounters++;document.getElementById('enc').textContent=encounters;
+ document.getElementById('spirit').textContent=current.s.e;
+ document.getElementById('sname').textContent=current.s.n;
+ const rar=document.getElementById('srarity');rar.textContent=current.s.r;rar.style.color=current.s.rc;
+ document.getElementById('spirit').classList.add('wobble');
+ buildGrid();status.innerHTML='A wild <b>'+current.s.n+'</b> appeared! Flip a card.';
+ ct('encounter_spawned',{spirit:current.s.n,rarity:current.s.r});}
+function buildGrid(){resolving=false;
+ // honest distribution: 4 catch, 2 flee, 3 bonus, shuffled
+ let cells=['catch','catch','catch','catch','flee','flee','bonus','bonus','bonus'];
+ for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}
+ grid3=cells;
+ const g=document.getElementById('grid');g.innerHTML='';
+ cells.forEach((type,i)=>{const c=document.createElement('button');c.className='fcard';
+  c.onclick=()=>flip(i,type,c);g.appendChild(c);});}
+function flip(i,type,el){if(!playing||resolving||el.classList.contains('flipped'))return;
+ el.classList.add('flipped');
+ const face=type==='catch'?'✅':(type==='flee'?'💨':'🎁');el.textContent=face;
+ ct('capture_card_flipped',{type:type});
+ if(type==='catch'){resolving=true;document.querySelectorAll('.fcard').forEach(c=>c.classList.add('disabled'));
+  catalogState[current.i]=true;caught++;document.getElementById('caught').textContent=caught;
+  document.getElementById('spirit').classList.remove('wobble');renderCatalog();
+  status.innerHTML='🎉 Caught the <b>'+current.s.n+'</b>!';
+  ct('spirit_captured',{spirit:current.s.n,catalog_count:caught});
+  setTimeout(()=>{if(caught>=6)winGame();else nextEncounter();},1300);}
+ else if(type==='flee'){resolving=true;document.querySelectorAll('.fcard').forEach(c=>c.classList.add('disabled'));
+  document.getElementById('spirit').classList.remove('wobble');
+  status.innerHTML='💨 The <b>'+current.s.n+'</b> escaped! Onto the next.';
+  ct('spirit_fled',{spirit:current.s.n});
+  setTimeout(()=>nextEncounter(),1300);}
+ else{status.innerHTML='🎁 Bonus! Flip again — still time to catch.';
+  ct('bonus_found',{});}}
+function start(){caught=0;encounters=0;won=false;catalogState=new Array(SPIRITS.length).fill(false);
+ document.getElementById('caught').textContent='0';playing=true;
+ document.getElementById('start').style.display='none';renderCatalog();nextEncounter();
+ ct('game_started',{game:'destination_catch'});}
+function winGame(){playing=false;
+ document.getElementById('grid').innerHTML='';
+ status.innerHTML='🏆 Catalog complete — all 6 spirits caught!';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM eSIM REWARD 🎁';b.disabled=false;
+ ct('catalog_complete',{catalog_count:caught});
+ b.onclick=()=>{ct('reward_won',{reward:'destination_esim_discount'});b.textContent='REWARD SAVED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+renderCatalog();
+ct('Notification Viewed',{game:'destination_catch',mechanic:'spawn_plus_flipcard_capture',spec:'G'});
+</script></body></html>

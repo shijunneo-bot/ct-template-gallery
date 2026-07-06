@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G169 — POS MALAYSIA "DELIVERY DASH" · Committal Platformer + Scratch-Zones
+  Spec C (committal vertical platformer + scratch-card, made HONEST). IP-neutral
+  platformer logic: committal jump (locked horizontal momentum once launched),
+  ladder bounding-box climb, scene traversal. Reward layer = platform rows split
+  into scratch zones revealed on landing (true odds shown, no rigged distribution).
+  NO trademarked art/names/characters. Brand-skinned as a courier climbing to
+  deliver. Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.dash_score}}. PROMOS: postage reward at top.
+  NOT for White Hat accounts. Brand: Pos Malaysia red #E1251B (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e1251b"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pos Malaysia · Delivery Dash</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#e1251b);--deep:#A81810;--gold:#F4A52A;--grn:#2Fa85b;--blu:#2F8Fd8;--ink:#1f0d0b;--paper:#FDF4EC}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a120e,#1a0807);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,6,4,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,5,.5);overflow:hidden;position:relative}
+.hd{background:var(--red);color:#fff;padding:13px 20px;position:relative;text-align:center}
+.brand{font:800 11px 'Bricolage Grotesque';letter-spacing:2px;margin-bottom:3px}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer;z-index:5}
+h1{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px}
+.hd p{font-size:10.5px;opacity:.93;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 11px 'Bricolage Grotesque';color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:linear-gradient(180deg,#fff,#fdeee2);border:2px solid #f0d9cb;border-radius:10px;touch-action:none}
+.ctrls{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,38px);gap:5px;justify-content:center;padding:6px 0 2px}
+.dpad{border:0;border-radius:10px;background:#fff;border:2px solid #f0d9cb;font-size:16px;color:var(--deep);cursor:pointer}
+.dpad:active{background:#fbe2da}
+.dpad.up{grid-column:2;grid-row:1}.dpad.left{grid-column:1;grid-row:2}
+.dpad.jump{grid-column:2;grid-row:2;background:var(--gold);color:#fff;border-color:var(--gold);font:800 11px Inter}
+.dpad.right{grid-column:3;grid-row:2}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a6a5a;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--red);color:#fff;font:800 13px 'Bricolage Grotesque';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.5;box-shadow:none}
+.odds{font-size:8.5px;color:#b8907f;margin-top:5px;line-height:1.4}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#a8836a;background:#f3e3d5;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">POS MALAYSIA</div>
+    <h1>Delivery Dash 📦</h1>
+    <p>Climb the ladders to the rooftop. Each platform hides a scratch panel — land to reveal it. Reach the top to deliver!</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Floor: <span id="floor">1</span>/5</span></div>
+  <div class="stage"><canvas id="cv" width="240" height="290"></canvas></div>
+  <div class="ctrls">
+    <button class="dpad up" onclick="climb()">▲</button>
+    <button class="dpad left" onmousedown="hold(-1)" onmouseup="rel()" ontouchstart="hold(-1)" ontouchend="rel()">◀</button>
+    <button class="dpad jump" onclick="jump()">JUMP</button>
+    <button class="dpad right" onmousedown="hold(1)" onmouseup="rel()" ontouchstart="hold(1)" ontouchend="rel()">▶</button>
+  </div>
+  <div class="body">
+    <div class="status" id="status">Tap Start. Walk to a ladder, climb up!</div>
+    <button class="btn" id="start">START CLIMB</button>
+    <div class="odds" id="odds"></div>
+    
+  </div>
+</div></div>
+<script>
+/* Spec C: committal platformer (locked jump momentum + ladder bounding-box) +
+   HONEST scratch zones. True odds shown. IP-neutral. SETS profile.dash_score. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const FLOORS=5,FH=52; // floor height
+// each floor: y position; ladder x; scratch zones [{x,w,revealed,type}]
+let player,floors,score,curFloor,playing=false,dir=0,vy=0,jumping=false,onLadder=false,loopT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+// HONEST scratch outcomes (Spec C table)
+const ZONES=[
+ {type:'mult',label:'x2 Score',emo:'✨',w:45,col:'#2Fa85b'},
+ {type:'hazard',label:'Hazard',emo:'⚠️',w:25,col:CONFIG.accentColor},
+ {type:'safe',label:'Safe',emo:'✅',w:25,col:'#2F8Fd8'},
+ {type:'jackpot',label:'Jackpot!',emo:'🎁',w:5,col:'#F4A52A'}];
+function pickZone(){const tot=ZONES.reduce((a,z)=>a+z.w,0);let r=Math.random()*tot;
+ for(const z of ZONES){if(r<z.w)return {...z,revealed:false};r-=z.w;}return {...ZONES[0],revealed:false};}
+function floorY(f){return H-30-(f-1)*FH;} // f=1 bottom
+function reset(){floors=[];
+ for(let f=1;f<=FLOORS;f++){const ladderX=f%2?180:40; // alternate ladder side
+  const zones=[];for(let z=0;z<3;z++){zones.push({x:20+z*72,w:64,...pickZone()});}
+  floors.push({f,y:floorY(f),ladderX,zones});}
+ player={x:30,y:floorY(1)-14,w:16,h:16};score=0;curFloor=1;won=false;jumping=false;vy=0;onLadder=false;
+ document.getElementById('score').textContent='0';document.getElementById('floor').textContent='1';
+ document.getElementById('odds').innerHTML='Scratch odds: '+ZONES.map(z=>z.label+' '+z.w+'%').join(' · ');}
+function hold(d){if(!jumping)dir=d;}
+function rel(){dir=0;}
+function draw(){cx.clearRect(0,0,W,H);
+ floors.forEach(fl=>{
+  // platform
+  cx.fillStyle='#e8c4a8';cx.fillRect(0,fl.y,W,6);
+  // scratch zones sit on the platform
+  fl.zones.forEach(z=>{if(z.revealed){cx.fillStyle=z.col;cx.globalAlpha=.8;cx.fillRect(z.x,fl.y-12,z.w,12);cx.globalAlpha=1;
+    cx.font='9px serif';cx.textAlign='center';cx.fillText(z.emo,z.x+z.w/2,fl.y-3);}
+   else{cx.fillStyle='#b0b0b0';cx.fillRect(z.x,fl.y-12,z.w,12);
+    cx.fillStyle='#888';cx.font='8px Inter';cx.textAlign='center';cx.fillText('▒▒▒',z.x+z.w/2,fl.y-3);}});
+  // ladder (except top floor has goal)
+  if(fl.f<FLOORS){cx.strokeStyle='#c08850';cx.lineWidth=2;
+   cx.beginPath();cx.moveTo(fl.ladderX,fl.y);cx.lineTo(fl.ladderX,fl.y-FH);cx.stroke();
+   cx.beginPath();cx.moveTo(fl.ladderX+10,fl.y);cx.lineTo(fl.ladderX+10,fl.y-FH);cx.stroke();
+   for(let ry=fl.y;ry>fl.y-FH;ry-=8){cx.beginPath();cx.moveTo(fl.ladderX,ry);cx.lineTo(fl.ladderX+10,ry);cx.stroke();}}});
+ // goal at top
+ cx.font='20px serif';cx.textAlign='center';cx.fillText('🏠',W/2,floorY(FLOORS)-18);
+ // player (courier)
+ cx.font='16px serif';cx.textBaseline='alphabetic';cx.fillText('🏃',player.x+8,player.y+14);}
+function nearLadder(){const fl=floors[curFloor-1];if(curFloor>=FLOORS)return false;
+ return Math.abs((player.x+8)-(fl.ladderX+5))<14;}
+function climb(){if(!playing||jumping)return;
+ if(nearLadder()){onLadder=true;curFloor++;document.getElementById('floor').textContent=curFloor;
+  player.y=floorY(curFloor)-14;const fl=floors[curFloor-2];player.x=fl.ladderX-4;
+  ct('floor_climbed',{floor:curFloor});onLadder=false;
+  status.innerHTML='Floor <b>'+curFloor+'</b>! Land on panels to scratch them.';
+  if(curFloor>=FLOORS&&!won){won=true;return winGame();}}
+ else status.textContent='Walk onto a ladder first (the rungs), then climb!';}
+function jump(){if(!playing||jumping)return;jumping=true;vy=-7; // committal: dir locked at launch
+ ct('jump',{});}
+function step(){if(!playing)return;
+ if(jumping){player.y+=vy;vy+=0.5;player.x+=dir*1.2; // locked horizontal during jump
+  const ground=floorY(curFloor)-14;
+  if(player.y>=ground){player.y=ground;jumping=false;vy=0;checkScratch();}}
+ else{player.x+=dir*2.2;}
+ player.x=Math.max(4,Math.min(W-20,player.x));
+ draw();}
+function checkScratch(){const fl=floors[curFloor-1];
+ for(const z of fl.zones){if(!z.revealed&&player.x+8>z.x&&player.x+8<z.x+z.w){
+  z.revealed=true;ct('zone_scratched',{type:z.type,label:z.label});
+  if(z.type==='mult'){score+=100;status.innerHTML='✨ <b>x2 Zone!</b> +100';}
+  else if(z.type==='jackpot'){score+=300;status.innerHTML='🎁 <b>Jackpot!</b> +300';}
+  else if(z.type==='hazard'){score=Math.max(0,score-50);status.innerHTML='⚠️ <b>Hazard!</b> −50';}
+  else{score+=25;status.innerHTML='✅ Safe. +25';}
+  document.getElementById('score').textContent=score;draw();return;}}}
+function start(){reset();playing=true;status.textContent='Walk to a ladder & climb. Jump onto panels!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,30);
+ ct('game_started',{game:'delivery_dash'});}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 Delivered! Final score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM POSTAGE REWARD 🎁';b.disabled=false;
+ ct('rooftop_reached',{dash_score:score});
+ b.onclick=()=>{ct('reward_won',{reward:'postage_voucher'});b.textContent='REWARD SAVED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{if(!playing)return;
+ if(e.key==='ArrowLeft')hold(-1);else if(e.key==='ArrowRight')hold(1);
+ else if(e.key==='ArrowUp')climb();else if(e.key===' '){e.preventDefault();jump();}});
+window.addEventListener('keyup',rel);
+ct('Notification Viewed',{game:'delivery_dash',mechanic:'platformer_plus_scratch',spec:'C'});
+</script></body></html>

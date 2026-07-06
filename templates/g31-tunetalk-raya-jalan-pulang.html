@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G31 — TUNE TALK "JALAN PULANG" · Raya Journey Home Story
+  Surface: Custom HTML In-App (branching, P9 register) · Grade B
+  Pattern: P-C + Raya emotional-film register (MY balik kampung)
+  Lifecycle: seasonal engagement · Ramadan/Raya 2027
+  SETS: {{profile.raya_path}} → themed Raya push/offer AFTER story.
+  Brand: Tune Talk orange #F36F21 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f36f21"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tune Talk · Jalan Pulang</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,500&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#f36f21);--deep:#C2511A;--ink:#221208}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:#160d05;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(14,7,2,.7);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:615px;max-height:92vh;border-radius:26px;overflow:hidden;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.7)}
+.scr{position:absolute;inset:0;padding:54px 26px 26px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .6s}
+.scr.on{opacity:1;pointer-events:auto}
+.bg0{background:linear-gradient(170deg,#3B2A14,#1c1106)}
+.bg1{background:linear-gradient(170deg,#1F4D3A,#0d2419)}
+.bg2{background:linear-gradient(170deg,#4A2E68,#221238)}
+.bgE{background:linear-gradient(170deg,var(--org),#a8430f)}
+.x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.13);color:#fff;cursor:pointer;z-index:6}
+.kick{font:800 10.5px Karla;letter-spacing:3px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:12px}
+.scene{font-size:42px;margin-bottom:10px}
+.story{font-family:Fraunces,Georgia;font-size:21px;color:#fff;line-height:1.55}
+.story i{color:#FFC894}
+.spacer{flex:1}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.2);border-radius:15px;padding:14px 16px;cursor:pointer;display:flex;gap:11px;align-items:center;transition:.2s}
+.choice:hover{background:rgba(255,255,255,.13)}
+.choice:active{transform:scale(.97)}
+.choice i{font-style:normal;font-size:19px}
+.choice span{font:600 13px Karla;color:#fff;line-height:1.4}
+.tap{font:800 10.5px Karla;letter-spacing:2px;color:rgba(255,255,255,.45);text-align:center;cursor:pointer}
+.offer{background:#fff;border-radius:18px;padding:19px;text-align:center;margin-top:13px}
+.offer .ok{font:800 10px Karla;letter-spacing:2.5px;color:#b08868}
+.offer .ov{font-family:Fraunces;font-size:26px;color:var(--deep);margin:5px 0 4px}
+.offer .od{font-size:12px;color:#7a5e48;line-height:1.5}
+.btn{width:100%;border:0;border-radius:13px;padding:15px;background:#fff;color:var(--deep);font:800 14px Karla;cursor:pointer;margin-top:12px}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:rgba(255,255,255,.5);background:rgba(0,0,0,.4);border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+  <div class="scr bg0 on" id="s0">
+    <div class="kick">Tune Talk · cerita raya</div>
+    <div class="scene">🌙</div>
+    <div class="story">The last day of Ramadan.<br><br>Your bag is packed, the ketupat is waiting at Mak's, and the whole highway home is glowing in your mind.<br><br><i>How are you going back this year?</i></div>
+    <div class="spacer"></div>
+    <div class="choices">
+      <div class="choice" onclick="pick('drive')"><i>🚗</i><span>The long drive — playlist ready, windows down</span></div>
+      <div class="choice" onclick="pick('bus')"><i>🚌</i><span>The night bus — sleeping through the kilometres</span></div>
+      <div class="choice" onclick="pick('video')"><i>📱</i><span>Can't make it this year — video call from far away</span></div>
+    </div>
+  </div>
+  <div class="scr" id="s1">
+    <div class="kick">jalan pulang</div>
+    <div class="scene" id="e1"></div>
+    <div class="story" id="t1"></div>
+    <div class="spacer"></div>
+    <div class="tap" onclick="finale()">TAP TO ARRIVE →</div>
+  </div>
+  <div class="scr bgE" id="s2">
+    <div class="kick">selamat hari raya</div>
+    <div class="story" style="font-size:23px" id="endT">Maaf zahir dan batin. 🤲</div>
+    <div class="offer">
+      <div class="ok">RAYA GIFT</div>
+      <div class="ov" id="offV">FREE 10GB RAYA WEEK</div>
+      <div class="od" id="offD">So every call home, every photo of the rendang, every group video — flows free.</div>
+    </div>
+    <button class="btn" id="claimBtn">CLAIM MY RAYA GIFT 🎁</button>
+    <div class="spacer"></div>
+  </div>
+  
+</div></div>
+<script>
+/* SETS profile.raya_path → themed offer post-story (P9: story before ask). */
+const PATHS={
+ drive:{bg:'bg1',e:'🛣️',t:'The highway hums. Every R&R stop smells of kopi and kuih.<br><br>Somewhere past Tapah, the rain starts — that soft kind — and the wipers keep time with your raya playlist.<br><br><i>Almost there. Mak\'s porch light is already on.</i>',
+  end:'You made it home. The rendang was worth every kilometre. 🏡'},
+ bus:{bg:'bg2',e:'🚌',t:'Seat 14A. The bus breathes out and rolls into the dark.<br><br>Cities shrink into kampung lights. Someone\'s sharing kuih tart down the aisle. You drift off to the engine\'s hum…<br><br><i>…and wake up to the smell of morning and home.</i>',
+  end:'You made it home. Sleepy, crumpled, and completely happy. 🏡'},
+ video:{bg:'bg0',e:'💛',t:'Not every jalan pulang is a road.<br><br>This year, home is a screen that fits in your palm — Mak holding the phone too close, everyone shouting salam at once, the ketupat shown off like a trophy.<br><br><i>Distance is just geography. This is still home.</i>',
+  end:'Home found you anyway — right through the screen. 💛'}};
+let path='';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function pick(p){path=p;const P=PATHS[p];
+ ct('story_branch',{raya_path:p}); /* SETS profile.raya_path */
+ const s1=document.getElementById('s1');s1.className='scr '+P.bg;
+ e1.textContent=P.e;t1.innerHTML=P.t;
+ s0.classList.remove('on');s1.classList.add('on');}
+function finale(){endT.innerHTML=PATHS[path].end+'<br><i>Maaf zahir dan batin.</i> 🤲';
+ if(path==='video'){offV.textContent='FREE UNLIMITED CALLS RAYA WEEK';
+  offD.textContent='So the video never freezes mid-salam — unlimited home calls all raya week.';}
+ document.getElementById('s1').classList.remove('on');
+ document.getElementById('s2').classList.add('on');
+ ct('story_completed',{raya_path:path});
+ claimBtn.onclick=()=>{ /* PROMOS: raya data/calls pack post-story */
+  ct('reward_won',{reward:path==='video'?'unlimited_calls':'10GB raya'});
+  claimBtn.textContent='ACTIVATED ✓ SELAMAT HARI RAYA';claimBtn.disabled=true;};}
+ct('Notification Viewed',{story:'jalan_pulang',season:'raya_2027'});
+</script></body></html>

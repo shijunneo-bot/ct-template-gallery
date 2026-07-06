@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G157 — EASYBOOK "ROUTE SLIDER" · Sliding-Tile Puzzle
+  Mechanic: sliding-tile puzzle LOGIC (15-puzzle, public-domain genre) — slide
+  tiles into the gap to restore order/an image. NO trademarked art. Brand-skinned
+  as sliding tiles to complete a destination route map.
+  NEW puzzle sub-type (sliding-tile). Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement.
+  SETS: {{profile.puzzle_solved}}. PROMOS: travel voucher on solve.
+  Brand: Easybook (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f5a623"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Easybook · Route Slider</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1E63D8;--deep:#1448a8;--gold:var(--cfg-accent,#f5a623);--grn:#2FA85B;--ink:#0C1B33;--paper:#F2F7FE;--soft:#D9E6F8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0c2247,#06121f);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,14,25,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,18,40,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Outfit;letter-spacing:2px;color:#6a8cc2;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Outfit;font-weight:800;font-size:19px;color:var(--ink)}
+.hd p{font-size:11px;color:#5a7196;margin-top:3px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 11px Outfit;color:var(--deep)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px 28px 4px;aspect-ratio:1}
+.tile{border-radius:11px;background:linear-gradient(150deg,var(--blue),var(--deep));color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:28px;transition:.12s;border:0;user-select:none}
+.tile .seq{font:800 9px Outfit;opacity:.8;margin-top:1px}
+.tile.gap{background:#e2ebf7;cursor:default}
+.tile:active:not(.gap){transform:scale(.96)}
+.tile.locked{background:linear-gradient(150deg,var(--grn),#1f7a44)}
+.body{padding:8px 20px 16px;text-align:center}
+.status{font:700 11px Inter;color:#5a7196;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--blue);color:#fff;font:800 14px Outfit;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--soft);box-shadow:none;margin-top:7px;font-size:12px;padding:10px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#7a90b8;background:#e8f0fb;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">EASYBOOK</div>
+    <h1>Route Slider 🗺️</h1>
+    <p>Slide the tiles to put your journey in order — from home all the way to the beach. Solve it for a travel voucher!</p>
+  </div>
+  <div class="hud"><span>Moves: <span id="moves">0</span></span><span>Order: 1→8</span></div>
+  <div class="grid" id="grid"></div>
+  <div class="body">
+    <div class="status" id="status">Tap a tile next to the gap to slide it.</div>
+    <button class="btn" id="shuffle">SHUFFLE & START</button>
+    <button class="btn ghost" id="peek">👁️ Show the order (1–8)</button>
+    
+  </div>
+</div></div>
+<script>
+/* Sliding-tile (15-puzzle) LOGIC, 3x3 (8-puzzle) for pop-up fit. Public-domain.
+   Tiles = stops on a route. No IP art. SETS profile.puzzle_solved. */
+const STOPS=['🏠','🚏','🚌','🏞️','⛰️','🌉','🏖️','🌅']; // 8 stops, index 8 = gap
+let tiles,gap,moves,playing=false,solved=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function solvedState(){return [0,1,2,3,4,5,6,7,8];} // 8 = gap, in last slot
+function render(){grid.innerHTML='';
+ tiles.forEach((v,idx)=>{const t=document.createElement('button');
+  if(v===8){t.className='tile gap';t.innerHTML='';}
+  else{t.className='tile'+(solved?' locked':'');
+   t.innerHTML='<span>'+STOPS[v]+'</span><span class="seq">'+(v+1)+'</span>';}
+  t.onclick=()=>slide(idx);grid.appendChild(t);});}
+function neighbors(i){const r=Math.floor(i/3),c=i%3;const n=[];
+ if(r>0)n.push(i-3);if(r<2)n.push(i+3);if(c>0)n.push(i-1);if(c<2)n.push(i+1);return n;}
+function slide(i){if(!playing||solved)return;
+ const gi=tiles.indexOf(8);
+ if(neighbors(gi).includes(i)){[tiles[gi],tiles[i]]=[tiles[i],tiles[gi]];
+  moves++;document.getElementById('moves').textContent=moves;render();
+  ct('tile_slid',{moves:moves});
+  if(JSON.stringify(tiles)===JSON.stringify(solvedState())){win();}}}
+function shuffle(){tiles=solvedState();
+ // do many random valid moves to guarantee solvability
+ let gi=8;for(let k=0;k<120;k++){const n=neighbors(gi);const pick=n[Math.floor(Math.random()*n.length)];
+  [tiles[gi],tiles[pick]]=[tiles[pick],tiles[gi]];gi=pick;}
+ moves=0;solved=false;playing=true;
+ document.getElementById('moves').textContent='0';
+ status.textContent='Slide tiles into the gap to reach 1→8 order!';
+ document.getElementById('shuffle').style.display='none';render();
+ ct('game_started',{game:'route_slider'});}
+function win(){solved=true;playing=false;render();
+ status.innerHTML='🎉 Route complete in <b>'+moves+'</b> moves!';
+ const b=document.getElementById('shuffle');b.style.display='block';b.textContent='CLAIM TRAVEL VOUCHER 🎁';b.disabled=false;
+ document.getElementById('peek').style.display='none';
+ ct('puzzle_solved',{moves:moves,puzzle_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'travel_voucher'});b.textContent='VOUCHER SAVED ✓';b.disabled=true;};}
+document.getElementById('shuffle').onclick=shuffle;
+let peeking=false;
+document.getElementById('peek').onclick=()=>{peeking=!peeking;
+ if(peeking){const saved=tiles?[...tiles]:null;
+  grid.querySelectorAll('.tile').forEach((t,i)=>{if(!t.classList.contains('gap')){
+   const seq=t.querySelector('.seq');if(seq)t.style.outline='2px solid #F5A623';}});
+  setTimeout(()=>{grid.querySelectorAll('.tile').forEach(t=>t.style.outline='');peeking=false;},1400);}};
+// init with solved preview
+tiles=solvedState();render();
+ct('Notification Viewed',{game:'route_slider',mechanic:'sliding_tile'});
+</script></body></html>

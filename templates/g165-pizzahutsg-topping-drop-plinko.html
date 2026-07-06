@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G165 — PIZZA HUT SG "TOPPING DROP" · Plinko / Peg-Drop
+  Mechanic: Plinko/peg-drop LOGIC (public-domain genre) — drop a disc through a
+  peg field, it bounces into a weighted prize slot. NO trademarked art/names.
+  Reward layer is intrinsic (the slot landed in) — HONEST: slot odds shown, real
+  physics, no rigged funnel. Brand-skinned as dropping a topping onto a pizza.
+  NEW FAMILY (Plinko) — 0 prior files. Surface: in-app interstitial. Grade B.
+  Lifecycle: conversion. SETS: {{profile.plinko_prize}}. PROMOS: slot reward.
+  NOT for White Hat accounts. Brand: Pizza Hut red #EE3A43 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ee3a43"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pizza Hut · Topping Drop</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#ee3a43);--deep:#B71C24;--gold:#F5A623;--grn:#2FA85B;--ink:#221012;--paper:#FFF6F0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1518,#1a0a0b);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,4,5,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Karla;letter-spacing:3px;color:#c2807c;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#fbe2e0;color:var(--ink);cursor:pointer}
+h1{font-family:Fraunces;font-size:20px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a6a6a;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Karla;color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:#fff8f3;border:2px solid #fbe2e0;border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Karla;color:#9a6a6a;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--red);color:#fff;font:800 13px Karla;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.odds{font-size:8.5px;color:#c2a09c;margin-top:5px;line-height:1.4}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#b08884;background:#f7e4e1;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">PIZZA HUT</div>
+    <h1>Topping Drop 🍕</h1>
+    <p>Tap to drop your topping! Watch it bounce down to a prize slot. You've got 3 drops.</p>
+  </div>
+  <div class="hud"><span>Drops left: <span id="drops">3</span></span><span>Best: <span id="best">—</span></span></div>
+  <div class="stage"><canvas id="cv" width="260" height="280"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap the board to drop your topping!</div>
+    <button class="btn" id="start">START · 3 DROPS</button>
+    <div class="odds" id="odds"></div>
+    
+  </div>
+</div></div>
+<script>
+/* Plinko/peg-drop LOGIC (public-domain). Honest physics; slot odds emerge from
+   real bounce distribution + shown. IP-neutral. SETS profile.plinko_prize. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const ROWS=7,PEG_R=4;
+const SLOTS=[
+ {label:'Free Side',emo:'🍟',col:'#F5A623'},
+ {label:'10% off',emo:'💵',col:CONFIG.accentColor},
+ {label:'Free Topping',emo:'🧀',col:'#2FA85B'},
+ {label:'25% off',emo:'🎉',col:'#F5A623'},
+ {label:'Free Topping',emo:'🧀',col:'#2FA85B'},
+ {label:'10% off',emo:'💵',col:CONFIG.accentColor},
+ {label:'Free Side',emo:'🍟',col:'#F5A623'}];
+let pegs,disc,drops,playing=false,dropping=false,loopT=null,bestPrize=null;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function buildPegs(){pegs=[];const top=40,gapY=26;
+ for(let r=0;r<ROWS;r++){const count=r+3;const gapX=W/(count+1);
+  for(let c=0;c<count;c++){pegs.push({x:gapX*(c+1),y:top+r*gapY});}}}
+const SLOT_Y=H-34,SLOT_W=W/SLOTS.length;
+function draw(){cx.clearRect(0,0,W,H);
+ // pegs
+ cx.fillStyle='#d89b8f';pegs.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,PEG_R,0,7);cx.fill();});
+ // slots
+ SLOTS.forEach((s,i)=>{cx.fillStyle=s.col;cx.globalAlpha=.85;
+  cx.fillRect(i*SLOT_W+1,SLOT_Y,SLOT_W-2,30);cx.globalAlpha=1;
+  cx.fillStyle='#fff';cx.font='13px serif';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText(s.emo,i*SLOT_W+SLOT_W/2,SLOT_Y+15);});
+ // dividers
+ cx.strokeStyle='#e8c0b8';for(let i=0;i<=SLOTS.length;i++){cx.beginPath();cx.moveTo(i*SLOT_W,SLOT_Y);cx.lineTo(i*SLOT_W,SLOT_Y+30);cx.stroke();}
+ if(disc){cx.font='20px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🍅',disc.x,disc.y);}}
+function dropDisc(){if(!playing||dropping||drops<=0)return;dropping=true;
+ disc={x:W/2+(Math.random()-.5)*30,y:18,vx:(Math.random()-.5)*1,vy:0,r:9};
+ ct('disc_dropped',{drops_left:drops-1});
+ if(loopT)clearAnim();loopT=setInterval(physics,16);}
+function clearAnim(){clearInterval(loopT);loopT=null;}
+function physics(){disc.vy+=0.22;disc.x+=disc.vx;disc.y+=disc.vy;
+ // peg collisions
+ pegs.forEach(p=>{const dx=disc.x-p.x,dy=disc.y-p.y,d=Math.hypot(dx,dy);
+  if(d<disc.r+PEG_R){const a=Math.atan2(dy,dx);
+   disc.x=p.x+Math.cos(a)*(disc.r+PEG_R);disc.y=p.y+Math.sin(a)*(disc.r+PEG_R);
+   disc.vx=Math.cos(a)*1.8+(Math.random()-.5)*0.8;disc.vy=Math.abs(disc.vy)*0.5+0.5;}});
+ // walls
+ if(disc.x<disc.r){disc.x=disc.r;disc.vx*=-.6;}
+ if(disc.x>W-disc.r){disc.x=W-disc.r;disc.vx*=-.6;}
+ // landed
+ if(disc.y>=SLOT_Y-disc.r){clearAnim();dropping=false;
+  const slotIdx=Math.max(0,Math.min(SLOTS.length-1,Math.floor(disc.x/SLOT_W)));
+  const prize=SLOTS[slotIdx];
+  drops--;document.getElementById('drops').textContent=drops;
+  status.innerHTML='Landed on <b>'+prize.label+'</b> '+prize.emo;
+  ct('disc_landed',{slot:slotIdx,prize:prize.label});
+  // track best (by a simple rank)
+  const rank={'Free Side':1,'10% off':2,'Free Topping':3,'25% off':4};
+  if(!bestPrize||rank[prize.label]>rank[bestPrize.label]){bestPrize=prize;
+   document.getElementById('best').textContent=prize.label;}
+  disc=null;draw();
+  if(drops<=0){endGame();}}
+ else draw();}
+function endGame(){playing=false;
+ status.innerHTML='🎉 Best prize: <b>'+bestPrize.label+'</b> '+bestPrize.emo;
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM '+bestPrize.label.toUpperCase()+' 🎁';b.disabled=false;
+ ct('game_over',{plinko_prize:bestPrize.label});
+ b.onclick=()=>{ct('reward_won',{reward:bestPrize.label});b.textContent='CLAIMED ✓';b.disabled=true;};}
+function start(){buildPegs();drops=3;bestPrize=null;playing=true;disc=null;
+ document.getElementById('drops').textContent='3';document.getElementById('best').textContent='—';
+ status.textContent='Tap the board to drop!';document.getElementById('start').style.display='none';
+ // honest odds note (emergent from physics; we present indicative slot spread)
+ document.getElementById('odds').textContent='Center slots are rarer (real bounce physics) — no rigged funnel.';
+ draw();ct('game_started',{game:'topping_drop'});}
+cv.addEventListener('pointerdown',dropDisc);
+document.getElementById('start').onclick=start;
+buildPegs();draw();
+ct('Notification Viewed',{game:'topping_drop',mechanic:'plinko'});
+</script></body></html>

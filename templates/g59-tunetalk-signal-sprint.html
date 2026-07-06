@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G59 — TUNE TALK "SIGNAL SPRINT" · Tap-Timing Reaction Game
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: precision-timing mastery loop (stop the sweep in the zone)
+  Lifecycle: engagement / habit (3 rounds, escalating speed)
+  PROMOS: 3/3 perfect → bonus data. Brand: Tune Talk orange #F36F21 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#2f9e6e"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tune Talk · Signal Sprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;800&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--org:#F36F21;--deep:#C2511A;--ink:#221208;--paper:#FFFAF5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:linear-gradient(165deg,#4a2c12,#1f1206);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(22,11,3,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.hd{background:var(--org);color:#fff;padding:15px 18px;position:relative;text-align:center}
+.brand{font:800 11px Karla;letter-spacing:3px;margin-bottom:4px;opacity:.95}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font-family:Rubik;font-size:19px;font-weight:800}
+.hd p{font-size:11px;opacity:.94;margin-top:3px}
+.rounds{display:flex;justify-content:center;gap:7px;padding:12px 0 4px}
+.rd{width:34px;height:8px;border-radius:4px;background:#f3ddcb;transition:.3s}
+.rd.hit{background:var(--cfg-accent,#2f9e6e)}.rd.miss{background:#e35d5d}
+.tower{display:flex;justify-content:center;padding:6px 0 0;font-size:34px}
+.meter{margin:8px 24px 0;position:relative;height:46px;background:#fff;border:2px solid #f0dcc8;border-radius:13px;overflow:hidden}
+.zone{position:absolute;top:0;bottom:0;background:rgba(47,158,110,.25);border-left:2.5px dashed var(--cfg-accent,#2f9e6e);border-right:2.5px dashed var(--cfg-accent,#2f9e6e)}
+.sweep{position:absolute;top:3px;bottom:3px;width:7px;border-radius:4px;background:var(--org);box-shadow:0 0 10px rgba(243,111,33,.6)}
+.status{text-align:center;font:800 12px Karla;color:#9b6f48;padding:9px 0 0;letter-spacing:.5px;min-height:26px}
+.body{padding:8px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Rubik;font-size:18px;font-weight:800;color:var(--org);display:block}
+.result span{font-size:12px;color:#8a6a4e}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--org);color:#fff;font:800 14px Rubik;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#a8845f;background:#f6ead9;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">TUNE TALK</div>
+    <h1>SIGNAL SPRINT ⚡</h1>
+    <p>Tap when the signal hits the green zone. 3 rounds, each one faster.</p>
+  </div>
+  <div class="rounds" id="rds"></div>
+  <div class="tower">📡</div>
+  <div class="meter" id="meter">
+    <div class="zone" id="zone"></div>
+    <div class="sweep" id="sweep"></div>
+  </div>
+  <div class="status" id="st">ROUND 1 · NICE AND EASY</div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go">LOCK THE SIGNAL</button>
+    
+  </div>
+</div></div>
+<script>
+/* 3 rounds, narrowing zone + faster sweep. 3/3 → Promos data bonus. */
+const ROUNDS=[{sp:1.6,zw:26,zx:52},{sp:2.5,zw:19,zx:34},{sp:3.4,zw:13,zx:62}];
+let r=0,hits=0,pos=0,dir=1,running=false,raf=null,phase='ready';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<3;i++){const d=document.createElement('div');d.className='rd';rds.appendChild(d);}
+function setup(){const R=ROUNDS[r];
+ zone.style.left=R.zx+'%';zone.style.width=R.zw+'%';
+ pos=0;dir=1;sweep.style.left='0%';
+ st.textContent='ROUND '+(r+1)+' · '+(r===0?'NICE AND EASY':r===1?'FASTER NOW':'FULL SPEED 🔥');}
+function loop(){if(!running)return;
+ const R=ROUNDS[r];
+ pos+=dir*R.sp;
+ if(pos>=97){pos=97;dir=-1;}if(pos<=0){pos=0;dir=1;}
+ sweep.style.left=pos+'%';
+ raf=requestAnimationFrame(loop);}
+go.onclick=()=>{
+ if(phase==='ready'){phase='running';running=true;
+  go.textContent='TAP! ⚡';loop();
+  if(r===0)ct('Game Played',{game:'signal_sprint'});}
+ else if(phase==='running'){running=false;cancelAnimationFrame(raf);
+  const R=ROUNDS[r];
+  const hit=pos>=R.zx-1&&pos<=R.zx+R.zw-1;
+  rds.children[r].classList.add(hit?'hit':'miss');
+  if(hit)hits++;
+  ct('round_result',{round:r+1,hit:hit,pos:Math.round(pos)});
+  st.textContent=hit?'LOCKED! FULL BARS 📶':'SIGNAL DROPPED 📵';
+  r++;
+  if(r<3){phase='ready';go.textContent='ROUND '+(r+1)+' — GO';
+   setTimeout(setup,700);}
+  else{phase='done';end();}}};
+function end(){result.style.display='block';
+ if(hits===3){rT.textContent='PERFECT SIGNAL 🏆';
+  rS.textContent='3/3 locks — reflexes of a fibre line. 2GB bonus data is yours.';
+  go.textContent='CLAIM 2GB BONUS';
+  ct('game_perfect',{hits:3,reward:'2GB'});
+  go.onclick=()=>{ /* PROMOS: data bonus */
+   ct('reward_claimed',{reward:'2GB'});
+   go.textContent='CREDITED ✓';go.disabled=true;};}
+ else{rT.textContent=hits+'/3 LOCKS';
+  rS.textContent='Almost full bars! A perfect run earns 2GB. The tower believes in you.';
+  go.textContent='SPRINT AGAIN';
+  ct('game_over',{hits:hits});
+  go.onclick=()=>location.reload();}}
+setup();
+ct('Notification Viewed',{game:'signal_sprint',trigger:'engagement'});
+</script></body></html>

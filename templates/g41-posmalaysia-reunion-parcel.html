@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G41 — POS MALAYSIA "THE REUNION PARCEL" · CNY Story (P9 register)
+  Surface: Custom HTML In-App (story → ask) · Grade B
+  Pattern: P-C emotional narrative + CNY reunion (concepts 26/37)
+  Lifecycle: seasonal win-back / activation of senders
+  SETS: {{profile.cny_path}} → "send something home" festive journey.
+  Brand: Pos Malaysia red + white (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e1251b"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pos Malaysia · The Reunion Parcel</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,500&family=Asap:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#e1251b);--deep:#A8160E;--ink:#231312}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Asap,sans-serif;min-height:100vh;background:#1c0807;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(20,4,3,.7);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:605px;max-height:92vh;border-radius:26px;overflow:hidden;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.7)}
+.scr{position:absolute;inset:0;padding:54px 26px 26px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .6s}
+.scr.on{opacity:1;pointer-events:auto}
+.bg0{background:linear-gradient(170deg,#5e1612,#2a0a08)}
+.bg1{background:linear-gradient(170deg,#7A1F1A,#3c0d0a)}
+.bgE{background:linear-gradient(170deg,var(--cfg-accent,#e1251b),#8e120c)}
+.x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;z-index:6}
+.kick{font:700 10.5px Asap;letter-spacing:3px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:12px}
+.scene{font-size:42px;margin-bottom:10px}
+.story{font-family:Fraunces,Georgia;font-size:20px;color:#fff;line-height:1.55}
+.story i{color:#FFC894}
+.spacer{flex:1}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.22);border-radius:15px;padding:14px 16px;cursor:pointer;display:flex;gap:11px;align-items:center;transition:.2s}
+.choice:hover{background:rgba(255,255,255,.15)}
+.choice:active{transform:scale(.97)}
+.choice i{font-style:normal;font-size:19px}
+.choice span{font:600 13px Asap;color:#fff;line-height:1.4}
+.tap{font:700 10.5px Asap;letter-spacing:2px;color:rgba(255,255,255,.45);text-align:center;cursor:pointer}
+.offer{background:#fff;border-radius:18px;padding:18px;text-align:center;margin-top:13px}
+.offer .ok{font:700 10px Asap;letter-spacing:2.5px;color:#b07a76}
+.offer .ov{font-family:Fraunces;font-size:24px;color:var(--deep);margin:5px 0 4px}
+.offer .od{font-size:12px;color:#7d5552;line-height:1.5}
+.btn{width:100%;border:0;border-radius:13px;padding:15px;background:#fff;color:var(--deep);font:700 14px Asap;cursor:pointer;margin-top:12px}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:rgba(255,255,255,.5);background:rgba(0,0,0,.4);border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+  <div class="scr bg0 on" id="s0">
+    <div class="kick">Pos Malaysia · a CNY story</div>
+    <div class="scene">📦</div>
+    <div class="story">This year, you can't make it home for reunion dinner.<br><br>But on your desk sits an empty box — and an idea.<br><br><i>What goes in the parcel?</i></div>
+    <div class="spacer"></div>
+    <div class="choices">
+      <div class="choice" onclick="pick('kuih')"><i>🍪</i><span>Ma's favourite kuih kapit — from the shop she misses</span></div>
+      <div class="choice" onclick="pick('photo')"><i>🖼️</i><span>A framed photo from your graduation she never got</span></div>
+      <div class="choice" onclick="pick('angpow')"><i>🧧</i><span>Hand-written angpow — your first year giving, not receiving</span></div>
+    </div>
+  </div>
+  <div class="scr bg1" id="s1">
+    <div class="kick">the journey home</div>
+    <div class="scene" id="e1"></div>
+    <div class="story" id="t1"></div>
+    <div class="spacer"></div>
+    <div class="tap" onclick="finale()">TAP — THE DOORBELL RINGS →</div>
+  </div>
+  <div class="scr bgE" id="s2">
+    <div class="kick">gong xi fa cai 🧧</div>
+    <div class="story" style="font-size:21px" id="endT"></div>
+    <div class="offer">
+      <div class="ok">REUNION DELIVERY</div>
+      <div class="ov">RM5 OFF + FESTIVE BOX FREE</div>
+      <div class="od">CNY-priority handling so it arrives before the reunion dinner — guaranteed window, tracked all the way home.</div>
+    </div>
+    <button class="btn" id="claimBtn">SEND SOMETHING HOME 📦</button>
+    <div class="spacer"></div>
+  </div>
+  
+</div></div>
+<script>
+/* SETS profile.cny_path → festive sender journey. Story before ask (P9). */
+const PATHS={
+ kuih:{e:'🍪',t:'The tin is sealed with three layers of tape — because Ma taught you that, too.<br><br>It rides through two sorting hubs and one rainy highway, carrying the smell of charcoal and childhood.<br><br><i>Some recipes travel better than people do.</i>',
+  end:'She calls before the box is even fully open. <i>"Same shop?!"</i> Same shop, Ma. Happy New Year. 🧧'},
+ photo:{e:'🖼️',t:'Bubble-wrapped twice, corners padded — a four-year-old promise finally in transit.<br><br>Through the scanner it goes: one frame, one gown, one smile she\'s only ever seen on a phone screen.<br><br><i>Some things deserve to be held, not swiped.</i>',
+  end:'She puts it on the shelf before dinner — facing the table, <i>so you\'re there too.</i> Happy New Year. 🧧'},
+ angpow:{e:'🧧',t:'Your handwriting wobbles on the envelope — giving feels heavier than receiving ever did.<br><br>Inside: not much, honestly. But it\'s the first harvest of your first real job, folded in red.<br><br><i>Growing up has a postage stamp on it.</i>',
+  end:'Pa doesn\'t say much on the phone. He doesn\'t have to — <i>you can hear him smiling.</i> Happy New Year. 🧧'}};
+let path='';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function pick(p){path=p;const P=PATHS[p];
+ ct('story_branch',{cny_path:p}); /* SETS profile.cny_path */
+ e1.textContent=P.e;t1.innerHTML=P.t;
+ s0.classList.remove('on');document.getElementById('s1').classList.add('on');}
+function finale(){endT.innerHTML=PATHS[path].end;
+ document.getElementById('s1').classList.remove('on');
+ document.getElementById('s2').classList.add('on');
+ ct('story_completed',{cny_path:path});
+ claimBtn.onclick=()=>{ /* PROMOS: CNY-priority shipping voucher post-story */
+  ct('reward_won',{reward:'RM5 + festive box',path:path});
+  claimBtn.textContent='OPENING SEND FLOW ✓';claimBtn.disabled=true;};}
+ct('Notification Viewed',{story:'reunion_parcel',season:'cny_2027'});
+</script></body></html>

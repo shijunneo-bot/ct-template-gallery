@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G204 — CAROUSELL "WORD HIVE" · Spelling-Bee Anagram Puzzle
+  Mechanic: anagram-builder LOGIC (NYT-Spelling-Bee-spirit, public-domain genre) —
+  7 letters in a hive (1 required center); build 4+ letter words that include the
+  center; letters reusable; pangram uses all 7. Word list VERIFIED: 42 valid words,
+  pangram CENTRAL confirmed. NO trademarked art/names. Brand-skinned as building
+  listings from letters. NEW FAMILY (anagram hive). Daily-puzzle format. Surface:
+  in-app Custom HTML. Grade B. Lifecycle: engagement (daily-return).
+  SETS: {{profile.hive_score}}. PROMOS: boost at score tier.
+  Brand: Carousell red #FF3B30 (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff3b30"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carousell · Word Hive</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#ff3b30);--deep:#CC2A20;--gold:#F5A623;--grn:#34C759;--ink:#1A1012;--paper:#FFF7F6;--soft:#FFE0DD}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1512,#1a0a09);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,7,5,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,5,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#c28680;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a6a66;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Sora;color:var(--deep)}
+.current{text-align:center;font:800 22px Sora;color:var(--ink);letter-spacing:4px;min-height:30px;padding:4px}
+.hive{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0}
+.hrow{display:flex;gap:8px}
+.hex{width:54px;height:60px;background:var(--soft);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);display:flex;align-items:center;justify-content:center;font:800 22px Sora;color:var(--ink);cursor:pointer;transition:.1s;text-transform:uppercase}
+.hex.center{background:var(--gold)}
+.hex:active{transform:scale(.9)}
+.found{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;padding:4px 22px;max-height:50px;overflow-y:auto}
+.fw{font:700 9px Inter;color:#5a8a6c;background:#eafaf0;border-radius:5px;padding:2px 6px}
+.fw.pangram{background:var(--gold);color:#1a0f06;font-weight:800}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a6a66;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.row{display:flex;gap:7px}
+.btn{flex:1;border:0;border-radius:12px;padding:11px;background:var(--red);color:#fff;font:800 12px Sora;cursor:pointer;box-shadow:0 4px 0 var(--deep)}
+.btn:disabled{opacity:.5;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--soft);box-shadow:none}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#b08884;background:#ffe8e5;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CAROUSELL</div>
+    <h1>Word Hive 🐝</h1>
+    <p>Build words (4+ letters) using these letters. Every word must include the gold centre. Hit 30 points for a boost!</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Words: <span id="count">0</span></span></div>
+  <div class="current" id="current"></div>
+  <div class="hive" id="hive"></div>
+  <div class="found" id="found"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then tap letters!</div>
+    <div class="row" id="controls" style="display:none">
+      <button class="btn ghost" id="back">⌫</button>
+      <button class="btn ghost" id="shuffle">🔀</button>
+      <button class="btn" id="submit">ENTER</button>
+    </div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Anagram-hive LOGIC (Spelling-Bee-spirit, public-domain). Center required, 4+ len,
+   reusable letters. Word list verified (42 words, pangram CENTRAL). IP-neutral.
+   SETS profile.hive_score. */
+const CENTER='A';const OUTER=['T','C','R','E','N','L'];
+const VALID=new Set(["ACRE","ALERT","ALTER","ANTE","ANTLER","ARENA","CANAL","CANE","CANTER","CARE",
+ "CARNAL","CART","CATER","CENTRAL","CLARET","CLEAN","CLEAR","CRANE","CRATE","EARN","ENACT","LACE",
+ "LANCE","LANE","LATE","LATER","LEAN","LEARN","NACRE","NEAR","NEAT","NECTAR","RACE","RATE","REACT",
+ "RECANT","RENAL","RENTAL","TALE","TEAL","TEAR","TRACE"]);
+const TARGET=30;
+let current='',found=[],score=0,outer,playing=false,rewarded=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function wordScore(w){if(w.length===4)return 1;let s=w.length;
+ if([...new Set([CENTER,...OUTER])].every(l=>w.includes(l)))s+=7;/*pangram bonus*/return s;}
+function isPangram(w){return [...new Set([CENTER,...OUTER])].every(l=>w.includes(l));}
+function renderHive(){const h=document.getElementById('hive');h.innerHTML='';
+ const top=outer.slice(0,3),bot=outer.slice(3,6);
+ const mk=arr=>{const row=document.createElement('div');row.className='hrow';
+  arr.forEach(l=>{const hx=document.createElement('div');hx.className='hex';hx.textContent=l;hx.onclick=()=>tap(l);row.appendChild(hx);});return row;};
+ h.appendChild(mk(top));
+ const mid=document.createElement('div');mid.className='hrow';
+ const cx=document.createElement('div');cx.className='hex center';cx.textContent=CENTER;cx.onclick=()=>tap(CENTER);mid.appendChild(cx);
+ h.appendChild(mid);h.appendChild(mk(bot));}
+function tap(l){if(!playing)return;current+=l;document.getElementById('current').textContent=current;}
+function submit(){if(!playing)return;const w=current.toUpperCase();
+ if(w.length<4){status.textContent='Words need 4+ letters.';reset();return;}
+ if(!w.includes(CENTER)){status.textContent='Must include the gold centre letter.';reset();return;}
+ if(found.includes(w)){status.textContent='Already found "'+w+'".';reset();return;}
+ if(!VALID.has(w)){status.textContent='"'+w+'" isn\'t in our list — try another.';reset();return;}
+ const pts=wordScore(w);score+=pts;found.unshift(w);
+ ct('word_found',{word:w,points:pts,pangram:isPangram(w),hive_score:score});
+ document.getElementById('score').textContent=score;document.getElementById('count').textContent=found.length;
+ renderFound();status.innerHTML=isPangram(w)?'🌟 PANGRAM! <b>+'+pts+'</b>':'Nice — <b>+'+pts+'</b> ('+w+')';
+ reset();
+ if(score>=TARGET&&!rewarded){rewarded=true;reward();}}
+function renderFound(){document.getElementById('found').innerHTML=
+ found.map(w=>'<span class="fw'+(isPangram(w)?' pangram':'')+'">'+w+'</span>').join('');}
+function reset(){current='';document.getElementById('current').textContent='';}
+function back(){if(playing&&current){current=current.slice(0,-1);document.getElementById('current').textContent=current;}}
+function shuffle(){outer=outer.sort(()=>Math.random()-0.5);renderHive();}
+function start(){current='';found=[];score=0;rewarded=false;outer=OUTER.slice();playing=true;
+ document.getElementById('score').textContent='0';document.getElementById('count').textContent='0';
+ document.getElementById('found').innerHTML='';status.textContent='Tap letters to build a word.';
+ document.getElementById('start').style.display='none';document.getElementById('controls').style.display='flex';
+ renderHive();ct('game_started',{game:'word_hive'});}
+function reward(){
+ status.innerHTML='🎉 '+TARGET+' points — boost unlocked! Keep finding more.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM BOOST 🎁';b.disabled=false;
+ ct('score_tier_reached',{hive_score:score});
+ b.onclick=()=>{ct('reward_won',{reward:'seller_boost'});b.textContent='BOOST CLAIMED ✓';b.disabled=true;};}
+document.getElementById('submit').onclick=submit;
+document.getElementById('back').onclick=back;
+document.getElementById('shuffle').onclick=shuffle;
+document.getElementById('start').onclick=start;
+outer=OUTER.slice();renderHive();
+ct('Notification Viewed',{game:'word_hive',mechanic:'spelling_bee'});
+</script></body></html>

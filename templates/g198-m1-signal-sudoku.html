@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G198 — M1 "SIGNAL SUDOKU" · 4x4 Mini-Sudoku
+  Mechanic: sudoku LOGIC (public-domain genre) — fill a 4x4 grid so each row,
+  column, and 2x2 box contains 1-4 once. NO trademarked art/names. Brand-skinned
+  as filling a signal grid (numbers shown as bars 1-4). NEW FAMILY (sudoku) — 0
+  prior files. Daily-puzzle format. Puzzle + solution VERIFIED at build. Surface:
+  in-app Custom HTML. Grade B. Lifecycle: engagement (daily-return).
+  SETS: {{profile.sudoku_solved}}. PROMOS: data on solve.
+  Brand: M1 orange/magenta (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#9a7080"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · Signal Sudoku</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Mulish:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF6B2C;--mag:#E5007D;--grn:#3FAE6A;--ink:#241019;--paper:#FFF6F1;--soft:#FCE3D8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Mulish,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c1018,#160810);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,5,10,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,14,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Mulish;letter-spacing:3px;color:var(--mag);margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Fraunces;font-size:20px;color:var(--ink)}
+.hd p{font-size:10.5px;color:var(--cfg-accent,#9a7080);margin-top:2px;line-height:1.35}
+.gridwrap{display:flex;justify-content:center;padding:10px 0 4px}
+.grid{display:grid;grid-template-columns:repeat(4,54px);gap:0;background:var(--ink);padding:3px;border-radius:8px}
+.cell{width:54px;height:54px;background:#fff;display:flex;align-items:center;justify-content:center;font:800 22px Mulish;color:var(--ink);cursor:pointer;border:1px solid #f0d8ce}
+.cell.fixed{background:#fbeee8;color:var(--mag);cursor:default}
+.cell.sel{background:#ffe0b8;box-shadow:inset 0 0 0 2px var(--org)}
+.cell.bx{border-right:2px solid var(--ink)}
+.cell.by{border-bottom:2px solid var(--ink)}
+.cell.bad{color:#E1251B}
+.pad{display:flex;justify-content:center;gap:8px;padding:8px 0 2px}
+.numb{width:48px;height:44px;border:0;border-radius:10px;background:#fff;border:2px solid var(--soft);font:800 18px Mulish;color:var(--mag);cursor:pointer}
+.numb:active{background:var(--soft)}
+.numb.erase{font-size:13px;color:var(--cfg-accent,#9a7080)}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 10.5px Mulish;color:var(--cfg-accent,#9a7080);min-height:14px;margin-bottom:8px}
+.status b{color:var(--mag)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:linear-gradient(135deg,var(--org),var(--mag));color:#fff;font:800 14px Mulish;cursor:pointer;box-shadow:0 5px 0 #b3145e}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#b88a9a;background:#f8e6ee;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">M1</div>
+    <h1>Signal Sudoku 📶</h1>
+    <p>Fill the grid so every row, column and 2×2 box has 1–4 exactly once. Solve it for bonus data!</p>
+  </div>
+  <div class="gridwrap"><div class="grid" id="grid"></div></div>
+  <div class="pad" id="pad"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to load the puzzle!</div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Sudoku LOGIC (public-domain). 4x4 mini: rows/cols/2x2 boxes hold 1-4 once.
+   Puzzle + solution verified valid below. IP-neutral. SETS profile.sudoku_solved. */
+// solution (valid 4x4 latin square with box constraint):
+const SOLUTION=[
+ [1,2,3,4],
+ [3,4,1,2],
+ [2,1,4,3],
+ [4,3,2,1]];
+// givens (0 = blank) — VERIFIED uniquely solvable (single solution) by solver:
+const PUZZLE=[
+ [0,0,3,4],
+ [0,0,1,2],
+ [2,0,0,0],
+ [4,3,2,0]];
+let grid,fixed,sel,playing=false,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){grid=PUZZLE.map(r=>r.slice());fixed=PUZZLE.map(r=>r.map(v=>v!==0));sel=null;won=false;render();}
+function render(){const g=document.getElementById('grid');g.innerHTML='';
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++){const d=document.createElement('div');
+  let cls='cell';if(fixed[r][c])cls+=' fixed';if(sel&&sel.r===r&&sel.c===c)cls+=' sel';
+  if(c===1)cls+=' bx';if(r===1)cls+=' by';
+  d.className=cls;d.textContent=grid[r][c]||'';
+  d.onclick=()=>{if(!fixed[r][c]&&playing){sel={r,c};render();}};
+  g.appendChild(d);}}
+function buildPad(){const p=document.getElementById('pad');p.innerHTML='';
+ [1,2,3,4].forEach(n=>{const b=document.createElement('button');b.className='numb';b.textContent=n;
+  b.onclick=()=>place(n);p.appendChild(b);});
+ const e=document.createElement('button');e.className='numb erase';e.textContent='✕';
+ e.onclick=()=>place(0);p.appendChild(e);}
+function place(n){if(!playing||!sel||fixed[sel.r][sel.c])return;
+ grid[sel.r][sel.c]=n;ct('cell_filled',{r:sel.r,c:sel.c,val:n});render();checkSolved();}
+function valid(){ // check current grid for conflicts (full + correct)
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++){if(grid[r][c]===0)return false;}
+ // rows, cols, boxes
+ for(let i=0;i<4;i++){const row=new Set(),col=new Set();
+  for(let j=0;j<4;j++){row.add(grid[i][j]);col.add(grid[j][i]);}
+  if(row.size!==4||col.size!==4)return false;}
+ for(let br=0;br<4;br+=2)for(let bc=0;bc<4;bc+=2){const box=new Set();
+  for(let r=br;r<br+2;r++)for(let c=bc;c<bc+2;c++)box.add(grid[r][c]);
+  if(box.size!==4)return false;}
+ return true;}
+function checkSolved(){if(valid()&&!won){won=true;win();}
+ else{const filled=grid.flat().filter(Boolean).length;
+  if(filled===16)status.innerHTML='Grid full but has a clash — check rows/cols/boxes.';
+  else status.innerHTML='Keep going — <b>'+(16-filled)+'</b> cells left.';}}
+function start(){build();playing=true;status.textContent='Tap a cell, then a number.';
+ document.getElementById('start').style.display='none';
+ ct('game_started',{game:'signal_sudoku'});}
+function win(){playing=false;
+ status.innerHTML='🎉 Solved — every row, column & box checks out!';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM BONUS DATA 📶';b.disabled=false;
+ ct('puzzle_solved',{sudoku_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'bonus_data'});b.textContent='DATA ADDED ✓';b.disabled=true;};}
+document.getElementById('start').onclick=start;
+buildPad();build();
+ct('Notification Viewed',{game:'signal_sudoku',mechanic:'sudoku'});
+</script></body></html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G208 — TREVO "ROAD TRACE" · Word-Path on Letter Board
+  Mechanic: word-path-finding LOGIC (NYT-Strands / word-search-spirit, public-
+  domain genre) — drag across adjacent letters to spell hidden travel words from a
+  theme; found words highlight; find them all. Grid VERIFIED by solver: all 4
+  targets (DRIVE/ROUTE/MILES/PETROL) traceable as 8-dir adjacent paths. NO
+  trademarked art/names. Brand-skinned as tracing road-trip words (Trevo = car
+  rental/mobility). Daily-puzzle format; 2nd word-path build but distinct grid/
+  theme/account from G197. Surface: in-app Custom HTML. Grade B. Lifecycle:
+  engagement (daily-return). SETS: {{profile.roadtrace_solved}}.
+  PROMOS: rental credit on full clear. Brand: Trevo purple #6C3CE9 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#6c3ce9"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trevo · Road Trace</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--purp:var(--cfg-accent,#6c3ce9);--deep:#4F25B8;--gold:#F5A623;--grn:#2FA85B;--ink:#160A33;--paper:#F6F3FE;--soft:#E4DAFB}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#1d0e47,#0e0722);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(10,4,25,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(12,5,35,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Outfit;letter-spacing:3px;color:#9a82d8;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Outfit;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#7158a6;margin-top:2px;line-height:1.35}
+.theme{text-align:center;font:800 10px Outfit;color:var(--deep);background:var(--soft);margin:4px 22px;border-radius:8px;padding:5px;letter-spacing:.5px}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 11px Outfit;color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:#fff;border:2px solid var(--soft);border-radius:12px;touch-action:none;cursor:pointer}
+.found-list{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:6px 22px 2px;min-height:24px}
+.fw{font:800 9px Outfit;color:#fff;background:var(--grn);border-radius:6px;padding:3px 8px}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#7158a6;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--purp);color:#fff;font:800 13px Outfit;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#a892d8;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#9a82c8;background:#ece5fb;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">TREVO</div>
+    <h1>Road Trace 🛣️</h1>
+    <p>Drag across touching letters to spell the hidden road-trip words. Find all 4 for a rental credit!</p>
+  </div>
+  <div class="theme" id="theme">THEME: ON THE ROAD</div>
+  <div class="hud"><span>Found: <span id="found">0</span>/4</span><span>Trace the words!</span></div>
+  <div class="stage"><canvas id="cv" width="240" height="240"></canvas></div>
+  <div class="found-list" id="foundList"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then drag to trace a word!</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Drag through adjacent letters (any direction) · release to submit</div>
+    
+  </div>
+</div></div>
+<script>
+/* Word-path LOGIC (Strands/word-search-spirit, public-domain). Grid solver-verified:
+   DRIVE/ROUTE/MILES/PETROL all traceable (8-dir adjacency). Targets validated live
+   against dragged paths. IP-neutral. SETS profile.roadtrace_solved. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const N=5,CELL=48;
+const GRID=[
+ ['D','R','I','M','S'],
+ ['E','V','I','E','L'],
+ ['T','U','O','L','E'],
+ ['R','O','R','T','I'],
+ ['P','E','T','O','M']];
+const TARGETS=['DRIVE','ROUTE','MILES','PETROL'];
+let found=[],path=[],drawing=false,playing=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function cellAt(px,py){const rect=cv.getBoundingClientRect();
+ const x=(px-rect.left)*(cv.width/rect.width),y=(py-rect.top)*(cv.height/rect.height);
+ const c=Math.floor(x/CELL),r=Math.floor(y/CELL);if(r<0||r>=N||c<0||c>=N)return null;return {r,c};}
+function adjacent(a,b){return Math.abs(a.r-b.r)<=1&&Math.abs(a.c-b.c)<=1&&!(a.r===b.r&&a.c===b.c);}
+function down(e){if(!playing)return;const cell=cellAt(e.clientX,e.clientY);if(!cell)return;
+ drawing=true;path=[cell];draw();}
+function move(e){if(!playing||!drawing)return;const cell=cellAt(e.clientX,e.clientY);if(!cell)return;
+ const last=path[path.length-1];
+ if(path.some(p=>p.r===cell.r&&p.c===cell.c)){
+  if(path.length>=2&&path[path.length-2].r===cell.r&&path[path.length-2].c===cell.c){path.pop();draw();}return;}
+ if(adjacent(last,cell)){path.push(cell);draw();}}
+function up(){if(!playing||!drawing)return;drawing=false;
+ const word=path.map(p=>GRID[p.r][p.c]).join('');
+ const rev=word.split('').reverse().join('');
+ let match=null;
+ if(TARGETS.includes(word)&&!found.includes(word))match=word;
+ else if(TARGETS.includes(rev)&&!found.includes(rev))match=rev;
+ if(match){found.push(match);ct('word_found',{word:match,roadtrace_found:found.length});
+  status.innerHTML='✅ Found <b>'+match+'</b>!';renderFound();
+  if(found.length>=TARGETS.length)return win();}
+ else{status.textContent=word.length>=3?'"'+word+'" isn\'t a target — try again.':'Trace a longer word.';}
+ path=[];draw();}
+function renderFound(){const el=document.getElementById('foundList');
+ el.innerHTML=found.map(w=>'<span class="fw">'+w+'</span>').join('');
+ document.getElementById('found').textContent=found.length;}
+function draw(){cx.clearRect(0,0,cv.width,cv.height);
+ if(path.length){cx.strokeStyle='rgba(108,60,233,.35)';cx.lineWidth=22;cx.lineCap='round';cx.lineJoin='round';
+  cx.beginPath();path.forEach((p,i)=>{const x=p.c*CELL+CELL/2,y=p.r*CELL+CELL/2;
+   if(i===0)cx.moveTo(x,y);else cx.lineTo(x,y);});cx.stroke();}
+ cx.lineWidth=1;
+ for(let r=0;r<N;r++)for(let c=0;c<N;c++){cx.strokeStyle='#e6ddfb';cx.strokeRect(c*CELL,r*CELL,CELL,CELL);
+  cx.fillStyle='#160A33';cx.font='800 20px Outfit';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText(GRID[r][c],c*CELL+CELL/2,r*CELL+CELL/2);}}
+function start(){found=[];path=[];playing=true;status.textContent='Drag to trace a road-trip word!';
+ document.getElementById('start').style.display='none';renderFound();draw();
+ ct('game_started',{game:'road_trace'});}
+function win(){playing=false;
+ status.innerHTML='🎉 All 4 words traced! Road trip sorted.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM RENTAL CREDIT 🎁';b.disabled=false;
+ ct('puzzle_solved',{roadtrace_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'rental_credit'});b.textContent='CREDIT SAVED ✓';b.disabled=true;};}
+cv.addEventListener('pointerdown',down);cv.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+document.getElementById('start').onclick=start;
+draw();
+ct('Notification Viewed',{game:'road_trace',mechanic:'word_path_strands'});
+</script></body></html>

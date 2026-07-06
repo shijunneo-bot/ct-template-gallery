@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G44 — NEURON "PARK LIKE A PRO" · Swipe-Judgement Safety Quiz
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: rapid judgement + safety norms (parking compliance is Neuron's
+  #1 city-relations issue — gamify the norm, not the lecture)
+  Lifecycle: engagement + safety education (post-ride trigger)
+  SETS: {{profile.parking_pro}} on perfect score → badge + ops goodwill.
+  PROMOS: 5/5 → small ride credit. Brand: Neuron orange (verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#f0ddd2"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neuron · Park Like a Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Archivo:wght@800&display=swap" rel="stylesheet">
+<style>
+:root{--org:#F05A22;--deep:#B23C10;--ink:#13100E;--paper:#FFFAF6;--good:#2f9e6e;--bad:#e35d5d}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a2418,#170d08);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,8,4,.64);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.hd{background:var(--org);color:#fff;padding:16px 18px;position:relative;text-align:center}
+.brand{font-family:Archivo;font-size:14px;letter-spacing:3px;margin-bottom:6px}
+.x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font-family:Archivo;font-size:19px}
+.hd p{font-size:11.5px;opacity:.93;margin-top:4px}
+.scorebar{display:flex;justify-content:center;gap:7px;padding:12px 0 2px}
+.sdot{width:30px;height:8px;border-radius:4px;background:var(--cfg-accent,#f0ddd2);transition:.3s}
+.sdot.ok{background:var(--good)}.sdot.no{background:var(--bad)}
+.scene{margin:10px 20px 0;background:#fff;border:2px solid var(--cfg-accent,#f0ddd2);border-radius:16px;padding:14px;text-align:center;min-height:150px}
+.scene-art{font-size:15px;line-height:1.9;letter-spacing:2px;background:#FCF3EC;border-radius:11px;padding:10px 6px;margin-bottom:9px;white-space:pre-line;font-family:ui-monospace,monospace}
+.scene-cap{font-size:12.5px;font-weight:700;color:#5c4435;line-height:1.45}
+.verd{display:none;margin:8px 20px 0;border-radius:11px;padding:9px 12px;font-size:11.5px;line-height:1.5}
+.verd.ok{background:#e8f7ef;color:#1e6b48;display:block}
+.verd.no{background:#fdebeb;color:#9c3535;display:block}
+.tf{display:flex;gap:10px;padding:10px 20px 4px}
+.tfb{flex:1;border:0;border-radius:13px;padding:14px;font:800 13px Archivo;cursor:pointer;letter-spacing:.5px}
+.tfb:active{transform:scale(.96)}
+.tfb.good{background:var(--good);color:#fff;box-shadow:0 4px 0 #1e6b48}
+.tfb.bad{background:var(--bad);color:#fff;box-shadow:0 4px 0 #a33}
+.body{padding:8px 20px 18px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Archivo;font-size:17px;color:var(--org);display:block}
+.result span{font-size:12px;color:#7d6453}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;background:var(--org);color:#fff;font:800 13.5px Archivo;letter-spacing:.5px;cursor:pointer;box-shadow:0 5px 0 var(--deep);display:none}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#a3866f;background:#f5e8dd;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">NEURON</div>
+    <h1>PARK LIKE A PRO 🛴</h1>
+    <p>5 parking jobs. You're the judge — good park or bad park?</p>
+  </div>
+  <div class="scorebar" id="sb"></div>
+  <div class="scene">
+    <div class="scene-art" id="art"></div>
+    <div class="scene-cap" id="cap"></div>
+  </div>
+  <div class="verd" id="vd"></div>
+  <div class="tf" id="tf">
+    <button class="tfb good" onclick="judge(true)">GOOD PARK ✓</button>
+    <button class="tfb bad" onclick="judge(false)">BAD PARK ✗</button>
+  </div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="claimBtn">CLAIM $2 RIDE CREDIT</button>
+    
+  </div>
+</div></div>
+<script>
+/* Post-ride trigger. SETS profile.parking_pro on 5/5. */
+const QS=[
+ {art:'🏢  🛴  🚶  🚶\n━━━━━━━━━━',cap:'Scooter upright in the marked bay, footpath clear.',good:true,
+  why:'GOOD — in the bay, upright, path clear. Textbook. The city thanks you.'},
+ {art:'🏢  🚶 🛴 🚶\n━━╳━━━━╳━━',cap:'Parked across the middle of a busy footpath.',good:false,
+  why:'BAD — blocks pedestrians, prams and wheelchairs. This is the #1 complaint cities have.'},
+ {art:'🚪🛴\n━━━━━━━━━━',cap:'Leaning against a shop\'s front door.',good:false,
+  why:'BAD — blocking an entrance is an instant fine in most cities (and very bad karma).'},
+ {art:'🌳  🛴  🪧\n━━━━━━━━━━',cap:'Upright beside the designated parking sign, off the path.',good:true,
+  why:'GOOD — by the sign, out of the way. Future riders can find it too.'},
+ {art:'♿  🛴\n━━━━━━━━━━',cap:'Parked on the accessibility ramp.',good:false,
+  why:'BAD — never on ramps or tactile paving. Accessibility routes are sacred.'}];
+let i=0,score=0;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+QS.forEach(()=>{const d=document.createElement('div');d.className='sdot';sb.appendChild(d);});
+function show(){art.textContent=QS[i].art;cap.textContent=QS[i].cap;
+ vd.className='verd';tf.style.pointerEvents='auto';}
+function judge(v){tf.style.pointerEvents='none';
+ const Q=QS[i],ok=v===Q.good;if(ok)score++;
+ sb.children[i].classList.add(ok?'ok':'no');
+ vd.className='verd '+(ok?'ok':'no');vd.textContent=Q.why;
+ ct('parking_judged',{q:i+1,correct:ok,score:score});
+ setTimeout(()=>{i++;
+  if(i<QS.length)show();
+  else done();},1700);}
+function done(){tf.style.display='none';
+ result.style.display='block';
+ if(score===5){rT.textContent='PARKING PRO 🏆';
+  rS.textContent='5/5 — cities love riders like you. Badge earned + $2 ride credit.';
+  claimBtn.style.display='block';
+  ct('quiz_perfect',{parking_pro:true}); /* SETS profile.parking_pro */
+  claimBtn.onclick=()=>{ /* PROMOS: small ride credit for safety champions */
+   ct('reward_won',{reward:'$2 credit',badge:'parking_pro'});
+   claimBtn.textContent='CREDITED ✓';claimBtn.disabled=true;};}
+ else{rT.textContent=score+'/5 — almost pro';
+  rS.textContent='Good eye! Remember: marked bays, clear paths, never on ramps. Try again after your next ride.';
+  ct('quiz_completed',{score:score});}}
+show();
+ct('Notification Viewed',{game:'park_like_a_pro',trigger:'post_ride'});
+</script></body></html>

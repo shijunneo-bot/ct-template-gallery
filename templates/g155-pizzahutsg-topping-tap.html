@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G155 — PIZZA HUT SG "TOPPING TAP" · Whack-a-Mole Reflex
+  Mechanic: whack-a-mole LOGIC (public-domain genre) — tap targets that pop up
+  fast, avoid the "bad" ones. NO trademarked art/names. Brand-skinned as catching
+  toppings landing on a pizza (avoid the chilli if you don't want heat!).
+  Fills arcade reflex gap. Surface: in-app Custom HTML. Grade B.
+  Lifecycle: conversion (fun pre-order moment).
+  SETS: {{profile.topping_score}}. PROMOS: topping voucher at score tier.
+  Brand: Pizza Hut red #EE3A43 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ee3a43"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pizza Hut · Topping Tap</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Karla:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#ee3a43);--deep:#B71C24;--grn:#2FA85B;--ink:#221012;--paper:#FFF6F0;--crust:#E8B96A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1518,#1a0a0b);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,4,5,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(0,0,0,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:800 11px Karla;letter-spacing:3px;color:#c2807c;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#fbe2e0;color:var(--ink);cursor:pointer}
+h1{font-family:Fraunces;font-size:20px;color:var(--ink)}
+.hd p{font-size:11px;color:#9a6a6a;margin-top:3px;line-height:1.4}
+.hud{display:flex;justify-content:space-between;padding:4px 24px;font:800 12px Karla;color:var(--deep)}
+.pizza{position:relative;width:240px;height:240px;margin:8px auto 4px;border-radius:50%;background:radial-gradient(circle,#F4C430 60%,var(--crust) 61%);border:6px solid var(--crust);box-shadow:inset 0 0 0 3px #d89b3a}
+.hole{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;transform:translate(-50%,-50%);user-select:none}
+.hole .pop{transform:scale(0);transition:transform .12s}
+.hole.up .pop{transform:scale(1)}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 11px Karla;color:#9a6a6a;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--red);color:#fff;font:800 14px Karla;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9.5px;color:#c2a09c;margin-top:6px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#b08884;background:#f7e4e1;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">PIZZA HUT</div>
+    <h1>Topping Tap 🍕</h1>
+    <p>Tap the toppings as they land! Grab as many as you can in 20 seconds — but skip the 🌶️ unless you like it spicy.</p>
+  </div>
+  <div class="hud"><span>Score: <span id="score">0</span></span><span>Time: <span id="time">20</span>s</span></div>
+  <div class="pizza" id="pizza"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start — then catch those toppings!</div>
+    <button class="btn" id="start">START TOPPING</button>
+    <div class="hint">🍅🧀🍄 = +points · 🌶️ = −points · be quick!</div>
+    
+  </div>
+</div></div>
+<script>
+/* Whack-a-mole LOGIC (public-domain genre). Toppings pop from holes; tap good,
+   avoid chilli. No IP art. SETS profile.topping_score. */
+const GOOD=['🍅','🧀','🍄','🫒','🌽','🥓'],BAD='🌶️';
+// 5 hole positions on the pizza (% of 240px)
+const POS=[[50,30],[28,52],[72,52],[38,76],[64,74]];
+let holes=[],score,time,playing=false,gameT=null,popT=null,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function buildHoles(){pizza.innerHTML='';holes=[];
+ POS.forEach((p,i)=>{const h=document.createElement('div');h.className='hole';
+  h.style.left=p[0]+'%';h.style.top=p[1]+'%';
+  h.innerHTML='<span class="pop"></span>';
+  h.dataset.i=i;h.onclick=()=>tap(i);pizza.appendChild(h);holes.push({el:h,active:false,bad:false});});}
+function tap(i){if(!playing)return;const h=holes[i];if(!h.active)return;
+ if(h.bad){score=Math.max(0,score-30);status.innerHTML='🌶️ Ouch! <b>−30</b>';
+  ct('bad_tap',{score:score});}
+ else{score+=20;status.innerHTML='Nice! <b>+20</b>';ct('good_tap',{score:score});}
+ document.getElementById('score').textContent=score;
+ h.active=false;h.el.classList.remove('up');h.el.querySelector('.pop').textContent='';}
+function popRandom(){if(!playing)return;
+ // clear a couple
+ holes.forEach(h=>{if(Math.random()<0.4&&h.active){h.active=false;h.el.classList.remove('up');h.el.querySelector('.pop').textContent='';}});
+ const free=holes.filter(h=>!h.active);
+ if(free.length){const h=free[Math.floor(Math.random()*free.length)];
+  const bad=Math.random()<0.22;h.active=true;h.bad=bad;
+  h.el.querySelector('.pop').textContent=bad?BAD:GOOD[Math.floor(Math.random()*GOOD.length)];
+  h.el.classList.add('up');}}
+function start(){score=0;time=20;won=false;playing=true;
+ document.getElementById('score').textContent='0';document.getElementById('time').textContent='20';
+ status.textContent='Catch the toppings!';document.getElementById('start').style.display='none';
+ buildHoles();
+ if(popT)clearInterval(popT);popT=setInterval(popRandom,620);
+ if(gameT)clearInterval(gameT);gameT=setInterval(()=>{time--;document.getElementById('time').textContent=time;
+  if(time<=0)endGame();},1000);
+ ct('game_started',{game:'topping_tap'});}
+function endGame(){playing=false;clearInterval(gameT);clearInterval(popT);
+ holes.forEach(h=>{h.el.classList.remove('up');h.el.querySelector('.pop').textContent='';});
+ const tier=score>=200;
+ status.innerHTML=tier?'🎉 Topping master! <b>'+score+'</b>':'Time! Final score <b>'+score+'</b>';
+ const b=document.getElementById('start');b.style.display='block';b.disabled=false;
+ ct('game_over',{topping_score:score});
+ if(tier){b.textContent='CLAIM TOPPING VOUCHER 🎁';
+  ct('score_tier_reached',{topping_score:score});
+  b.onclick=()=>{ct('reward_won',{reward:'free_topping'});b.textContent='VOUCHER SAVED ✓';b.disabled=true;};}
+ else{b.textContent='TRY AGAIN (200 to win)';b.onclick=start;}}
+buildHoles();
+document.getElementById('start').onclick=start;
+ct('Notification Viewed',{game:'topping_tap',mechanic:'whack_a_mole'});
+</script></body></html>

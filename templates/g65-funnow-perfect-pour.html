@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G65 — FUNNOW "PERFECT POUR" · Stop-the-Fill Timing Game
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: precision-stop tension (cocktail fill = bar-category romance)
+  Lifecycle: engagement → bar/nightlife category conversion
+  Mechanic: glass fills fast — tap STOP inside the golden band. 3 pours.
+  PROMOS: 3 perfect pours → happy-hour booking deal.
+  Brand: FunNow coral (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#c4a8d6"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FunNow · Perfect Pour</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#FF5A36;--deep:#D63A18;--night:#1C1024;--gold:#FFC74A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -20%,#43224f,#160b1c);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(12,5,16,.66);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--night);border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid #38214a}
+.hd{padding:15px 20px 6px;text-align:center;position:relative}
+.brand{font-family:Fredoka;font-size:16px;color:var(--coral);margin-bottom:4px}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff14;color:#fff;cursor:pointer}
+h1{font-family:Fredoka;font-size:20px}
+.hd p{font-size:11px;color:var(--cfg-accent,#c4a8d6);margin-top:3px}
+.pours{display:flex;justify-content:center;gap:8px;padding:10px 0 2px}
+.pd{width:32px;height:8px;border-radius:4px;background:#3a2249;transition:.3s}
+.pd.hit{background:var(--gold)}.pd.miss{background:#e35d5d}
+.barzone{display:flex;justify-content:center;align-items:flex-end;gap:18px;padding:8px 0 4px}
+.glass{position:relative;width:84px;height:128px;border:3px solid #5e3f73;border-top:0;border-radius:0 0 20px 20px;overflow:hidden;background:rgba(255,255,255,.04)}
+.band{position:absolute;left:0;right:0;background:rgba(255,199,74,.22);border-top:2px dashed var(--gold);border-bottom:2px dashed var(--gold)}
+.fill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(180deg,#FF8A5C,var(--coral));transition:none}
+.garnish{font-size:26px;align-self:flex-start;margin-top:6px}
+.status{text-align:center;font:800 11px Nunito;letter-spacing:1px;color:#b594cc;padding:7px 0 0;min-height:24px}
+.body{padding:8px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Fredoka;font-size:18px;color:var(--gold);display:block}
+.result span{font-size:11.5px;color:var(--cfg-accent,#c4a8d6)}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;background:linear-gradient(90deg,var(--coral),var(--deep));color:#fff;font:800 14px Nunito;cursor:pointer;box-shadow:0 6px 18px rgba(255,90,54,.35)}
+.btn:active{transform:scale(.98)}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#9a82ab;background:#281634;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FunNow</div>
+    <h1>Perfect Pour 🍹</h1>
+    <p>Stop the pour inside the golden band. 3 drinks, rising speed.</p>
+  </div>
+  <div class="pours" id="pds"></div>
+  <div class="barzone">
+    <div class="garnish" id="gar">🍋</div>
+    <div class="glass"><div class="band" id="band"></div><div class="fill" id="fill"></div></div>
+    <div class="garnish" style="align-self:flex-end">🫒</div>
+  </div>
+  <div class="status" id="st">DRINK 1 · THE WARM-UP SPRITZ</div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go">POUR!</button>
+    
+  </div>
+</div></div>
+<script>
+/* 3 pours, narrowing band + faster fill. 3/3 → Promos happy-hour deal. */
+const ROUNDS=[
+ {sp:.9,bt:58,bh:24,n:'THE WARM-UP SPRITZ',g:'🍋'},
+ {sp:1.5,bt:46,bh:17,n:'THE MIDNIGHT MOJITO',g:'🌿'},
+ {sp:2.2,bt:66,bh:11,n:'THE BOSS-LEVEL MARTINI',g:'🫒'}];
+let r=0,hits=0,h=0,running=false,raf=null,phase='ready';
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+for(let i=0;i<3;i++){const d=document.createElement('div');d.className='pd';pds.appendChild(d);}
+function setup(){const R=ROUNDS[r];
+ band.style.bottom=R.bt+'%';band.style.height=R.bh+'%';
+ h=0;fill.style.height='0%';gar.textContent=R.g;
+ st.textContent='DRINK '+(r+1)+' · '+R.n;}
+function loop(){if(!running)return;
+ h+=ROUNDS[r].sp;
+ if(h>=100){h=100;stopPour();return;}
+ fill.style.height=h+'%';
+ raf=requestAnimationFrame(loop);}
+function stopPour(){running=false;cancelAnimationFrame(raf);
+ const R=ROUNDS[r];
+ const hit=h>=R.bt&&h<=R.bt+R.bh;
+ pds.children[r].classList.add(hit?'hit':'miss');
+ if(hit)hits++;
+ st.textContent=hit?'🥂 PERFECT POUR — CHEERS!':(h>=99?'OVERFLOW! THE BAR WEEPS 🫗':'UNDERPOURED — THE GLASS IS SAD 🥲');
+ ct('pour_result',{drink:r+1,hit:hit,fill:Math.round(h)});
+ r++;
+ if(r<3){phase='ready';go.textContent='POUR DRINK '+(r+1);
+  setTimeout(setup,800);}
+ else{phase='done';end();}}
+go.onclick=()=>{
+ if(phase==='ready'){phase='running';running=true;go.textContent='STOP! ✋';
+  if(r===0)ct('Game Played',{game:'perfect_pour'});
+  loop();}
+ else if(phase==='running')stopPour();
+ };
+function end(){result.style.display='block';
+ if(hits===3){rT.textContent='MASTER MIXOLOGIST 🏆';
+  rS.textContent='Three flawless pours — bars should be paying YOU. Happy-hour deal unlocked for tonight.';
+  go.textContent='BOOK MY HAPPY HOUR →';
+  ct('game_perfect',{hits:3,reward:'happy_hour'});
+  go.onclick=()=>{ /* PROMOS: bar-category booking deal */
+   ct('reward_claimed',{reward:'happy_hour'});
+   go.textContent='BOOKING OPEN ✓ 乾杯!';go.disabled=true;};}
+ else{rT.textContent=hits+'/3 PERFECT POURS';
+  rS.textContent='The martini band is brutal — even real bartenders flinch. 3/3 unlocks happy hour.';
+  go.textContent='POUR AGAIN';
+  ct('game_over',{hits:hits});
+  go.onclick=()=>location.reload();}}
+setup();
+ct('Notification Viewed',{game:'perfect_pour',category:'bars_nightlife'});
+</script></body></html>

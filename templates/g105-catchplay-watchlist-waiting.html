@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G105 — CATCHPLAY "YOUR WATCHLIST IS WAITING" · Win-Back Story
+  Tier-3 Concept #29 · Pattern P-C + P-B (story re-immersion before the ask)
+  Surface: Custom HTML In-App (multi-screen) · Grade B
+  Lifecycle: WIN-BACK (dormant viewers)
+  LIQUID-FED via key-values: {{profile.last_genre}}, {{profile.unfinished_title}},
+  {{profile.days_away}} (demo values inline). Fallback branch (5s timeout).
+  SETS: {{profile.winback_path}}. PROMOS: free rental post-story.
+  Brand: CatchPlay dark + orange (verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff7a1a"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatchPlay · Your Watchlist Is Waiting</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:var(--cfg-accent,#ff7a1a);--deep:#b34f06;--ink:#0E0C0A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter Tight',sans-serif;min-height:100vh;background:#070605;display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,3,2,.74);display:flex;align-items:center;justify-content:center;padding:14px}
+.phone{width:88vw;max-width:354px;height:608px;max-height:92vh;border-radius:26px;overflow:hidden;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.75)}
+.scr{position:absolute;inset:0;padding:54px 26px 26px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .6s}
+.scr.on{opacity:1;pointer-events:auto}
+.bg0{background:linear-gradient(170deg,#1a1410,#0a0807)}
+.bg1{background:linear-gradient(170deg,#2a1c10,#120c07)}
+.bgE{background:linear-gradient(170deg,var(--org),#7a3604)}
+.debug{position:absolute;top:14px;left:14px;z-index:6;display:flex;gap:5px}
+.dbg{border:1.5px dashed rgba(255,255,255,.35);background:rgba(0,0,0,.25);border-radius:7px;padding:4px 8px;font:800 8.5px 'Inter Tight';color:rgba(255,255,255,.7);cursor:pointer}
+.dbg.on{background:rgba(255,255,255,.22);border-style:solid;color:#fff}
+.x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;z-index:6}
+.kick{font:800 10.5px 'Inter Tight';letter-spacing:3px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:12px}
+.scene{font-size:42px;margin-bottom:10px}
+.story{font-family:'Bebas Neue';font-size:30px;letter-spacing:.5px;color:#fff;line-height:1.12}
+.story.sm{font-family:'Inter Tight';font-size:18px;font-weight:500;line-height:1.6;letter-spacing:0}
+.story i{color:#FFC48A;font-style:normal}
+.spacer{flex:1}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.2);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;gap:11px;align-items:center;transition:.2s}
+.choice:hover{background:rgba(255,255,255,.14)}
+.choice:active{transform:scale(.97)}
+.choice i{font-style:normal;font-size:19px}
+.choice span{font:600 13px 'Inter Tight';color:#fff;line-height:1.4}
+.tap{font:800 10.5px 'Inter Tight';letter-spacing:2px;color:rgba(255,255,255,.45);text-align:center;cursor:pointer}
+.offer{background:#fff;border-radius:18px;padding:18px;text-align:center;margin-top:13px}
+.offer .ok{font:800 10px 'Inter Tight';letter-spacing:2.5px;color:#c2854a}
+.offer .ov{font-family:'Bebas Neue';font-size:24px;letter-spacing:.5px;color:var(--deep);margin:5px 0 4px}
+.offer .od{font-size:12px;color:#8a6a4a;line-height:1.5}
+.btn{width:100%;border:0;border-radius:13px;padding:15px;background:#fff;color:var(--deep);font:800 14px 'Inter Tight';cursor:pointer;margin-top:12px}
+.ctlog{position:absolute;left:14px;right:14px;bottom:8px;font:700 9.5px ui-monospace,monospace;color:rgba(255,255,255,.5);background:rgba(0,0,0,.4);border-radius:8px;padding:6px 9px;z-index:6;pointer-events:none}
+</style></head><body>
+<div class="backdrop"><div class="phone">
+  <div class="debug">
+    <button class="dbg on" onclick="setData(true,this)">DEBUG: DATA OK</button>
+    <button class="dbg" onclick="setData(false,this)">FALLBACK</button>
+  </div>
+  <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+
+  <div class="scr bg0 on" id="s0">
+    <div class="kick">CatchPlay+ · still here</div>
+    <div class="scene">🎬</div>
+    <div class="story" id="t0">A STORY YOU STARTED<br>IS STILL <i>PAUSED.</i></div>
+    <div class="story sm" id="t0b" style="margin-top:16px">It's been <i>54 days</i> since you last pressed play on <i>"The Silent Tide."</i><br><br>The ending hasn't moved. It's been waiting.</div>
+    <div class="spacer"></div>
+    <div class="choices">
+      <div class="choice" onclick="pick('busy')"><i>😮‍💨</i><span>"Life got in the way."</span></div>
+      <div class="choice" onclick="pick('lost')"><i>🤔</i><span>"I forgot where I was."</span></div>
+      <div class="choice" onclick="pick('done')"><i>🍿</i><span>"I just need a reason to come back."</span></div>
+    </div>
+  </div>
+
+  <div class="scr bg1" id="s1">
+    <div class="kick">the screen remembers</div>
+    <div class="scene" id="e1"></div>
+    <div class="story sm" id="t1"></div>
+    <div class="spacer"></div>
+    <div class="tap" onclick="finale()">TAP — YOUR WATCHLIST AWAITS →</div>
+  </div>
+
+  <div class="scr bgE" id="s2">
+    <div class="kick">press play again</div>
+    <div class="story" style="font-size:26px">THE STORY ISN'T<br>OVER YET. 🍿</div>
+    <div class="offer">
+      <div class="ok">YOUR WATCHLIST, REFRESHED</div>
+      <div class="ov" id="offV">1 FREE RENTAL — ON US</div>
+      <div class="od" id="offD">Pick up where you left off, or start something new. The night is yours.</div>
+    </div>
+    <button class="btn" id="claimBtn">RESUME WATCHING 🎬</button>
+    <div class="spacer"></div>
+  </div>
+
+  
+</div></div>
+<script>
+/* LIQUID-FED via key-values: last_genre, unfinished_title, days_away.
+   FALLBACK branch (feed unavailable): generic copy — mandatory per 5s-timeout rule.
+   SETS profile.winback_path. */
+const DATA={
+ ok:{t0:'A STORY YOU STARTED<br>IS STILL <i>PAUSED.</i>',
+  t0b:'It\'s been <i>54 days</i> since you last pressed play on <i>"The Silent Tide."</i><br><br>The ending hasn\'t moved. It\'s been waiting.',
+  offV:'1 FREE RENTAL — ON US',offD:'Finish "The Silent Tide," or start something new. The night is yours.'},
+ fb:{t0:'A GOOD STORY<br>IS <i>WAITING.</i>',
+  t0b:'It\'s been a while since your last watch night.<br><br>Thousands of films and series have been waiting for you to come back.',
+  offV:'1 FREE RENTAL — ON US',offD:'Pick anything from the catalogue. Consider it a welcome back.'}};
+const PATHS={
+ busy:{e:'⏳',t:'Life does that. The good stories don\'t mind waiting.<br><br>They just sit there, perfectly preserved, ready for the exact moment you have <i>two free hours</i> and a sofa.<br><br>Tonight could be that moment.'},
+ lost:{e:'🔖',t:'No need to rewind your memory — we kept your place.<br><br>The story picks up <i>right where you left it</i>, no awkward "wait, who\'s that again?" required.<br><br>Just press play.'},
+ done:{e:'🎟️',t:'Then here\'s your reason.<br><br>A fresh watchlist, your unfinished story still bookmarked, and <i>one free rental</i> to make the decision easy.<br><br>The remote is in your hands.'}};
+let path='',dataOk=true;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function setData(ok,btn){document.querySelectorAll('.dbg').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');dataOk=ok;const D=ok?DATA.ok:DATA.fb;
+ t0.innerHTML=D.t0;t0b.innerHTML=D.t0b;offV.textContent=D.offV;offD.textContent=D.offD;
+ ct('context_state',{source:ok?'key_value':'liquid_fallback'});}
+function pick(p){path=p;const P=PATHS[p];
+ ct('story_branch',{winback_path:p}); /* SETS profile.winback_path */
+ e1.textContent=P.e;t1.innerHTML=P.t;
+ s0.classList.remove('on');document.getElementById('s1').classList.add('on');}
+function finale(){document.getElementById('s1').classList.remove('on');
+ document.getElementById('s2').classList.add('on');
+ ct('story_completed',{winback_path:path,data:dataOk?'personalised':'fallback'});
+ claimBtn.onclick=()=>{ /* PROMOS: free rental ONLY post-story */
+  ct('reward_won',{reward:'free_rental',path:path});
+  claimBtn.textContent='OPENING PLAYER ✓ ENJOY';claimBtn.disabled=true;};}
+ct('Notification Viewed',{story:'watchlist_waiting',segment:'dormant_viewer'});
+</script></body></html>

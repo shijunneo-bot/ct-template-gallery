@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G205 — WHIRLPOOL "DOT DRIFT" · Vertex Connect-the-Dots Reveal
+  Mechanic: connect-the-dots LOGIC (NYT-Vertex-spirit, public-domain genre) — connect
+  numbered/edge-defined vertices to fill triangles and reveal a simple shape. NO
+  trademarked art (generic geometric shape, self-defined coordinates). NEW FAMILY
+  (vertex/dot-connect). Daily-puzzle format. Surface: in-app Custom HTML. Grade B.
+  Lifecycle: engagement (daily-return). SETS: {{profile.vertex_solved}}.
+  PROMOS: care-kit on solve. Brand: Whirlpool yellow #EEB111 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#eeb111"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whirlpool · Dot Drift</title>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--yel:var(--cfg-accent,#eeb111);--deep:#B5850A;--grn:#3FAE6A;--ink:#231C0A;--paper:#FFFCF3;--soft:#F6EBC9}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c2410,#161104);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,12,3,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,15,3,.5);overflow:hidden}
+.hd{padding:14px 20px 8px;position:relative;text-align:center}
+.brand{font:700 11px 'Spline Sans';letter-spacing:3px;color:#c2a766;margin-bottom:4px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:'Spline Sans';font-weight:700;font-size:19px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a8758;margin-top:2px;line-height:1.4}
+.stage{display:flex;justify-content:center;padding:8px 0 2px}
+#cv{background:linear-gradient(180deg,#fffdf6,#fbf3da);border:2px solid var(--soft);border-radius:12px;touch-action:none;cursor:pointer}
+.body{padding:6px 20px 16px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a8758;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--yel);color:#231C0A;font:700 14px 'Spline Sans';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#b8a76a;margin-top:5px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a8946a;background:#f3e9cd;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">WHIRLPOOL</div>
+    <h1>Dot Drift ✨</h1>
+    <p>Connect each pair of glowing dots to fill in the triangles. Complete the picture to reveal today's shape!</p>
+  </div>
+  <div class="stage"><canvas id="cv" width="260" height="260"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to see the dots.</div>
+    <button class="btn" id="start">START</button>
+    <div class="hint">Tap one dot then an adjacent dot to draw an edge · fill all triangles</div>
+    
+  </div>
+</div></div>
+<script>
+/* Vertex/connect-dots LOGIC (public-domain). Vertices + required edges form
+   triangles; completing all edges reveals a filled shape. IP-neutral geometric
+   star. SETS profile.vertex_solved. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width;
+// vertices for a simple 6-point star + center (self-defined, no IP)
+const cxp=W/2,cyp=W/2,R=92,r=42;
+const V=[];for(let i=0;i<12;i++){const ang=-Math.PI/2+i*Math.PI/6;const rad=i%2===0?R:r;
+ V.push({x:cxp+rad*Math.cos(ang),y:cyp+rad*Math.sin(ang)});}
+V.push({x:cxp,y:cyp}); // center index 12
+// required edges: outline (0..11 loop) + spokes from center to each inner point
+const EDGES=[];for(let i=0;i<12;i++)EDGES.push([i,(i+1)%12]);
+for(let i=1;i<12;i+=2)EDGES.push([12,i]); // spokes to inner points
+// (win condition is simply "all required edges drawn"; no triangle bookkeeping needed)
+let drawn,sel,playing=false,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function edgeKey(a,b){return Math.min(a,b)+'-'+Math.max(a,b);}
+function reset(){drawn=new Set();sel=null;won=false;draw();}
+function nearest(x,y){let best=-1,bd=22;V.forEach((v,i)=>{const d=Math.hypot(v.x-x,v.y-y);if(d<bd){bd=d;best=i;}});return best;}
+function tap(e){if(!playing||won)return;const rect=cv.getBoundingClientRect();
+ const x=(e.clientX-rect.left)*(W/rect.width),y=(e.clientY-rect.top)*(W/rect.height);
+ const i=nearest(x,y);if(i<0)return;
+ if(sel===null){sel=i;draw();return;}
+ if(sel===i){sel=null;draw();return;}
+ // must be a required edge
+ const key=edgeKey(sel,i);
+ if(EDGES.some(([a,b])=>edgeKey(a,b)===key)){drawn.add(key);ct('edge_drawn',{edges:drawn.size,total:EDGES.length});
+  sel=null;draw();check();}
+ else{status.textContent='Those dots aren\'t connected — try an adjacent pair.';sel=i;draw();}}
+function check(){if(drawn.size>=EDGES.length&&!won){won=true;win();}
+ else status.innerHTML='<b>'+drawn.size+'/'+EDGES.length+'</b> edges drawn — keep going!';}
+function draw(){cx.clearRect(0,0,W,W);
+ // fill once complete
+ if(won){cx.fillStyle='rgba(238,177,17,.25)';cx.beginPath();
+  for(let i=0;i<12;i++){const v=V[i];if(i===0)cx.moveTo(v.x,v.y);else cx.lineTo(v.x,v.y);}cx.closePath();cx.fill();}
+ // drawn edges
+ EDGES.forEach(([a,b])=>{const key=edgeKey(a,b);if(drawn.has(key)){
+  cx.strokeStyle=CONFIG.accentColor;cx.lineWidth=4;cx.beginPath();cx.moveTo(V[a].x,V[a].y);cx.lineTo(V[b].x,V[b].y);cx.stroke();}});
+ cx.lineWidth=1;
+ // vertices
+ V.forEach((v,i)=>{cx.beginPath();cx.arc(v.x,v.y,i===sel?9:6,0,7);
+  cx.fillStyle=i===sel?'#B5850A':CONFIG.accentColor;cx.fill();
+  cx.strokeStyle='#fff';cx.lineWidth=2;cx.stroke();cx.lineWidth=1;});}
+function start(){reset();playing=true;status.textContent='Tap two adjacent dots to connect them.';
+ document.getElementById('start').style.display='none';
+ ct('game_started',{game:'dot_drift'});}
+function win(){playing=false;draw();
+ status.innerHTML='🎉 Picture complete — a shining star!';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM CARE KIT 🎁';b.disabled=false;
+ ct('puzzle_solved',{vertex_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'care_kit'});b.textContent='KIT CLAIMED ✓';b.disabled=true;};}
+cv.addEventListener('pointerdown',tap);
+document.getElementById('start').onclick=start;
+reset();
+ct('Notification Viewed',{game:'dot_drift',mechanic:'vertex_connect_dots'});
+</script></body></html>

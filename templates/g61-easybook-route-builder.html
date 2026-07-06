@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G61 — EASYBOOK "ROUTE BUILDER" · Stop-Order Sequence Puzzle
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: spatial mastery + destination daydreaming (route = the ad)
+  Lifecycle: engagement → route discovery
+  Mechanic: tap stops in correct geographic order (north→south KL→SG run).
+  PROMOS: perfect order → route discount. Brand: Easybook blue (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e35d5d"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Easybook · Route Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@600;800&family=Karla:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B6BB5;--deep:#114a80;--org:#F7941D;--ink:#0E2A42;--paper:#F6FAFE}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Karla,sans-serif;min-height:100vh;background:linear-gradient(165deg,#11406b,#081f36);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(4,14,25,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden}
+.hd{background:var(--blue);color:#fff;padding:15px 18px;position:relative;text-align:center}
+.brand{font:800 11px Karla;letter-spacing:3px;margin-bottom:4px;opacity:.95}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font-family:Rubik;font-size:19px;font-weight:800}
+.hd p{font-size:11px;opacity:.94;margin-top:3px}
+.route{margin:12px 22px 0;min-height:64px;background:#fff;border:2px dashed #c5d9ec;border-radius:14px;padding:10px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.route .ph{font:700 11px Karla;color:#94aec7;width:100%;text-align:center}
+.stopchip{background:var(--blue);color:#fff;border-radius:10px;padding:7px 10px;font:800 11px Karla;display:flex;gap:5px;align-items:center;animation:pop .25s}
+@keyframes pop{from{transform:scale(.6)}}
+.stopchip.wrongc{background:var(--cfg-accent,#e35d5d)}
+.pool{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:12px 22px 4px}
+.stop{background:#fff;border:2px solid #d7e6f3;border-radius:13px;padding:11px 10px;cursor:pointer;display:flex;gap:9px;align-items:center;transition:.16s}
+.stop:hover{border-color:var(--blue)}
+.stop:active{transform:scale(.95)}
+.stop.used{opacity:.35;pointer-events:none}
+.stop i{font-style:normal;font-size:20px}
+.stop span{font:800 11.5px Karla;color:var(--ink);line-height:1.25}
+.status{text-align:center;font:800 11px Karla;letter-spacing:1px;color:#7d99b5;padding:8px 0 0;min-height:24px}
+.body{padding:8px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Rubik;font-size:17px;font-weight:800;color:var(--blue);display:block}
+.result span{font-size:12px;color:#6b87a3}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--org);color:#fff;font:800 14px Rubik;cursor:pointer;box-shadow:0 5px 0 #c46f08;display:none}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#7d99b5;background:#e7f0f8;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">EASYBOOK</div>
+    <h1>ROUTE BUILDER 🚌</h1>
+    <p>The classic KL → Singapore run. Tap the 6 stops in order, north to south.</p>
+  </div>
+  <div class="route" id="route"><div class="ph">YOUR ROUTE STARTS HERE…</div></div>
+  <div class="pool" id="pool"></div>
+  <div class="status" id="st">TAP THE FIRST STOP (HINT: IT'S THE CAPITAL)</div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="claimBtn">UNLOCK 15% OFF THIS ROUTE</button>
+    
+  </div>
+</div></div>
+<script>
+/* Correct order = geographic north→south. Perfect first try → Promos discount. */
+const ORDER=[['🏙️','Kuala Lumpur'],['🛣️','Seremban'],['🍢','Melaka'],['🐔','Muar'],['🌆','Johor Bahru'],['🦁','Singapore']];
+const shuffled=[...ORDER].sort(()=>Math.random()-.5);
+let next=0,mistakes=0,placed=0;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+shuffled.forEach(S=>{const d=document.createElement('div');d.className='stop';
+ d.innerHTML=`<i>${S[0]}</i><span>${S[1]}</span>`;
+ d.onclick=()=>pick(S,d);pool.appendChild(d);});
+function pick(S,el){
+ if(placed===0){route.innerHTML='';ct('Game Played',{game:'route_builder'});}
+ if(S[1]===ORDER[next][1]){
+  el.classList.add('used');
+  const c=document.createElement('div');c.className='stopchip';
+  c.innerHTML=`${S[0]} ${S[1]}`+(next<5?' →':' 🏁');
+  route.appendChild(c);
+  next++;placed++;
+  st.textContent=next<6?'NICE — NEXT STOP HEADING SOUTH…':'';
+  ct('stop_placed',{stop:S[1],position:next});
+  if(next===6)end();}
+ else{mistakes++;
+  st.textContent='NOT YET — '+S[1].toUpperCase()+' COMES LATER. THINK NORTH → SOUTH 🧭';
+  el.style.borderColor=CONFIG.accentColor;
+  setTimeout(()=>el.style.borderColor='',600);
+  ct('wrong_stop',{tried:S[1],mistakes:mistakes});}}
+function end(){result.style.display='block';
+ const perfect=mistakes===0;
+ rT.textContent=perfect?'PERFECT ROUTE! 🗺️':'ROUTE COMPLETE ('+mistakes+' detour'+(mistakes===1?'':'s')+')';
+ rS.textContent=perfect?'Flawless geography — the driver would be proud. 15% off this exact route, unlocked.':
+  'Made it to the Lion City! A zero-detour run unlocks 15% off. The map awaits a rematch.';
+ ct('game_over',{mistakes:mistakes,perfect:perfect});
+ if(perfect){claimBtn.style.display='block';
+  claimBtn.onclick=()=>{ /* PROMOS: route discount voucher */
+   ct('reward_claimed',{reward:'route15'});
+   claimBtn.textContent='SAVED ✓ JALAN-JALAN TIME';claimBtn.disabled=true;};}}
+ct('Notification Viewed',{game:'route_builder',trigger:'route_discovery'});
+</script></body></html>

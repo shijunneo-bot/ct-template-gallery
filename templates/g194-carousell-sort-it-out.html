@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G194 — CAROUSELL "SORT IT OUT" · Connections-Style Grouping Puzzle
+  Mechanic: grouping-deduction LOGIC (NYT-Connections-spirit, public-domain genre)
+  — 16 items, find 4 hidden groups of 4; pick 4, submit, get hit/miss; limited
+  mistakes. NO trademarked art/names. Brand-skinned as sorting marketplace items
+  into categories. NEW FAMILY (grouping puzzle) — 0 prior files. Daily-puzzle format.
+  Surface: in-app Custom HTML. Grade B. Lifecycle: engagement (daily-return).
+  SETS: {{profile.groups_solved}}. PROMOS: reward on solve.
+  Brand: Carousell red #FF3B30 (approx — verify)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#ff3b30"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carousell · Sort It Out</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#ff3b30);--deep:#CC2A20;--gold:#F5A623;--grn:#34C759;--blu:#2F8Fd8;--purp:#7C3AED;--ink:#1A1012;--paper:#FFF7F6;--soft:#FFE0DD}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a1512,#1a0a09);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,7,5,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,5,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#c28680;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a6a66;margin-top:2px;line-height:1.35}
+.solved{padding:4px 18px 0}
+.solvedrow{border-radius:10px;padding:7px;margin-bottom:5px;text-align:center;color:#fff}
+.solvedrow .cat{font:800 9px Sora;letter-spacing:.5px}
+.solvedrow .items{font:700 9px Inter;opacity:.95;margin-top:1px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 18px 4px}
+.item{aspect-ratio:1.15;border-radius:9px;background:#fff;border:2px solid var(--soft);display:flex;align-items:center;justify-content:center;font:800 9px Inter;color:var(--ink);cursor:pointer;text-align:center;padding:2px;transition:.1s;line-height:1.05}
+.item.sel{background:var(--ink);color:#fff;border-color:var(--ink);transform:scale(.96)}
+.item.wrong{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.mistakes{display:flex;justify-content:center;gap:6px;padding:6px 0 2px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--red)}
+.dot.used{background:var(--soft)}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a6a66;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--red);color:#fff;font:800 13px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.4;box-shadow:none}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#b08884;background:#ffe8e5;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">CAROUSELL</div>
+    <h1>Sort It Out 🗂️</h1>
+    <p>Find the four hidden groups of four. Pick 4 items that belong together, then submit. 4 mistakes allowed!</p>
+  </div>
+  <div class="solved" id="solved"></div>
+  <div class="grid" id="grid"></div>
+  <div class="mistakes" id="mistakes"></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start to get today's puzzle!</div>
+    <button class="btn" id="submit" disabled>SUBMIT (0/4)</button>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Grouping-deduction LOGIC (Connections-spirit, public-domain). 16 items, 4 groups
+   of 4. IP-neutral marketplace categories. SETS profile.groups_solved. */
+const GROUPS=[
+ {cat:'PHONE BRANDS',color:'#F5A623',items:['Apple','Samsung','Xiaomi','Oppo']},
+ {cat:'FURNITURE',color:'#34C759',items:['Sofa','Table','Shelf','Chair']},
+ {cat:'SNEAKER WORDS',color:'#2F8Fd8',items:['Sole','Lace','Tongue','Heel']},
+ {cat:'CAMERA GEAR',color:'#7C3AED',items:['Lens','Tripod','Flash','Strap']}];
+let tiles,sel,mistakes,solvedGroups,playing=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function setup(){tiles=[];GROUPS.forEach((g,gi)=>g.items.forEach(it=>tiles.push({label:it,group:gi})));
+ shuffle(tiles);sel=[];mistakes=0;solvedGroups=[];}
+function renderSolved(){const el=document.getElementById('solved');el.innerHTML='';
+ solvedGroups.forEach(gi=>{const g=GROUPS[gi];const d=document.createElement('div');
+  d.className='solvedrow';d.style.background=g.color;
+  d.innerHTML='<div class="cat">'+g.cat+'</div><div class="items">'+g.items.join(' · ')+'</div>';el.appendChild(d);});}
+function render(){renderSolved();const grid=document.getElementById('grid');grid.innerHTML='';
+ tiles.forEach((t,i)=>{if(solvedGroups.includes(t.group))return;
+  const d=document.createElement('div');d.className='item'+(sel.includes(i)?' sel':'');
+  d.textContent=t.label;d.onclick=()=>tap(i);grid.appendChild(d);});
+ const m=document.getElementById('mistakes');m.innerHTML='';
+ for(let i=0;i<4;i++){const dot=document.createElement('div');dot.className='dot'+(i<mistakes?' used':'');m.appendChild(dot);}
+ document.getElementById('submit').textContent='SUBMIT ('+sel.length+'/4)';
+ document.getElementById('submit').disabled=sel.length!==4;}
+function tap(i){if(!playing)return;
+ if(sel.includes(i)){sel=sel.filter(x=>x!==i);}
+ else if(sel.length<4){sel.push(i);}
+ render();}
+function submit(){if(sel.length!==4)return;
+ const groups=sel.map(i=>tiles[i].group);
+ const allSame=groups.every(g=>g===groups[0]);
+ ct('group_submitted',{correct:allSame});
+ if(allSame){solvedGroups.push(groups[0]);sel=[];
+  ct('group_solved',{category:GROUPS[groups[0]].cat,groups_solved:solvedGroups.length});
+  status.innerHTML='✅ '+GROUPS[groups[0]].cat+' — correct!';render();
+  if(solvedGroups.length===4)return win();}
+ else{mistakes++;
+  // "one away" feedback like Connections
+  const counts={};groups.forEach(g=>counts[g]=(counts[g]||0)+1);
+  const max=Math.max(...Object.values(counts));
+  document.querySelectorAll('.item.sel').forEach(el=>el.classList.add('wrong'));
+  setTimeout(()=>{status.innerHTML=max===3?'So close — <b>one away!</b>':'Not a group. <b>'+(4-mistakes)+'</b> mistakes left.';
+   sel=[];render();},420);
+  ct('group_wrong',{mistakes:mistakes,one_away:max===3});
+  if(mistakes>=4)return lose();}}
+function start(){setup();playing=true;status.textContent='Pick 4 that belong together.';
+ document.getElementById('start').style.display='none';document.getElementById('submit').style.display='block';
+ render();ct('game_started',{game:'sort_it_out'});}
+function win(){playing=false;
+ status.innerHTML='🎉 All four groups solved'+(mistakes===0?' — flawless!':'!');
+ document.getElementById('submit').style.display='none';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM REWARD 🎁';b.disabled=false;
+ ct('puzzle_solved',{groups_solved:4,mistakes:mistakes});
+ b.onclick=()=>{ct('reward_won',{reward:'sorter_voucher'});b.textContent='REWARD SAVED ✓';b.disabled=true;};}
+function lose(){playing=false;
+ // reveal remaining
+ GROUPS.forEach((g,gi)=>{if(!solvedGroups.includes(gi))solvedGroups.push(gi);});renderSolved();
+ document.getElementById('grid').innerHTML='';
+ status.innerHTML='Out of guesses! Here were the groups. Try again?';
+ document.getElementById('submit').style.display='none';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{groups_solved:solvedGroups.length});}
+document.getElementById('submit').onclick=submit;
+document.getElementById('start').onclick=start;
+setup();render();document.getElementById('submit').style.display='none';
+ct('Notification Viewed',{game:'sort_it_out',mechanic:'connections_grouping'});
+</script></body></html>

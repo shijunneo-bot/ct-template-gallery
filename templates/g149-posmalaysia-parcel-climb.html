@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G149 — POS MALAYSIA "PARCEL CLIMB" · Roll-and-Move Board
+  Mechanic: Snakes-&-Ladders LOGIC (public domain board game) — roll, move,
+  climb shortcuts / slide setbacks. NO trademarked art/names. Brand-skinned as a
+  parcel's journey up the delivery network.
+  NEW FAMILY (roll-and-move board) — 0 prior files. Surface: in-app Custom HTML.
+  Grade B. Lifecycle: engagement / delivery-tracking habit.
+  SETS: {{profile.board_position}}. PROMOS: postage voucher at finish.
+  Brand: Pos Malaysia red #E1251B (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#e1251b"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pos Malaysia · Parcel Climb</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:var(--cfg-accent,#e1251b);--deep:#A81810;--gold:#F4A52A;--grn:#2Fa85b;--ink:#1f0d0b;--paper:#FDF4EC}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#3a120e,#1a0807);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(18,6,4,.64);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,8,5,.5);overflow:hidden}
+.hd{background:var(--red);color:#fff;padding:14px 20px;position:relative;text-align:center}
+.brand{font:800 11px 'Bricolage Grotesque';letter-spacing:2px;margin-bottom:4px}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;cursor:pointer}
+h1{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px}
+.hd p{font-size:11px;opacity:.93;margin-top:3px;line-height:1.4}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:14px 18px 6px}
+.sq{aspect-ratio:1;border-radius:8px;background:#fff;border:1.5px solid #f0d9cb;display:flex;align-items:center;justify-content:center;font:700 10px Inter;color:#b8856a;position:relative}
+.sq .n{position:absolute;top:2px;left:4px;font-size:7px;color:#cbb;}
+.sq.ladder{background:#e6f6ec;border-color:var(--grn)}
+.sq.chute{background:#fdeceb;border-color:var(--red)}
+.sq .ic{font-size:15px}
+.sq.here{background:var(--gold);border-color:var(--deep);box-shadow:0 0 0 2px var(--gold)}
+.sq.here .ic{font-size:18px}
+.sq.finish{background:linear-gradient(135deg,var(--gold),var(--red));border-color:var(--deep)}
+.legend{display:flex;justify-content:center;gap:14px;padding:2px 18px;font:700 9px Inter;color:#9a6a5a}
+.legend span{display:flex;align-items:center;gap:4px}
+.dotg{width:9px;height:9px;border-radius:2px;background:var(--grn)}
+.dotr{width:9px;height:9px;border-radius:2px;background:var(--red)}
+.body{padding:8px 20px 16px;text-align:center}
+.dice{font-size:40px;margin:2px 0;height:48px;transition:.2s}
+.dice.roll{animation:shake .5s}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-18deg) scale(1.1)}75%{transform:rotate(18deg) scale(1.1)}}
+.status{font:700 11px Inter;color:#9a6a5a;min-height:16px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:14px;background:var(--red);color:#fff;font:800 14px 'Bricolage Grotesque';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.5;box-shadow:none}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--deep)}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#a8836a;background:#f3e3d5;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">POS MALAYSIA</div>
+    <h1>Parcel Climb 📦</h1>
+    <p>Roll to send your parcel up the network. Catch an express lane, dodge the delays — reach the doorstep to win.</p>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="legend"><span><span class="dotg"></span>Express lane (climb)</span><span><span class="dotr"></span>Delay (slide back)</span></div>
+  <div class="body">
+    <div class="dice" id="dice">🎲</div>
+    <div class="status" id="status">Tap to roll your first move!</div>
+    <button class="btn" id="roll">ROLL THE DICE 🎲</button>
+    
+  </div>
+</div></div>
+<script>
+/* Snakes-&-Ladders public-domain LOGIC, brand-skinned. 20-square short board.
+   Ladders = express lanes; chutes = delays. SETS profile.board_position. */
+const SIZE=20;
+// jumps: from->to  (positive=ladder/express, negative=chute/delay)
+const JUMPS={3:9, 7:14, 12:6, 16:19, 18:11};
+const LADDERS=[3,7,16], CHUTES=[12,18];
+let pos=0,rolling=false,won=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){board.innerHTML='';
+ // render 1..20 in a boustrophedon (snake) order so it reads like a real board
+ const cells=[];
+ for(let row=3;row>=0;row--){
+  let line=[];
+  for(let c=0;c<5;c++){line.push(row*5+c+1);}
+  if(row%2===1)line.reverse(); // alternate direction
+  cells.push(...line);
+ }
+ cells.forEach(num=>{
+  const sq=document.createElement('div');sq.className='sq';sq.dataset.num=num;
+  let ic='';
+  if(num===SIZE){sq.classList.add('finish');ic='🏠';}
+  else if(LADDERS.includes(num)){sq.classList.add('ladder');ic='🚀';}
+  else if(CHUTES.includes(num)){sq.classList.add('chute');ic='🐌';}
+  sq.innerHTML='<span class="n">'+num+'</span><span class="ic">'+ic+'</span>';
+  board.appendChild(sq);
+ });
+ paint();}
+function paint(){document.querySelectorAll('.sq').forEach(s=>{
+  s.classList.remove('here');
+  const num=+s.dataset.num;
+  if(num===pos){s.classList.add('here');
+   const base=num===SIZE?'🏠':(LADDERS.includes(num)?'🚀':(CHUTES.includes(num)?'🐌':''));
+   s.querySelector('.ic').textContent='📦';}
+  else{const num2=+s.dataset.num;
+   s.querySelector('.ic').textContent=num2===SIZE?'🏠':(LADDERS.includes(num2)?'🚀':(CHUTES.includes(num2)?'🐌':''));}
+ });}
+roll.onclick=()=>{if(rolling||won)return;rolling=true;roll.disabled=true;
+ const d=1+Math.floor(Math.random()*6);
+ dice.classList.add('roll');dice.textContent='🎲';
+ ct('dice_rolled',{roll:d,from:pos});
+ setTimeout(()=>{dice.classList.remove('roll');dice.textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][d-1];
+  let np=pos+d;
+  if(np>SIZE){status.innerHTML='Rolled <b>'+d+'</b> — need exact to reach home. Stay put!';
+   rolling=false;roll.disabled=false;return;}
+  pos=np;paint();
+  setTimeout(()=>{
+   if(JUMPS[pos]!==undefined){const to=JUMPS[pos];const up=to>pos;
+    status.innerHTML=up?'🚀 Express lane! Jump to <b>'+to+'</b>':'🐌 Delay — slide back to <b>'+to+'</b>';
+    pos=to;paint();
+    ct(up?'ladder_climb':'chute_slide',{to:pos});}
+   else{status.innerHTML='Moved to square <b>'+pos+'</b>';}
+   ct('position_update',{board_position:pos});
+   if(pos>=SIZE){won=true;status.innerHTML='🎉 Delivered! Your parcel made it home.';
+    roll.textContent='CLAIM POSTAGE VOUCHER 🎁';roll.disabled=false;
+    ct('board_complete',{board_position:SIZE});
+    roll.onclick=()=>{ct('reward_won',{reward:'RM5 postage voucher'});
+     roll.textContent='VOUCHER SAVED ✓';roll.disabled=true;};}
+   else{rolling=false;roll.disabled=false;}
+  },420);
+ },520);};
+build();
+ct('Notification Viewed',{game:'parcel_climb',mechanic:'roll_and_move'});
+</script></body></html>

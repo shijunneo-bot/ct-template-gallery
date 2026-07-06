@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G180 — WHIRLPOOL "TOWER STACK" · Timing-Drop Stacker
+  Mechanic: timing-stack LOGIC (Stack / Tower-Bloxx-spirit, public-domain genre) —
+  a moving block slides; tap to drop it on the stack; overhang is trimmed; perfect
+  aligns keep width; miss = game over. NO trademarked art/names. Distinct from
+  falling-block(150) — this is single-block timing, not tetromino fitting.
+  Brand-skinned as stacking appliance boxes. NEW FAMILY (timing-stack). Surface:
+  in-app interstitial. Grade B. Lifecycle: engagement. SETS: {{profile.tower_height}}.
+  PROMOS: reward at height target. Brand: Whirlpool yellow #EEB111 (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#eeb111"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whirlpool · Tower Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@600;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--yel:var(--cfg-accent,#eeb111);--deep:#B5850A;--grn:#3FAE6A;--ink:#231C0A;--paper:#FFFCF3;--soft:#F6EBC9}
+*{margin:0;box-sizing:border-box;padding:0}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#2c2410,#161104);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(16,12,3,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(20,15,3,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:700 11px 'Spline Sans';letter-spacing:3px;color:#c2a766;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:'Spline Sans';font-weight:700;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#9a8758;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:700 11px 'Spline Sans';color:var(--deep)}
+.stage{display:flex;justify-content:center;padding:6px 0 2px}
+#cv{background:linear-gradient(180deg,#fffdf6,#fbf3da);border:2px solid var(--soft);border-radius:10px;touch-action:none;cursor:pointer}
+.body{padding:4px 20px 14px;text-align:center}
+.status{font:700 10.5px Inter;color:#9a8758;min-height:14px;margin-bottom:7px}
+.status b{color:var(--deep)}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--yel);color:#231C0A;font:700 14px 'Spline Sans';cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.hint{font-size:9px;color:#b8a76a;margin-top:5px}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#a8946a;background:#f3e9cd;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">WHIRLPOOL</div>
+    <h1>Tower Stack 📦</h1>
+    <p>Tap to drop each box on the stack. Line them up — overhang gets trimmed! Reach 8 boxes for a reward.</p>
+  </div>
+  <div class="hud"><span>Height: <span id="height">0</span></span><span>Target: 8</span></div>
+  <div class="stage"><canvas id="cv" width="220" height="300"></canvas></div>
+  <div class="body">
+    <div class="status" id="status">Tap the tower (or Space) to drop!</div>
+    <button class="btn" id="start">START STACKING</button>
+    <div class="hint">Tap to drop · perfect aligns keep full width · miss = topple</div>
+    
+  </div>
+</div></div>
+<script>
+/* Timing-stack LOGIC (public-domain genre). Moving block, tap to drop, trim
+   overhang, perfect = keep width. IP-neutral. SETS profile.tower_height. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height,BH=22;
+let stack,current,height,playing=false,loopT=null,won=false,speed=2,dir=1;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){stack=[{x:W/2-50,w:100,y:H-BH}];height=0;won=false;speed=2;
+ document.getElementById('height').textContent='0';spawn();}
+function spawn(){const top=stack[stack.length-1];
+ current={x:0,w:top.w,y:top.y-BH,dir:1};dir=1;}
+function step(){if(!playing)return;
+ current.x+=speed*dir;
+ if(current.x<=0){current.x=0;dir=1;}
+ if(current.x+current.w>=W){current.x=W-current.w;dir=-1;}
+ draw();}
+function drop(){if(!playing||won)return;
+ const top=stack[stack.length-1];
+ const left=Math.max(current.x,top.x),right=Math.min(current.x+current.w,top.x+top.w);
+ const overlap=right-left;
+ if(overlap<=0){return topple();}
+ // trim to overlap
+ current.x=left;current.w=overlap;current.y=top.y-BH;
+ stack.push({x:current.x,w:current.w,y:current.y});
+ height++;document.getElementById('height').textContent=height;
+ const perfect=Math.abs(overlap-top.w)<2;
+ ct('box_dropped',{height:height,perfect:perfect,width:Math.round(overlap)});
+ status.innerHTML=perfect?'🎯 Perfect! Height <b>'+height+'</b>':'Stacked! Height <b>'+height+'</b>';
+ if(height>=8&&!won){won=true;return winGame();}
+ speed+=0.15;spawn();draw();}
+function draw(){cx.clearRect(0,0,W,H);
+ stack.forEach((b,i)=>{cx.fillStyle=i===0?'#B5850A':(i%2?CONFIG.accentColor:'#F4C430');
+  cx.fillRect(b.x,b.y,b.w,BH-2);
+  cx.fillStyle='rgba(255,255,255,.3)';cx.fillRect(b.x,b.y,b.w,5);
+  cx.font='11px serif';cx.textAlign='center';cx.fillText('📦',b.x+b.w/2,b.y+15);});
+ if(current&&playing){cx.fillStyle='#E8A00A';cx.fillRect(current.x,current.y,current.w,BH-2);
+  cx.fillStyle='rgba(255,255,255,.3)';cx.fillRect(current.x,current.y,current.w,5);
+  cx.font='11px serif';cx.textAlign='center';cx.fillText('📦',current.x+current.w/2,current.y+15);}}
+function start(){reset();playing=true;status.textContent='Tap to drop the box on the stack!';
+ document.getElementById('start').style.display='none';
+ if(loopT)clearInterval(loopT);loopT=setInterval(step,16);
+ ct('game_started',{game:'tower_stack'});}
+function topple(){playing=false;clearInterval(loopT);
+ status.innerHTML='📦 Toppled! You stacked <b>'+height+'</b> boxes';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='TRY AGAIN';b.disabled=false;b.onclick=start;
+ ct('game_over',{tower_height:height});}
+function winGame(){playing=false;clearInterval(loopT);draw();
+ status.innerHTML='🎉 8 boxes high! Steady hands.';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM REWARD 🎁';b.disabled=false;
+ ct('target_reached',{tower_height:height});
+ b.onclick=()=>{ct('reward_won',{reward:'care_kit_voucher'});b.textContent='REWARD SAVED ✓';b.disabled=true;};}
+cv.addEventListener('pointerdown',drop);
+document.getElementById('start').onclick=start;
+reset();draw();
+window.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();drop();}});
+ct('Notification Viewed',{game:'tower_stack',mechanic:'timing_stack'});
+</script></body></html>

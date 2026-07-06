@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G183 — FUNNOW "LINE UP FOUR" · Connect-Four Drop vs CPU
+  Mechanic: connect-four LOGIC (public-domain, generic "four in a row" — note:
+  "Connect Four" name is trademarked, so brand-skin & call it "Line Up Four",
+  generic disc art only). Drop discs into columns; first to 4-in-a-row (any
+  direction) wins; vs a beatable CPU. Brand-skinned as lining up night-out spots.
+  SWAPPED IN for crane-grab (cleaner cold demo). NEW FAMILY (connect-four vs CPU).
+  Surface: in-app interstitial. Grade B. Lifecycle: engagement.
+  SETS: {{profile.connect4_wins}}. PROMOS: deal on win. Brand: FunNow (approx)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#160b1c"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FunNow · Line Up Four</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#FF5A36;--deep:#D63A18;--gold:#FFC74A;--purp:#7C3AED;--cyan:#00C2FF;--ink:#1C1024}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,sans-serif;min-height:100vh;background:radial-gradient(circle at 50% -10%,#43224f,var(--cfg-accent,#160b1c));display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(10,5,14,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:linear-gradient(178deg,#241433,var(--cfg-accent,#160b1c));border-radius:24px;box-shadow:0 26px 64px rgba(20,8,28,.55);overflow:hidden;color:#fff;border:1px solid #3a2450}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Nunito;letter-spacing:3px;color:var(--gold);margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff1a;color:#fff;cursor:pointer}
+h1{font-family:Fredoka;font-size:19px}
+.hd p{font-size:10.5px;color:#c9a9e0;margin-top:2px;line-height:1.35}
+.hud{display:flex;justify-content:space-between;padding:3px 24px;font:800 12px Fredoka;color:var(--gold)}
+.boardwrap{display:flex;justify-content:center;padding:8px 0 4px}
+.board{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;background:#2e1a42;padding:7px;border-radius:12px}
+.slot{width:38px;height:38px;border-radius:50%;background:var(--cfg-accent,#160b1c);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:.1s}
+.slot.p{background:radial-gradient(circle at 35% 35%,#ff8366,var(--coral))}
+.slot.c{background:radial-gradient(circle at 35% 35%,#5fd4ff,var(--cyan))}
+.slot.win{box-shadow:0 0 0 3px var(--gold)}
+.col-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:2px 24px 0;max-width:316px;margin:0 auto}
+.colb{background:#3a2450;border:0;border-radius:6px;color:var(--gold);font-size:13px;padding:4px 0;cursor:pointer}
+.colb:active{background:var(--purp)}
+.body{padding:6px 20px 14px;text-align:center}
+.status{font:700 10.5px Nunito;color:#c9a9e0;min-height:14px;margin-bottom:7px}
+.status b{color:var(--gold)}
+.btn{width:100%;border:0;border-radius:13px;padding:12px;background:var(--coral);color:#fff;font:800 13px Fredoka;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.ctlog{margin-top:8px;font:700 9.5px ui-monospace,monospace;color:#a886c0;background:#2a1838;border-radius:8px;padding:6px 9px;text-align:left;min-height:28px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">FUNNOW</div>
+    <h1>Line Up Four 🔴</h1>
+    <p>You're 🔴, the app is 🔵. Drop discs and line up four in a row — any direction — to win a night-out deal!</p>
+  </div>
+  <div class="hud"><span>You: <span id="pw">0</span></span><span>App: <span id="cw">0</span></span></div>
+  <div class="col-btns" id="colBtns"></div>
+  <div class="boardwrap"><div class="board" id="board"></div></div>
+  <div class="body">
+    <div class="status" id="status">Tap Start, then drop a disc!</div>
+    <button class="btn" id="start">START</button>
+    
+  </div>
+</div></div>
+<script>
+/* Connect-four LOGIC (public-domain four-in-a-row). 7x6 grid, gravity drop,
+   beatable CPU (win/block heuristic). IP-neutral ("Line Up Four"). SETS profile.connect4_wins. */
+const COLS=7,ROWS=6;
+let board,turn,playing=false,pw=0,cw=0,over=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function buildBtns(){const cb=document.getElementById('colBtns');cb.innerHTML='';
+ for(let c=0;c<COLS;c++){const b=document.createElement('button');b.className='colb';b.textContent='▼';
+  b.onclick=()=>drop(c,'p');cb.appendChild(b);}}
+function render(winCells){const el=document.getElementById('board');el.innerHTML='';
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const s=document.createElement('div');
+  const v=board[r][c];s.className='slot'+(v==='p'?' p':v==='c'?' c':'')+(winCells&&winCells.some(w=>w[0]===r&&w[1]===c)?' win':'');
+  s.textContent=v?'':'';s.onclick=()=>drop(c,'p');el.appendChild(s);}}
+function dropRow(c){for(let r=ROWS-1;r>=0;r--)if(!board[r][c])return r;return -1;}
+function drop(c,who){if(!playing||over||who!=='p'||turn!=='p')return;
+ const r=dropRow(c);if(r<0)return;board[r][c]=who;ct('disc_dropped',{col:c,who:who});
+ const w=checkWin(who);if(w)return finish('p',w);
+ if(boardFull())return finish('draw');
+ render();turn='c';status.textContent='App is thinking…';setTimeout(cpuMove,500);}
+function cpuMove(){if(over)return;
+ let col=cpuPick();const r=dropRow(col);board[r][col]='c';ct('disc_dropped',{col:col,who:'c'});
+ const w=checkWin('c');if(w)return finish('c',w);
+ if(boardFull())return finish('draw');
+ render();turn='p';status.textContent='Your move — drop a disc!';}
+function cpuPick(){
+ // 1. win if possible
+ for(let c=0;c<COLS;c++){const r=dropRow(c);if(r<0)continue;board[r][c]='c';
+  if(checkWin('c')){board[r][c]=null;return c;}board[r][c]=null;}
+ // 2. block player win
+ for(let c=0;c<COLS;c++){const r=dropRow(c);if(r<0)continue;board[r][c]='p';
+  if(checkWin('p')){board[r][c]=null;return c;}board[r][c]=null;}
+ // 3. prefer center, with some randomness so it's beatable
+ const prefs=[3,2,4,1,5,0,6].filter(c=>dropRow(c)>=0);
+ if(Math.random()<0.25){const valid=prefs.slice();return valid[Math.floor(Math.random()*valid.length)];}
+ return prefs[0];}
+function checkWin(who){const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(board[r][c]!==who)continue;
+  for(const[dr,dc]of dirs){const cells=[[r,c]];
+   for(let k=1;k<4;k++){const nr=r+dr*k,nc=c+dc*k;
+    if(nr<0||nr>=ROWS||nc<0||nc>=COLS||board[nr][nc]!==who)break;cells.push([nr,nc]);}
+   if(cells.length>=4)return cells;}}return null;}
+function boardFull(){return board[0].every(Boolean);}
+function finish(who,cells){over=true;playing=false;
+ if(who==='draw'){status.innerHTML='🤝 Board full — draw!';resetBtn('PLAY AGAIN',start);ct('game_result',{result:'draw'});}
+ else if(who==='p'){pw++;document.getElementById('pw').textContent=pw;render(cells);
+  status.innerHTML='🎉 Four in a row — you win!';ct('game_result',{result:'player_win',connect4_wins:pw});
+  const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM NIGHT-OUT DEAL 🎁';b.disabled=false;
+  b.onclick=()=>{ct('reward_won',{reward:'night_out_deal'});b.textContent='DEAL SAVED ✓';b.disabled=true;};}
+ else{cw++;document.getElementById('cw').textContent=cw;render(cells);
+  status.innerHTML='The app lined up four! Rematch?';resetBtn('REMATCH',start);ct('game_result',{result:'cpu_win'});}}
+function resetBtn(label,fn){const b=document.getElementById('start');b.style.display='block';b.textContent=label;b.disabled=false;b.onclick=fn;}
+function start(){board=Array.from({length:ROWS},()=>Array(COLS).fill(null));turn='p';over=false;playing=true;
+ status.textContent='Your move — drop a disc!';document.getElementById('start').style.display='none';render();
+ ct('game_started',{game:'line_up_four'});}
+document.getElementById('start').onclick=start;
+buildBtns();board=Array.from({length:ROWS},()=>Array(COLS).fill(null));render();
+ct('Notification Viewed',{game:'line_up_four',mechanic:'connect_four'});
+</script></body></html>

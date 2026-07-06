@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G200 — SOCAR "PARK ONE" · Queens-Style One-Per-Region Logic
+  Mechanic: constraint-placement LOGIC (LinkedIn-Queens-spirit, public-domain genre)
+  — place one token per row, per column, and per coloured region, with no two tokens
+  touching (incl. diagonally). Solution + regions VERIFIED unique by solver. NO
+  trademarked art/names. Brand-skinned as parking one car per zone (car-share).
+  NEW FAMILY (one-per-region constraint). Daily-puzzle format. Surface: in-app
+  Custom HTML. Grade B. Lifecycle: engagement (daily-return).
+  SETS: {{profile.parkone_solved}}. PROMOS: drive credit on solve.
+  Brand: SOCAR green #00B14F (verified)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#00b14f"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOCAR · Park One</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--grn:var(--cfg-accent,#00b14f);--deep:#00833B;--ink:#0C1F14;--paper:#F1FBF5;--soft:#D6F0E0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;min-height:100vh;background:linear-gradient(165deg,#0d2c1b,#06150d);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(5,16,10,.62);display:flex;align-items:center;justify-content:center;padding:14px}
+.card{width:88vw;max-width:358px;background:var(--paper);border-radius:24px;box-shadow:0 26px 64px rgba(5,21,13,.5);overflow:hidden}
+.hd{padding:13px 20px 6px;position:relative;text-align:center}
+.brand{font:800 11px Sora;letter-spacing:3px;color:#7aab90;margin-bottom:3px}
+.x{position:absolute;top:11px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);cursor:pointer}
+h1{font-family:Sora;font-weight:800;font-size:18px;color:var(--ink)}
+.hd p{font-size:10.5px;color:#5a8a6c;margin-top:2px;line-height:1.35}
+.gridwrap{display:flex;justify-content:center;padding:10px 0 4px}
+.grid{display:grid;grid-template-columns:repeat(6,46px);gap:2px;background:#cdebd9;padding:3px;border-radius:10px}
+.cell{width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:.1s;border-radius:5px;user-select:none}
+.cell.bad{box-shadow:inset 0 0 0 3px #E1251B}
+.cell:active{transform:scale(.92)}
+.body{padding:8px 20px 16px;text-align:center}
+.status{font:700 10.5px Inter;color:#5a8a6c;min-height:15px;margin-bottom:8px}
+.status b{color:var(--deep)}
+.legend{font-size:9px;color:#8ab3a0;margin-bottom:8px}
+.btn{width:100%;border:0;border-radius:13px;padding:13px;background:var(--grn);color:#fff;font:800 14px Sora;cursor:pointer;box-shadow:0 5px 0 var(--deep)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--soft);box-shadow:none;margin-top:7px;font-size:12px;padding:9px}
+.ctlog{margin-top:9px;font:700 10px ui-monospace,monospace;color:#7aab90;background:#e3f3eb;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">SOCAR</div>
+    <h1>Park One 🚗</h1>
+    <p>Park exactly one car in each row, each column, and each coloured zone — and no two cars can touch, even diagonally.</p>
+  </div>
+  <div class="gridwrap"><div class="grid" id="grid"></div></div>
+  <div class="body">
+    <div class="legend">Tap to cycle: empty → ✕ (note) → 🚗 (park) → empty</div>
+    <div class="status" id="status">Tap Start for today's lot.</div>
+    <button class="btn" id="start">START</button>
+    <button class="btn ghost" id="clear" style="display:none">↩ Clear the lot</button>
+    
+  </div>
+</div></div>
+<script>
+/* Queens-style one-per-region LOGIC (public-domain). 6x6. Solution + regions
+   solver-verified UNIQUE. No two tokens touch (incl diagonal). IP-neutral.
+   SETS profile.parkone_solved. */
+const REGIONS=[
+ [0,0,2,2,1,1],
+ [2,2,2,2,3,1],
+ [4,2,2,3,3,3],
+ [4,5,2,3,3,3],
+ [4,5,5,5,3,3],
+ [4,5,5,5,5,5]];
+const SOLUTION=[1,5,2,4,0,3]; // col per row (verified unique)
+const COLORS=['#FFD9A0','#B5E8C9','#A0D8F5','#F5B5D8','#D8C5F5','#FFE08A'];
+let grid,playing=false,won=false; // grid[r][c]=0 empty,1 note,2 car
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function build(){grid=Array.from({length:6},()=>Array(6).fill(0));won=false;render();}
+function render(bad){const g=document.getElementById('grid');g.innerHTML='';
+ for(let r=0;r<6;r++)for(let c=0;c<6;c++){const d=document.createElement('div');
+  d.className='cell'+(bad&&bad.has(r+','+c)?' bad':'');
+  d.style.background=COLORS[REGIONS[r][c]];
+  d.textContent=grid[r][c]===2?'🚗':(grid[r][c]===1?'✕':'');
+  d.onclick=()=>cycle(r,c);g.appendChild(d);}}
+function cycle(r,c){if(!playing||won)return;grid[r][c]=(grid[r][c]+1)%3;
+ ct('cell_set',{r,c,val:grid[r][c]});check();}
+function cars(){const list=[];for(let r=0;r<6;r++)for(let c=0;c<6;c++)if(grid[r][c]===2)list.push([r,c]);return list;}
+function conflicts(){const bad=new Set();const list=cars();
+ // row/col/region duplicates
+ const rows={},cols={},regs={};
+ list.forEach(([r,c])=>{(rows[r]=rows[r]||[]).push([r,c]);(cols[c]=cols[c]||[]).push([r,c]);
+  const rg=REGIONS[r][c];(regs[rg]=regs[rg]||[]).push([r,c]);});
+ Object.values(rows).forEach(g=>{if(g.length>1)g.forEach(([r,c])=>bad.add(r+','+c));});
+ Object.values(cols).forEach(g=>{if(g.length>1)g.forEach(([r,c])=>bad.add(r+','+c));});
+ Object.values(regs).forEach(g=>{if(g.length>1)g.forEach(([r,c])=>bad.add(r+','+c));});
+ // adjacency (incl diagonal)
+ for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
+  const [r1,c1]=list[i],[r2,c2]=list[j];
+  if(Math.abs(r1-r2)<=1&&Math.abs(c1-c2)<=1){bad.add(r1+','+c1);bad.add(r2+','+c2);}}
+ return bad;}
+function check(){const bad=conflicts();render(bad);const list=cars();
+ if(list.length===6&&bad.size===0){
+  // verify one per row/col/region
+  const rs=new Set(list.map(([r])=>r)),cs=new Set(list.map(([,c])=>c)),gs=new Set(list.map(([r,c])=>REGIONS[r][c]));
+  if(rs.size===6&&cs.size===6&&gs.size===6&&!won){won=true;return win();}}
+ if(bad.size)status.innerHTML='Some cars clash — one per row, column &amp; zone, none touching.';
+ else status.innerHTML='Cars parked: <b>'+list.length+'</b>/6. Use ✕ to mark spots to avoid.';}
+function start(){build();playing=true;status.textContent='Park one car per row, column and zone.';
+ document.getElementById('start').style.display='none';document.getElementById('clear').style.display='block';
+ ct('game_started',{game:'park_one'});}
+function win(){playing=false;
+ status.innerHTML='🎉 Perfectly parked — one per zone, none touching!';
+ const b=document.getElementById('start');b.style.display='block';b.textContent='CLAIM DRIVE CREDIT 🎁';b.disabled=false;
+ document.getElementById('clear').style.display='none';
+ ct('puzzle_solved',{parkone_solved:true});
+ b.onclick=()=>{ct('reward_won',{reward:'drive_credit'});b.textContent='CREDIT BANKED ✓';b.disabled=true;};}
+document.getElementById('clear').onclick=()=>{if(playing){build();document.getElementById('clear').style.display='block';
+ status.textContent='Lot cleared — try again!';}};
+document.getElementById('start').onclick=start;
+build();
+ct('Notification Viewed',{game:'park_one',mechanic:'queens_one_per_region'});
+</script></body></html>

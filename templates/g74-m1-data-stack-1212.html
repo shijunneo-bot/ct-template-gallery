@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  G74 — M1 "DATA STACK" · Stack-Tower Timing Game (12.12)
+  Surface: Custom HTML In-App · Grade A → B
+  Behavioral: stack-tower precision tension (each clean stack = +GB)
+  Lifecycle: seasonal engagement · 12.12 sale
+  Mechanic: moving block, tap to drop; overhang trims it; height = GB won.
+  PROMOS: tower tiers → 12.12 data add-on deal. Brand: M1 orange→pink (established)
+============================================================ -->
+<html lang="en"><head>
+<script>
+const CONFIG = {
+  accentColor: "#d9a3c4"
+};
+try{document.documentElement.style.setProperty("--cfg-accent",CONFIG.accentColor);}catch(e){}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · Data Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=DM+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--org:#FF6B35;--pink:#E6007E;--ink:#1c0d18;--paper:#FFF7FB}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;background:linear-gradient(160deg,#3a1535,#1c0b1a);display:flex;align-items:center;justify-content:center}
+.backdrop{position:fixed;inset:0;background:rgba(20,5,18,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:88vw;max-width:358px;background:#1a0c16;border-radius:22px;box-shadow:0 26px 64px rgba(0,0,0,.6);overflow:hidden;color:#fff;border:1px solid #3a1530}
+.hd{padding:15px 20px 6px;text-align:center;position:relative}
+.brand{font-family:Righteous;font-size:17px;background:linear-gradient(90deg,var(--org),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px}
+.x{position:absolute;top:11px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#ffffff14;color:#fff;cursor:pointer}
+h1{font-size:18px;font-weight:700}
+.hd p{font-size:11px;color:var(--cfg-accent,#d9a3c4);margin-top:3px}
+.bar{display:flex;justify-content:space-between;padding:8px 24px 2px;font:700 11.5px 'DM Sans';color:#b58aa5}
+.bar b{color:var(--pink)}
+.stage{display:flex;justify-content:center;padding:4px 0 2px}
+canvas{border-radius:14px;background:linear-gradient(180deg,#2a0f24,#160a13);touch-action:none}
+.hint{text-align:center;font:800 10px 'DM Sans';letter-spacing:1.5px;color:#b58aa5;padding:7px 0 0}
+.body{padding:8px 20px 16px;text-align:center}
+.result{display:none;margin-bottom:9px}
+.result b{font-family:Righteous;font-size:18px;background:linear-gradient(90deg,var(--org),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;display:block}
+.result span{font-size:11.5px;color:var(--cfg-accent,#d9a3c4)}
+.btn{width:100%;border:0;border-radius:14px;padding:13px;background:linear-gradient(90deg,var(--org),var(--pink));color:#fff;font:700 14px 'DM Sans';cursor:pointer;box-shadow:0 5px 16px rgba(230,0,126,.3)}
+.ctlog{margin-top:10px;font:700 10.5px ui-monospace,monospace;color:#a4869a;background:#250f20;border-radius:8px;padding:7px 10px;text-align:left;min-height:30px}
+</style></head><body>
+<div class="backdrop"><div class="card">
+  <div class="hd">
+    <button class="x" onclick="ct('Notification Dismissed',{})">✕</button>
+    <div class="brand">M1 · 12.12</div>
+    <h1>Data Stack 📶</h1>
+    <p>Stack the data blocks. Each clean drop = more GB. Miss the edges and they shrink!</p>
+  </div>
+  <div class="bar"><span>HEIGHT <b id="ht">0</b></span><span>GB WON <b id="gb">0</b></span></div>
+  <div class="stage"><canvas id="cv" width="300" height="280"></canvas></div>
+  <div class="hint">TAP ANYWHERE TO DROP THE BLOCK 🎯</div>
+  <div class="body">
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+    <button class="btn" id="go">START STACKING</button>
+    
+  </div>
+</div></div>
+<script>
+/* Stack-tower: overhang trims width. Height tiers → Promos 12.12 data deal. */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const W=300,H=280,BH=22;
+let stack=[],cur=null,dir=1,running=false,raf=null,gameover=false;
+function ct(ev,p){console.log('CleverTap:',ev,p);}
+function reset(){stack=[{x:90,w:120}];spawn();}
+function spawn(){const top=stack[stack.length-1];
+ cur={x:0,w:top.w,y:H-(stack.length+1)*BH};dir=1;}
+function colour(i){const t=i/14;
+ return 'rgb('+Math.round(255-t*25)+','+Math.round(107-t*107)+','+Math.round(53+t*73)+')';}
+function draw(){cx.clearRect(0,0,W,H);
+ stack.forEach((b,i)=>{cx.fillStyle=colour(i);
+  cx.fillRect(b.x,H-(i+1)*BH,b.w,BH-2);});
+ if(cur){cx.fillStyle=colour(stack.length);
+  cx.fillRect(cur.x,cur.y,cur.w,BH-2);}}
+function loop(){if(!running)return;
+ const sp=2.2+stack.length*0.12;
+ cur.x+=dir*sp;
+ if(cur.x+cur.w>=W){cur.x=W-cur.w;dir=-1;}
+ if(cur.x<=0){cur.x=0;dir=1;}
+ draw();raf=requestAnimationFrame(loop);}
+function drop(){if(!running||!cur)return;
+ const top=stack[stack.length-1];
+ const left=Math.max(cur.x,top.x),right=Math.min(cur.x+cur.w,top.x+top.w);
+ const ov=right-left;
+ if(ov<=0){end();return;}
+ stack.push({x:left,w:ov});
+ ht.textContent=stack.length-1;
+ gb.textContent=Math.round((stack.length-1)*1.5);
+ ct('block_stacked',{height:stack.length-1});
+ if(stack.length>=15||H-(stack.length+1)*BH<10){end();return;}
+ spawn();}
+cv.addEventListener('click',drop);
+cv.addEventListener('touchstart',e=>{drop();e.preventDefault();},{passive:false});
+go.onclick=()=>{if(running)return;
+ running=true;gameover=false;reset();
+ result.style.display='none';go.textContent='TAP THE CANVAS!';
+ ct('Game Played',{game:'data_stack'});loop();};
+function end(){running=false;cancelAnimationFrame(raf);
+ const h=stack.length-1,won=Math.round(h*1.5);
+ result.style.display='block';
+ const tier=h>=10?'10GB':h>=6?'6GB':h>=3?'3GB':null;
+ rT.textContent='TOWER: '+h+' BLOCKS · '+won+'GB';
+ rS.textContent=tier?('Sky-high stacking! '+tier+' add-on deal unlocked for 12.12.'):
+  'Reach 3 blocks for a data deal. The tower wobbles but believes in you.';
+ go.textContent=tier?'CLAIM MY '+tier+' 12.12 DEAL →':'STACK AGAIN';
+ ct('game_over',{height:h,reward:tier||'none'});
+ if(tier)go.onclick=()=>{ct('reward_claimed',{reward:tier});
+  go.textContent='SAVED ✓';go.disabled=true;};
+ else go.onclick=()=>{go.textContent='START STACKING';go.onclick=null;
+  go.addEventListener('click',function h2(){go.removeEventListener('click',h2);
+   running=true;reset();result.style.display='none';go.textContent='TAP THE CANVAS!';loop();});};}
+reset();draw();
+ct('Notification Viewed',{game:'data_stack',season:'12_12'});
+</script></body></html>
