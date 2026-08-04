@@ -1,0 +1,25 @@
+# In-App Template Gallery · CleverTap Custom HTML
+
+> 178 production-ready Custom HTML in-app templates for CleverTap, across 11 categories. Every template opens with a live phone-mockup preview, an editable CONFIG for brand colours and copy, auto-listed CleverTap events, an implementation guide, and copy-ready source code. Guide 02 of the seventeen-gallery Field Guide Family. Curated by SJ Neo.
+
+## Categories (178 templates)
+- Arcade & Skill Games (71): quick skill-based mini-games such as snake, word puzzles, solitaire, tile match, tower stack and merge mechanics that reward mastery and drive repeat opens.
+- Gamification (18): chance-and-reward mechanics including scratch cards, spin wheels, mystery boxes, fortunes, advent calendars and treasure reveals.
+- Animation Toolkit (15): polished animation effects such as particle celebrations, kinetic type, card flips and progress rings to combine with any campaign.
+- Quiz & Survey (12): personality quizzes, trivia, polls, NPS and sentiment collectors that gather zero-party data.
+- Content & Social (11): stories carousels, year-in-review wrapped, social proof and testimonial formats.
+- Conversion (11): cart recovery, payment recovery, price-drop alerts, waitlists and post-purchase cross-sell moments.
+- Loyalty & Progress (9): streaks, stamp cards, milestones, leaderboards and tier progress trackers.
+- Interactive Tool (9): calculators, comparisons and decision helpers that guide informed choices.
+- Patterns (9): advanced interaction patterns including bundle builders, slot machines and tier upgrades.
+- Commerce (7): flash sales, swipe discovery, pricing cards and win-back offers.
+- Foundational (6): essential building blocks such as FAQs, trust badges and notification toasts.
+
+## How to use a template
+1. Browse or search, then open any template for a live preview in a phone mockup (web pop-up view included).
+2. Customise brand colours and copy in the Customize tab.
+3. Review the auto-listed CleverTap events and the implementation guide.
+4. Copy or download the HTML and paste it into a CleverTap Custom HTML In-App campaign.
+
+## The Field Guide Family
+This gallery is guide 02 of 17. The family covers: Rich Push, Custom HTML In-App, Native Display, App & Web Inbox, Webhooks, Linked Content, Geofencing, Bulletins, Recommendations & Catalog, Reminders, Promos, Product Experiences, AMP Email, SMS & RCS, WhatsApp, Trust & Security, and Intelligence. Links to all seventeen are in the Field Guide Family section of the page.
